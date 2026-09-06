@@ -39,6 +39,15 @@ export default defineNuxtConfig({
     // sessions are sealed into a cookie by nuxt-auth-utils. Set
     // NUXT_SESSION_PASSWORD to a 32+ char random string.
     discordClientSecret: "", // Set via NUXT_DISCORD_CLIENT_SECRET
+    // Session cookie lifetime. Without an explicit maxAge, h3 omits
+    // Expires/Max-Age entirely, so `nuxt-session` is a browser-session
+    // cookie and every browser restart forces a fresh Discord login.
+    // Absolute, not sliding — h3 derives Expires from session.createdAt —
+    // but the access token inside is renewed silently by refreshAndPersist(),
+    // and Discord refresh tokens stay valid as long as they're used.
+    session: {
+      maxAge: 60 * 60 * 24 * 30, // 30 days — override via NUXT_SESSION_MAX_AGE
+    },
     // Base URL of the bot's HTTP server (server-side only, never sent to browser)
     // Docker: http://bot:3005  |  Non-Docker: https://modus-bot.ppo.gg
     botWebhookUrl: "http://bot:3005", // Set via NUXT_BOT_WEBHOOK_URL
