@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.22.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.22.0...modus-v1.22.1) (2026-09-06)
+
+
+### 🐛 Bug Fixes
+
+* **web:** explain an empty "Your Servers" list instead of hiding it ([b2ebed1](https://github.com/PPO-GG/MODUS/commit/b2ebed16f21ac78c6e356a62dc597991b4fd79ee))
+* **web:** override @tiptap/core past the mergeAttributes prototype bug ([d02a020](https://github.com/PPO-GG/MODUS/commit/d02a020f3005071969630bef42826ffbe64bc0bb))
+* **web:** persist the dashboard session across browser restarts ([7b55afa](https://github.com/PPO-GG/MODUS/commit/7b55afad2c8acf325aca7c16f67cf5a24507bde8))
+* **web:** route landing nav through the router instead of reloading ([c4d9f54](https://github.com/PPO-GG/MODUS/commit/c4d9f54b4d8b5506399b043905217f180f841ee8))
+* **web:** stop Discord rate limits from emptying the user's guild list ([c84c8f0](https://github.com/PPO-GG/MODUS/commit/c84c8f0c3fc2920d9b6af17324eccdfc471a5fc3))
+
 ## [1.22.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.21.0...modus-v1.22.0) (2026-09-02)
 
 
