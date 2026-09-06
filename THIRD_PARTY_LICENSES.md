@@ -142,7 +142,7 @@ pnpm run licenses:generate
 - **@tanstack/virtual-core** `3.17.7` — Tanner Linsley ([source](https://tanstack.com/virtual))
 - **@tanstack/vue-table** `8.21.3` — Tanner Linsley ([source](https://tanstack.com/table))
 - **@tanstack/vue-virtual** `3.13.35` — Tanner Linsley ([source](https://tanstack.com/virtual))
-- **@tiptap/core** `3.29.2` ([source](https://tiptap.dev))
+- **@tiptap/core** `3.31.3` ([source](https://tiptap.dev))
 - **@tiptap/extension-blockquote** `3.29.2` ([source](https://tiptap.dev))
 - **@tiptap/extension-bold** `3.29.2` ([source](https://tiptap.dev))
 - **@tiptap/extension-bubble-menu** `3.29.2` ([source](https://tiptap.dev))
@@ -175,7 +175,7 @@ pnpm run licenses:generate
 - **@tiptap/extension-underline** `3.29.2` ([source](https://tiptap.dev))
 - **@tiptap/extensions** `3.29.2` ([source](https://tiptap.dev))
 - **@tiptap/markdown** `3.29.2` ([source](https://tiptap.dev))
-- **@tiptap/pm** `3.29.2` ([source](https://tiptap.dev))
+- **@tiptap/pm** `3.31.3` ([source](https://tiptap.dev))
 - **@tiptap/starter-kit** `3.29.2` ([source](https://tiptap.dev))
 - **@tiptap/suggestion** `3.29.2` ([source](https://tiptap.dev))
 - **@tiptap/vue-3** `3.29.2` ([source](https://tiptap.dev))
@@ -534,7 +534,7 @@ pnpm run licenses:generate
 - **prosemirror-state** `1.4.4` ([source](https://github.com/prosemirror/prosemirror-state#readme))
 - **prosemirror-tables** `1.8.5` ([source](https://github.com/ProseMirror/prosemirror-tables#readme))
 - **prosemirror-transform** `1.12.0` ([source](https://github.com/prosemirror/prosemirror-transform#readme))
-- **prosemirror-view** `1.42.2`
+- **prosemirror-view** `1.42.2, 1.42.3`
 - **quansync** `0.2.11` — Anthony Fu ([source](https://github.com/quansync-dev/quansync#readme))
 - **queue-microtask** `1.2.3` — Feross Aboukhadijeh ([source](https://github.com/feross/queue-microtask))
 - **radix3** `1.1.2` ([source](https://github.com/unjs/radix3#readme))
