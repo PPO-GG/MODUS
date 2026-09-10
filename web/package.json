@@ -42,7 +42,7 @@
     "@iconify-json/simple-icons": "^1.2.92",
     "@types/node": "^25.6.0",
     "h3": "^1.15.11",
-    "vitest": "^3.2.7",
+    "vitest": "^4.1.11",
     "vue-tsc": "^3.3.6"
   }
 }
