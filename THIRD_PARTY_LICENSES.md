@@ -595,7 +595,7 @@ pnpm run licenses:generate
 - **superjson** `2.2.6` — Simon Knott ([source](https://github.com/blitz-js/superjson#readme))
 - **supports-color** `5.5.0, 10.2.2` — Sindre Sorhus ([source](https://github.com/chalk/supports-color#readme))
 - **supports-preserve-symlinks-flag** `1.0.0` — Jordan Harband ([source](https://github.com/inspect-js/node-supports-preserve-symlinks-flag#readme))
-- **svgo** `4.0.2` — Kir Belevich ([source](https://svgo.dev))
+- **svgo** `4.1.0` — Kir Belevich ([source](https://svgo.dev))
 - **tagged-tag** `1.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/tagged-tag#readme))
 - **tailwind-merge** `3.6.0` — Dany Castillo ([source](https://github.com/dcastil/tailwind-merge))
 - **tailwind-variants** `3.3.0` — Junior Garcia ([source](https://github.com/heroui-inc/tailwind-variants#readme))
@@ -828,8 +828,8 @@ pnpm run licenses:generate
 
 ## BSD-2-Clause (10)
 
-- **css-select** `5.2.2` — Felix Boehm ([source](https://github.com/fb55/css-select#readme))
-- **css-what** `6.2.2` — Felix Böhm ([source](https://github.com/fb55/css-what#readme))
+- **css-select** `6.0.0` — Felix Boehm ([source](https://github.com/fb55/css-select#readme))
+- **css-what** `7.0.0` — Felix Böhm ([source](https://github.com/fb55/css-what#readme))
 - **domelementtype** `2.3.0` — Felix Boehm ([source](https://github.com/fb55/domelementtype#readme))
 - **domhandler** `5.0.3` — Felix Boehm ([source](https://github.com/fb55/domhandler#readme))
 - **domutils** `3.2.2` — Felix Boehm ([source](https://github.com/fb55/domutils#readme))
