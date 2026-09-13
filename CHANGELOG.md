@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.23.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.22.0...modus-v1.23.0) (2026-09-13)
+
+
+### ✨ Features
+
+* **bot:** add configurable welcome text alongside the image ([32b0b2a](https://github.com/PPO-GG/MODUS/commit/32b0b2ab55d53a63a61ffb6bf0d0ad56f96bb165))
+* **web:** split welcome into an overview page and image editor ([56be2a3](https://github.com/PPO-GG/MODUS/commit/56be2a31f165a1d0952dffa970f61bd50074ca41))
+
+
+### 🐛 Bug Fixes
+
+* **web:** bump svgo to 4.1.0 for removeScripts advisories ([92e2d1e](https://github.com/PPO-GG/MODUS/commit/92e2d1e85de51d7f691ea7b27606155962b09c0f))
+* **web:** explain an empty "Your Servers" list instead of hiding it ([b2ebed1](https://github.com/PPO-GG/MODUS/commit/b2ebed16f21ac78c6e356a62dc597991b4fd79ee))
+* **web:** override @tiptap/core past the mergeAttributes prototype bug ([d02a020](https://github.com/PPO-GG/MODUS/commit/d02a020f3005071969630bef42826ffbe64bc0bb))
+* **web:** persist the dashboard session across browser restarts ([7b55afa](https://github.com/PPO-GG/MODUS/commit/7b55afad2c8acf325aca7c16f67cf5a24507bde8))
+* **web:** render SVG stylesheet colours in welcome images ([78b08ae](https://github.com/PPO-GG/MODUS/commit/78b08ae6853e0f32a8c23c2e0a77d3491277528b))
+* **web:** route landing nav through the router instead of reloading ([c4d9f54](https://github.com/PPO-GG/MODUS/commit/c4d9f54b4d8b5506399b043905217f180f841ee8))
+* **web:** stop Discord rate limits from emptying the user's guild list ([c84c8f0](https://github.com/PPO-GG/MODUS/commit/c84c8f0c3fc2920d9b6af17324eccdfc471a5fc3))
+
 ## [1.22.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.21.0...modus-v1.22.0) (2026-09-02)
 
 
