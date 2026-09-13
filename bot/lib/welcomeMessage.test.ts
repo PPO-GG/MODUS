@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { ComponentType, MessageFlags } from "discord.js";
 import { WelcomeMessageSchema, WelcomeTemplateSchema } from "./schemas";
 import {
   applyWelcomePlaceholders,
@@ -18,12 +17,12 @@ const vars: WelcomeMessageVars = {
 
 const image = Buffer.from("png");
 
-function containerChildren(payload: ReturnType<typeof buildWelcomeMessage>) {
-  expect(payload).not.toBeNull();
-  const [container] = payload!.components.map((c) => c.toJSON()) as any[];
-  expect(container.type).toBe(ComponentType.Container);
-  return container;
+function build(settings: Record<string, unknown>, img: Buffer | null = image) {
+  return buildWelcomeMessage(WelcomeMessageSchema.parse(settings), vars, img);
 }
+
+const embedJson = (payload: ReturnType<typeof buildWelcomeMessage>) =>
+  payload!.embeds.map((e) => e.toJSON());
 
 describe("WelcomeMessageSchema", () => {
   it("defaults to the legacy welcome line above the image", () => {
@@ -60,79 +59,75 @@ describe("applyWelcomePlaceholders", () => {
 });
 
 describe("buildWelcomeMessage", () => {
-  it("puts text above the image for text-first", () => {
-    const message = WelcomeMessageSchema.parse({ title: "Hi {username}" });
-    const payload = buildWelcomeMessage(message, vars, image);
-    const container = containerChildren(payload);
+  it("puts the image inside the embed for text-first", () => {
+    const payload = build({ title: "Hi {username}", accentColor: "#a78bfa" });
+    const [embed] = embedJson(payload);
 
-    expect(container.components.map((c: any) => c.type)).toEqual([
-      ComponentType.TextDisplay,
-      ComponentType.MediaGallery,
-    ]);
-    expect(container.components[0].content).toBe(
-      "# Hi newbie\nWelcome to **Cool Server**, <@42>! 🎉",
-    );
-    expect(container.components[1].items[0].media.url).toBe(
-      "attachment://welcome.png",
-    );
-    expect(payload!.flags).toBe(MessageFlags.IsComponentsV2);
+    expect(payload!.embeds).toHaveLength(1);
+    expect(embed!.title).toBe("Hi newbie");
+    expect(embed!.description).toBe("Welcome to **Cool Server**, <@42>! 🎉");
+    expect(embed!.color).toBe(0xa78bfa);
+    expect(embed!.image?.url).toBe("attachment://welcome.png");
     expect(payload!.files).toHaveLength(1);
-    expect(payload!.allowedMentions).toEqual({ parse: ["roles"], users: ["42"] });
   });
 
-  it("puts the image first for image-first", () => {
-    const message = WelcomeMessageSchema.parse({ order: "image-first" });
-    const container = containerChildren(buildWelcomeMessage(message, vars, image));
-    expect(container.components.map((c: any) => c.type)).toEqual([
-      ComponentType.MediaGallery,
-      ComponentType.TextDisplay,
-    ]);
+  it("attaches the image outside the embed for image-first", () => {
+    const payload = build({ order: "image-first" });
+    const [embed] = embedJson(payload);
+
+    // Discord renders message attachments above embeds.
+    expect(embed!.image).toBeUndefined();
+    expect(embed!.description).toBe("Welcome to **Cool Server**, <@42>! 🎉");
+    expect(payload!.files).toHaveLength(1);
   });
 
-  it("sends only the image in image mode", () => {
-    const message = WelcomeMessageSchema.parse({ mode: "image" });
-    const container = containerChildren(buildWelcomeMessage(message, vars, image));
-    expect(container.components.map((c: any) => c.type)).toEqual([
-      ComponentType.MediaGallery,
-    ]);
+  it("pings the member from the message content when the text uses {user}", () => {
+    const payload = build({});
+    // Mentions inside embeds render but never notify.
+    expect(payload!.content).toBe("<@42>");
+    expect(payload!.allowedMentions).toEqual({ users: ["42"] });
   });
 
-  it("sends only text in text mode, without attaching the image", () => {
-    const message = WelcomeMessageSchema.parse({ mode: "text" });
-    const payload = buildWelcomeMessage(message, vars, image);
-    const container = containerChildren(payload);
-    expect(container.components.map((c: any) => c.type)).toEqual([
-      ComponentType.TextDisplay,
-    ]);
+  it("sends no content when the text does not mention the member", () => {
+    const payload = build({ body: "Welcome to {server_name}" });
+    expect(payload!.content).toBeUndefined();
+    expect(payload!.allowedMentions).toEqual({ users: [] });
+  });
+
+  it("sends only the attached image in image mode", () => {
+    const payload = build({ mode: "image" });
+    expect(payload!.embeds).toHaveLength(0);
+    expect(payload!.content).toBeUndefined();
+    expect(payload!.files).toHaveLength(1);
+  });
+
+  it("sends only the embed in text mode, without attaching the image", () => {
+    const payload = build({ mode: "text" });
+    const [embed] = embedJson(payload);
+    expect(embed!.image).toBeUndefined();
     expect(payload!.files).toHaveLength(0);
   });
 
-  it("falls back to text when the image is unavailable in both mode", () => {
-    const message = WelcomeMessageSchema.parse({});
-    const payload = buildWelcomeMessage(message, vars, null);
-    const container = containerChildren(payload);
-    expect(container.components.map((c: any) => c.type)).toEqual([
-      ComponentType.TextDisplay,
-    ]);
+  it("falls back to a text-only embed when the image is unavailable", () => {
+    const payload = build({}, null);
+    const [embed] = embedJson(payload);
+    expect(embed!.image).toBeUndefined();
     expect(payload!.files).toHaveLength(0);
+  });
+
+  it("sends just the image when both mode has no text", () => {
+    const payload = build({ body: "  " });
+    expect(payload!.embeds).toHaveLength(0);
+    expect(payload!.files).toHaveLength(1);
+  });
+
+  it("leaves the embed uncoloured when no accent colour is set", () => {
+    const [embed] = embedJson(build({}));
+    expect(embed!.color).toBeUndefined();
   });
 
   it("returns null when there is nothing to send", () => {
-    expect(
-      buildWelcomeMessage(WelcomeMessageSchema.parse({ mode: "image" }), vars, null),
-    ).toBeNull();
-    expect(
-      buildWelcomeMessage(
-        WelcomeMessageSchema.parse({ mode: "text", body: "  " }),
-        vars,
-        image,
-      ),
-    ).toBeNull();
-  });
-
-  it("applies the accent colour to the container", () => {
-    const message = WelcomeMessageSchema.parse({ accentColor: "#a78bfa" });
-    const container = containerChildren(buildWelcomeMessage(message, vars, image));
-    expect(container.accent_color).toBe(0xa78bfa);
+    expect(build({ mode: "image" }, null)).toBeNull();
+    expect(build({ mode: "text", body: "  " })).toBeNull();
   });
 });

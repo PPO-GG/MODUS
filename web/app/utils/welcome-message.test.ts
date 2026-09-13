@@ -3,7 +3,7 @@ import { renderDiscordMarkdown } from './discord-markdown'
 import {
   DEFAULT_WELCOME_MESSAGE,
   normalizeWelcomeMessage,
-  welcomeMessageText,
+  welcomeMessageParts,
   type WelcomePreviewVars,
 } from './welcome-message'
 
@@ -35,26 +35,37 @@ describe('normalizeWelcomeMessage', () => {
   })
 })
 
-describe('welcomeMessageText', () => {
-  it('prefixes the title as a heading and fills placeholders', () => {
+describe('welcomeMessageParts', () => {
+  it('fills placeholders in the title and body separately', () => {
     const message = {
       ...DEFAULT_WELCOME_MESSAGE,
       title: 'Hey {displayname}',
       body: '{user} is #{member_count} in {server_name} ({username})',
     }
-    expect(welcomeMessageText(message, vars)).toBe(
-      '# Hey New Person\n<@42> is #123 in Cool Server (newbie)',
-    )
+    expect(welcomeMessageParts(message, vars)).toEqual({
+      title: 'Hey New Person',
+      body: '<@42> is #123 in Cool Server (newbie)',
+      pingsMember: true,
+    })
+  })
+
+  it('only pings the member when the text uses {user}', () => {
+    const message = { ...DEFAULT_WELCOME_MESSAGE, body: 'Welcome to {server_name}' }
+    expect(welcomeMessageParts(message, vars).pingsMember).toBe(false)
   })
 
   it('is empty in image-only mode', () => {
-    expect(welcomeMessageText({ ...DEFAULT_WELCOME_MESSAGE, mode: 'image' }, vars)).toBe('')
+    expect(welcomeMessageParts({ ...DEFAULT_WELCOME_MESSAGE, mode: 'image' }, vars)).toEqual({
+      title: '',
+      body: '',
+      pingsMember: false,
+    })
   })
 
   it('is empty when both title and body are blank', () => {
     expect(
-      welcomeMessageText({ ...DEFAULT_WELCOME_MESSAGE, title: ' ', body: '  ' }, vars),
-    ).toBe('')
+      welcomeMessageParts({ ...DEFAULT_WELCOME_MESSAGE, title: ' ', body: '  ' }, vars),
+    ).toEqual({ title: '', body: '', pingsMember: false })
   })
 })
 
