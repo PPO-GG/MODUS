@@ -1,0 +1,101 @@
+/* Discord markdown rendered by app/utils/discord-markdown.ts (EmbedPreview, welcome preview). */
+.discord-md .dmd-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  padding: 0.1em 0.3em;
+  background: #2b2d31;
+  border-radius: 3px;
+  color: #e3e5e8;
+}
+.discord-md .dmd-code-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  padding: 0.5em 0.75em;
+  margin: 0.25em 0;
+  background: #2b2d31;
+  border: 1px solid #1e1f22;
+  border-radius: 4px;
+  color: #e3e5e8;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.discord-md .dmd-link {
+  color: #00a8fc;
+  text-decoration: none;
+}
+.discord-md .dmd-link:hover {
+  text-decoration: underline;
+}
+.discord-md .dmd-underline {
+  text-decoration: underline;
+}
+.discord-md .dmd-spoiler {
+  background: #202225;
+  color: transparent;
+  border-radius: 3px;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: color 120ms;
+}
+.discord-md .dmd-spoiler:hover {
+  color: #dcddde;
+}
+.discord-md .dmd-quote {
+  display: inline-block;
+  border-left: 4px solid #4f545c;
+  padding-left: 0.5em;
+  color: #b9bbbe;
+}
+.discord-md .dmd-h1 {
+  display: block;
+  font-size: 1.25em;
+  font-weight: 700;
+  color: #fff;
+  margin: 0.15em 0;
+}
+.discord-md .dmd-h2 {
+  display: block;
+  font-size: 1.1em;
+  font-weight: 700;
+  color: #fff;
+  margin: 0.15em 0;
+}
+.discord-md .dmd-h3 {
+  display: block;
+  font-size: 1em;
+  font-weight: 700;
+  color: #fff;
+  margin: 0.15em 0;
+}
+.discord-md .dmd-mention {
+  background: rgba(88, 101, 242, 0.3);
+  color: #c9cdfb;
+  padding: 0 2px;
+  border-radius: 3px;
+  font-weight: 500;
+  cursor: default;
+}
+.discord-md .dmd-mention.dmd-channel {
+  background: rgba(88, 101, 242, 0.2);
+  color: #c9cdfb;
+}
+.discord-md .dmd-mention.dmd-role {
+  background: rgba(88, 101, 242, 0.15);
+}
+.discord-md .dmd-emoji {
+  display: inline-block;
+  padding: 0 2px;
+  color: #e3e5e8;
+  font-size: 0.9em;
+}
+.discord-md .dmd-timestamp {
+  background: #2b2d31;
+  color: #e3e5e8;
+  padding: 0 4px;
+  border-radius: 3px;
+  cursor: default;
+}
+.discord-md .dmd-quote-block {
+  display: block;
+  white-space: pre-wrap;
+}

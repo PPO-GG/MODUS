@@ -30,7 +30,7 @@ export default defineNuxtConfig({
       sizeLimitKb: 512,
     },
   },
-  css: ["~/assets/css/main.css"],
+  css: ["~/assets/css/main.css", "~/assets/css/discord-md.css"],
   runtimeConfig: {
     discordBotToken: "", // Set via NUXT_DISCORD_BOT_TOKEN
     renderApiKey: "", // Shared secret for bot→dashboard render API — Set via NUXT_RENDER_API_KEY
