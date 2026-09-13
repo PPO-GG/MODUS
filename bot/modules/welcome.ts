@@ -4,12 +4,16 @@ import {
   GuildMember,
   TextChannel,
   NewsChannel,
-  AttachmentBuilder,
   ChannelType,
+  MessageFlags,
 } from "discord.js";
 import { BotModule, ModuleManager } from "../ModuleManager";
-import { WelcomeTemplateSchema } from "../lib/schemas";
+import {
+  WelcomeTemplateSchema,
+  type WelcomeTemplateSettings,
+} from "../lib/schemas";
 import { parseSettings } from "../lib/validateSettings";
+import { buildWelcomeMessage } from "../lib/welcomeMessage";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -196,6 +200,42 @@ async function renderViaApi(
   return Buffer.from(await response.arrayBuffer());
 }
 
+/**
+ * Build the configured welcome post for a member. Only renders the image when
+ * the mode needs it; a failed render in "both" mode falls back to text-only
+ * (and is reported via `onRenderError`) instead of dropping the welcome.
+ */
+async function buildWelcomeForMember(
+  settings: WelcomeTemplateSettings,
+  member: GuildMember,
+  onRenderError: (err: unknown) => void,
+) {
+  const { message } = settings;
+  let image: Buffer | null = null;
+
+  if (message.mode !== "text") {
+    try {
+      image = await renderViaApi(member.guild.id, member);
+    } catch (err) {
+      if (message.mode === "image") throw err;
+      onRenderError(err);
+    }
+  }
+
+  return buildWelcomeMessage(
+    message,
+    {
+      userId: member.id,
+      username: member.user.username,
+      displayName: member.displayName,
+      tag: member.user.tag,
+      serverName: member.guild.name,
+      memberCount: member.guild.memberCount,
+    },
+    image,
+  );
+}
+
 // ── Module Definition ──────────────────────────────────────────────
 
 const welcomeModule: BotModule = {
@@ -277,15 +317,37 @@ const welcomeModule: BotModule = {
       case "test": {
         try {
           const member = interaction.member as GuildMember;
-          const imageBuffer = await renderViaApi(guildId, member);
-          const attachment = new AttachmentBuilder(imageBuffer, {
-            name: "welcome-test.png",
-          });
+          const settings =
+            parseSettings(
+              WelcomeTemplateSchema,
+              await db.getModuleSettings(guildId, "welcome"),
+              "welcome",
+              guildId,
+            ) ?? WelcomeTemplateSchema.parse({});
 
-          await interaction.editReply({
-            content: "Here's a preview of your welcome image:",
-            files: [attachment],
-          });
+          let renderError: unknown;
+          const payload = await buildWelcomeForMember(
+            settings,
+            member,
+            (err) => (renderError = err),
+          );
+
+          if (!payload) {
+            await interaction.editReply(
+              "❌ Nothing to send — the welcome text is empty. Add some text or switch the message mode on the dashboard.",
+            );
+            break;
+          }
+
+          // Components V2 messages can't carry `content`, so the preview is
+          // exactly what members see; any note goes in a follow-up.
+          await interaction.editReply(payload);
+          if (renderError) {
+            await interaction.followUp({
+              content: `⚠️ The image failed to render, so only the text was sent: ${renderError instanceof Error ? renderError.message : String(renderError)}`,
+              flags: MessageFlags.Ephemeral,
+            });
+          }
         } catch (err) {
           console.error("[Welcome] Failed to generate test image:", err);
           await moduleManager.logger.error("Error generating test image", guildId, err, "welcome");
@@ -323,9 +385,9 @@ export function registerWelcomeEvents(moduleManager: ModuleManager) {
       const settings = await db.getModuleSettings(guildId, "welcome");
       if (!settings || !settings.channelId) return;
 
-      const template: WelcomeTemplate =
+      const template =
         parseSettings(WelcomeTemplateSchema, settings, "welcome", guildId) ??
-        DEFAULT_TEMPLATE;
+        WelcomeTemplateSchema.parse(DEFAULT_TEMPLATE);
 
       // Get channel
       const channel = member.guild.channels.cache.get(template.channelId!);
@@ -335,19 +397,20 @@ export function registerWelcomeEvents(moduleManager: ModuleManager) {
       )
         return;
 
-      // Render via dashboard API
-      const imageBuffer = await renderViaApi(guildId, member);
-      const attachment = new AttachmentBuilder(imageBuffer, {
-        name: "welcome.png",
-      });
+      const payload = await buildWelcomeForMember(template, member, (err) =>
+        moduleManager.logger.error(
+          "Welcome image render failed; sending text only",
+          guildId,
+          err,
+          "welcome",
+        ),
+      );
+      if (!payload) return;
 
-      await channel.send({
-        content: `Welcome to **${member.guild.name}**, ${member}! 🎉`,
-        files: [attachment],
-      });
+      await channel.send(payload);
 
       moduleManager.logger.info(
-        `Sent welcome image for ${member.user.tag}`,
+        `Sent welcome message for ${member.user.tag}`,
         guildId,
         "welcome",
       );
