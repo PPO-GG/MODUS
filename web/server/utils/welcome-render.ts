@@ -3,6 +3,7 @@
  * bot-facing POST /api/welcome/render and the dashboard preview route.
  */
 import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { optimize } from "svgo";
 import { ensureTemplateFonts } from "./font-manager";
 import { getRepos } from "./db";
 import { getR2, getR2Object } from "./r2";
@@ -97,13 +98,43 @@ function resolvePlaceholders(text: string, data: WelcomeRenderRequest): string {
 
 const WELCOME_PROXY_PREFIX = "/api/welcome/bg/";
 
+function isSvgObject(object: { body: Buffer; contentType: string }): boolean {
+  if (object.contentType.includes("svg")) return true;
+  // Content types aren't reliable for uploads, so also sniff the markup.
+  return /<svg[\s>]/i.test(object.body.subarray(0, 4096).toString("utf8"));
+}
+
+/**
+ * @napi-rs/canvas renders SVGs with Skia, which ignores <style> sheets, so
+ * class-based fills (the default in Illustrator/Figma exports) draw black even
+ * though browsers — and therefore the editor — apply them. Inline the rules
+ * into style attributes, which Skia does honour.
+ */
+function inlineSvgStylesheets(body: Buffer): Buffer {
+  try {
+    const { data } = optimize(body.toString("utf8"), {
+      plugins: [{ name: "inlineStyles", params: { onlyMatchedOnce: false } }],
+    });
+    return Buffer.from(data);
+  } catch (err) {
+    console.warn("[Welcome Render] Failed to inline SVG styles:", err);
+    return body;
+  }
+}
+
+async function loadR2Image(object: { body: Buffer; contentType: string }) {
+  return loadImage(
+    isSvgObject(object) ? inlineSvgStylesheets(object.body) : object.body,
+  );
+}
+
 async function loadWelcomeBackground(reference: string): Promise<any | null> {
   if (reference.startsWith(WELCOME_PROXY_PREFIX) && getR2()) {
     const key = reference.slice(WELCOME_PROXY_PREFIX.length);
     try {
       const object = await getR2Object(key);
       if (!object) return null;
-      return await loadImage(object.body);
+      return await loadR2Image(object);
     } catch (err) {
       console.warn(
         "[Welcome Render] R2 background load failed, falling back to URL:",
@@ -122,7 +153,7 @@ async function loadWelcomeImageLayer(reference: string): Promise<any | null> {
 
   try {
     const object = await getR2Object(key);
-    return object ? await loadImage(object.body) : null;
+    return object ? await loadR2Image(object) : null;
   } catch (err) {
     console.warn("[Welcome Render] R2 asset load failed:", err);
     return null;
