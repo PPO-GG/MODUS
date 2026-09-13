@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.23.0...modus-v1.23.1) (2026-09-13)
+
+
+### 🐛 Bug Fixes
+
+* **bot:** send welcome messages as classic embeds to avoid desktop cropping ([#73](https://github.com/PPO-GG/MODUS/issues/73)) ([0e42c72](https://github.com/PPO-GG/MODUS/commit/0e42c723a2dc56ad326e5969edc1cb4d876f5d52))
+
 ## [1.23.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.22.0...modus-v1.23.0) (2026-09-13)
 
 
