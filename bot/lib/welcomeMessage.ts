@@ -1,15 +1,15 @@
 /**
- * Builds the welcome post: an optional text block and the rendered welcome
- * image, in the configured order, inside one Components V2 container.
+ * Builds the welcome post as a classic message: an embed holding the title,
+ * text and accent colour, plus the rendered welcome image.
+ *
+ * Classic embeds rather than a Components V2 media gallery, because the
+ * Discord desktop client crops gallery images wider than the message column
+ * (it keeps the image's full pixel height while narrowing the width).
  */
 
 import {
   AttachmentBuilder,
-  ContainerBuilder,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
-  MessageFlags,
-  TextDisplayBuilder,
+  EmbedBuilder,
   escapeMarkdown,
   type MessageMentionOptions,
 } from "discord.js";
@@ -27,9 +27,9 @@ export interface WelcomeMessageVars {
 }
 
 export interface WelcomeMessagePayload {
-  components: ContainerBuilder[];
+  content?: string;
+  embeds: EmbedBuilder[];
   files: AttachmentBuilder[];
-  flags: MessageFlags.IsComponentsV2;
   allowedMentions: MessageMentionOptions;
 }
 
@@ -55,9 +55,17 @@ export function applyWelcomePlaceholders(
 }
 
 /**
- * Returns null when there is nothing to post (image-only with no image, or
- * text-only with empty text). In "both" mode a missing image degrades to a
- * text-only post so a render outage doesn't silence welcomes.
+ * Layouts:
+ * - text-first: one embed with the image inside it, at the bottom.
+ * - image-first: the image as a plain attachment, which Discord renders above
+ *   the embed.
+ * - text / image mode: just the embed / just the attachment.
+ *
+ * Mentions inside embeds render but never notify, so when the text uses
+ * {user} the member is also mentioned in the message content.
+ *
+ * Returns null when there is nothing to post. In "both" mode a missing image
+ * degrades to a text-only post so a render outage doesn't silence welcomes.
  */
 export function buildWelcomeMessage(
   message: WelcomeMessageSettings,
@@ -67,46 +75,35 @@ export function buildWelcomeMessage(
   const wantsText = message.mode !== "image";
   const wantsImage = message.mode !== "text";
 
-  const title = message.title.trim();
-  const body = message.body.trim();
-  const text = wantsText
-    ? applyWelcomePlaceholders(
-        [title && `# ${title}`, body].filter(Boolean).join("\n"),
-        vars,
-      )
-    : "";
+  const title = wantsText ? message.title.trim() : "";
+  const body = wantsText ? message.body.trim() : "";
+  const hasText = Boolean(title || body);
   const hasImage = wantsImage && image !== null;
 
-  if (!text && !hasImage) return null;
+  if (!hasText && !hasImage) return null;
 
-  const textBlock = text ? new TextDisplayBuilder().setContent(text) : null;
-  const gallery = hasImage
-    ? new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL(`attachment://${WELCOME_IMAGE_NAME}`),
-      )
-    : null;
-
-  const container = new ContainerBuilder();
-  if (message.accentColor) {
-    container.setAccentColor(parseInt(message.accentColor.slice(1), 16));
+  const embeds: EmbedBuilder[] = [];
+  if (hasText) {
+    const embed = new EmbedBuilder();
+    if (title) embed.setTitle(applyWelcomePlaceholders(title, vars));
+    if (body) embed.setDescription(applyWelcomePlaceholders(body, vars));
+    if (message.accentColor) {
+      embed.setColor(parseInt(message.accentColor.slice(1), 16));
+    }
+    if (hasImage && message.order === "text-first") {
+      embed.setImage(`attachment://${WELCOME_IMAGE_NAME}`);
+    }
+    embeds.push(embed);
   }
 
-  const addText = () => textBlock && container.addTextDisplayComponents(textBlock);
-  const addImage = () => gallery && container.addMediaGalleryComponents(gallery);
-  if (message.order === "image-first") {
-    addImage();
-    addText();
-  } else {
-    addText();
-    addImage();
-  }
+  const pingsMember = hasText && /\{user\}/.test(title + body);
 
   return {
-    components: [container],
+    content: pingsMember ? `<@${vars.userId}>` : undefined,
+    embeds,
     files: hasImage
       ? [new AttachmentBuilder(image!, { name: WELCOME_IMAGE_NAME })]
       : [],
-    flags: MessageFlags.IsComponentsV2,
-    allowedMentions: { parse: ["roles"], users: [vars.userId] },
+    allowedMentions: { users: pingsMember ? [vars.userId] : [] },
   };
 }

@@ -339,8 +339,8 @@ const welcomeModule: BotModule = {
             break;
           }
 
-          // Components V2 messages can't carry `content`, so the preview is
-          // exactly what members see; any note goes in a follow-up.
+          // Send the post exactly as members would see it; any note about a
+          // failed render goes in a separate follow-up.
           await interaction.editReply(payload);
           if (renderError) {
             await interaction.followUp({

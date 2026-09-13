@@ -55,24 +55,37 @@ export function normalizeWelcomeMessage(
   return { ...DEFAULT_WELCOME_MESSAGE, ...saved };
 }
 
+export interface WelcomeMessageParts {
+  /** Embed title, placeholders filled. */
+  title: string;
+  /** Embed description markdown, placeholders filled. */
+  body: string;
+  /** The bot also mentions the member above the embed (embed mentions don't notify). */
+  pingsMember: boolean;
+}
+
 /**
- * The markdown the bot will post for this message, with placeholders filled.
- * `{user}` becomes a mention so the preview renders it as a pill. Empty when
- * the mode is image-only or there is no text.
+ * The embed text the bot will post, with placeholders filled. `{user}`
+ * becomes a mention so the preview renders it as a pill. Empty when the mode
+ * is image-only or there is no text.
  */
-export function welcomeMessageText(
+export function welcomeMessageParts(
   message: WelcomeMessage,
   vars: WelcomePreviewVars,
-): string {
-  if (message.mode === "image") return "";
+): WelcomeMessageParts {
+  if (message.mode === "image") return { title: "", body: "", pingsMember: false };
   const title = message.title.trim();
   const body = message.body.trim();
-  return [title && `# ${title}`, body]
-    .filter(Boolean)
-    .join("\n")
-    .replace(/\{user\}/g, `<@${vars.userId}>`)
-    .replace(/\{username\}/g, vars.username)
-    .replace(/\{displayname\}/g, vars.displayName)
-    .replace(/\{server_name\}/g, vars.serverName)
-    .replace(/\{member_count\}/g, String(vars.memberCount));
+  const fill = (text: string) =>
+    text
+      .replace(/\{user\}/g, `<@${vars.userId}>`)
+      .replace(/\{username\}/g, vars.username)
+      .replace(/\{displayname\}/g, vars.displayName)
+      .replace(/\{server_name\}/g, vars.serverName)
+      .replace(/\{member_count\}/g, String(vars.memberCount));
+  return {
+    title: fill(title),
+    body: fill(body),
+    pingsMember: /\{user\}/.test(title + body),
+  };
 }

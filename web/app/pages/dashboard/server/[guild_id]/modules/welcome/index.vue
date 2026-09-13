@@ -217,69 +217,56 @@
                 <span class="text-[11px] text-gray-400">Today at {{ previewTime }}</span>
               </div>
 
-              <div
-                v-if="!previewText && !showImage"
-                class="text-sm italic text-gray-500"
-              >
+              <div v-if="!hasText && !showImage" class="text-sm italic text-gray-500">
                 Nothing will be sent — add some text or switch to Image or Both.
               </div>
 
-              <div
-                v-else
-                class="rounded-lg bg-[#2b2d31] border border-white/5 p-3 space-y-3 max-w-[520px]"
-                :style="
-                  message.accentColor
-                    ? { borderLeft: `4px solid ${message.accentColor}` }
-                    : undefined
-                "
-              >
-                <template v-for="block in previewBlocks" :key="block">
+              <template v-else>
+                <!-- Mentions inside embeds don't notify, so the bot pings above it -->
+                <div
+                  v-if="parts.pingsMember"
+                  class="discord-md text-sm text-[#dbdee1] mb-1"
+                  v-html="renderMd(`<@${previewUserId}>`)"
+                />
+
+                <!-- Image first (or image only): a plain attachment above the embed -->
+                <DashboardWelcomePreviewImage
+                  v-if="showImage && (!hasText || message.order === 'image-first')"
+                  :src="imageUrl"
+                  :edit-to="editorPath"
+                  class="max-w-[520px] mb-2"
+                />
+
+                <div
+                  v-if="hasText"
+                  class="rounded bg-[#2b2d31] border-l-4 px-4 py-3 max-w-[432px] space-y-2"
+                  :style="{ borderLeftColor: message.accentColor ?? '#1e1f22' }"
+                >
                   <div
-                    v-if="block === 'text'"
-                    class="discord-md text-sm text-[#dbdee1] whitespace-pre-wrap break-words"
-                    v-html="previewHtml"
+                    v-if="parts.title"
+                    class="discord-md text-base font-semibold text-white break-words"
+                    v-html="renderMd(parts.title)"
                   />
                   <div
-                    v-else
-                    class="relative rounded-md overflow-hidden bg-black/20"
-                    :class="{ 'aspect-[1024/500]': !imageLoaded }"
-                  >
-                    <img
-                      v-if="!imageError"
-                      :src="imageUrl"
-                      alt="Welcome image preview"
-                      class="block w-full h-auto"
-                      :class="{ 'absolute inset-0 opacity-0': !imageLoaded }"
-                      @load="imageLoaded = true"
-                      @error="imageError = true"
-                    />
-                    <div
-                      v-if="!imageLoaded"
-                      class="absolute inset-0 flex items-center justify-center text-xs text-gray-500"
-                    >
-                      <span v-if="imageError">Couldn't render the preview image.</span>
-                      <UIcon v-else name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
-                    </div>
-                    <div class="absolute bottom-2 right-2">
-                      <UButton
-                        :to="`/dashboard/server/${guildId}/modules/welcome/editor`"
-                        icon="i-heroicons-pencil-square"
-                        label="Edit image"
-                        color="neutral"
-                        variant="solid"
-                        size="sm"
-                        class="shadow-lg"
-                      />
-                    </div>
-                  </div>
-                </template>
-              </div>
+                    v-if="parts.body"
+                    class="discord-md text-sm text-[#dbdee1] whitespace-pre-wrap break-words"
+                    v-html="renderMd(parts.body)"
+                  />
+                  <!-- Text first: the image sits inside the embed, at the bottom -->
+                  <DashboardWelcomePreviewImage
+                    v-if="showImage && message.order === 'text-first'"
+                    :src="imageUrl"
+                    :edit-to="editorPath"
+                    class="!mt-3"
+                  />
+                </div>
+              </template>
             </div>
           </div>
 
           <UButton
             v-if="message.mode === 'text'"
-            :to="`/dashboard/server/${guildId}/modules/welcome/editor`"
+            :to="editorPath"
             icon="i-heroicons-pencil-square"
             label="Edit welcome image"
             color="neutral"
@@ -302,7 +289,7 @@ import {
   WELCOME_MESSAGE_ORDERS,
   WELCOME_PLACEHOLDERS,
   normalizeWelcomeMessage,
-  welcomeMessageText,
+  welcomeMessageParts,
   type WelcomeMessage,
 } from "~/utils/welcome-message";
 
@@ -386,9 +373,11 @@ const displayName = computed(
   () => user.value?.globalName || user.value?.username || "New Member",
 );
 
-const previewText = computed(() =>
-  welcomeMessageText(message.value, {
-    userId: user.value?.id ?? "0",
+const previewUserId = computed(() => user.value?.id ?? "0");
+
+const parts = computed(() =>
+  welcomeMessageParts(message.value, {
+    userId: previewUserId.value,
     username: user.value?.username ?? "newmember",
     displayName: displayName.value,
     serverName: state.value.guild?.name ?? "this server",
@@ -396,31 +385,26 @@ const previewText = computed(() =>
   }),
 );
 
-const previewHtml = computed(() =>
-  renderDiscordMarkdown(previewText.value, {
-    channels: state.value.channels.map((c) => ({ id: c.id, name: c.name })),
-    roles: state.value.roles.map((r) => ({
-      id: r.id,
-      name: r.name,
-      color: r.color ? `#${r.color.toString(16).padStart(6, "0")}` : null,
-    })),
-    users: user.value ? [{ id: user.value.id, name: displayName.value }] : [],
-  }),
-);
+const hasText = computed(() => Boolean(parts.value.title || parts.value.body));
+
+const markdownContext = computed(() => ({
+  channels: state.value.channels.map((c) => ({ id: c.id, name: c.name })),
+  roles: state.value.roles.map((r) => ({
+    id: r.id,
+    name: r.name,
+    color: r.color ? `#${r.color.toString(16).padStart(6, "0")}` : null,
+  })),
+  users: user.value ? [{ id: user.value.id, name: displayName.value }] : [],
+}));
+
+const renderMd = (text: string) => renderDiscordMarkdown(text, markdownContext.value);
 
 const showImage = computed(() => message.value.mode !== "text");
 
-const previewBlocks = computed<("text" | "image")[]>(() => {
-  const blocks: ("text" | "image")[] = [];
-  if (previewText.value) blocks.push("text");
-  if (showImage.value) blocks.push("image");
-  return message.value.order === "image-first" ? blocks.reverse() : blocks;
-});
+const editorPath = `/dashboard/server/${guildId}/modules/welcome/editor`;
 
 // Cache-bust once per visit so returning from the editor shows the new design.
 const imageUrl = `/api/welcome/preview/${encodeURIComponent(guildId)}?t=${Date.now()}`;
-const imageLoaded = ref(false);
-const imageError = ref(false);
 
 const previewTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
