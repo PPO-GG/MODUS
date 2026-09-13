@@ -116,6 +116,23 @@ const TemplateElementSchema = z
     }
   });
 
+// What gets posted alongside (or instead of) the rendered image. Sent as a
+// single Components V2 container; `order` only matters when mode is "both".
+export const WelcomeMessageSchema = z.object({
+  mode: z.literal(["image", "text", "both"]).default("both"),
+  order: z.literal(["text-first", "image-first"]).default("text-first"),
+  title: z.string().max(256).default(""),
+  // Matches the hardcoded line the module sent before this was configurable.
+  body: z.string().max(2000).default("Welcome to **{server_name}**, {user}! 🎉"),
+  accentColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .nullable()
+    .default(null),
+});
+
+export type WelcomeMessageSettings = z.infer<typeof WelcomeMessageSchema>;
+
 export const WelcomeTemplateSchema = z.object({
   canvasWidth: z.number().default(1024),
   canvasHeight: z.number().default(500),
@@ -131,6 +148,7 @@ export const WelcomeTemplateSchema = z.object({
       { message: WELCOME_IMAGE_COUNT_ERROR },
     ),
   channelId: z.string().optional(),
+  message: WelcomeMessageSchema.default(() => WelcomeMessageSchema.parse({})),
 });
 
 export type WelcomeTemplateSettings = z.infer<typeof WelcomeTemplateSchema>;
