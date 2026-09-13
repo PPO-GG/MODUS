@@ -241,9 +241,9 @@ async function buildWelcomeForMember(
 const welcomeModule: BotModule = {
   name: "welcome",
   registerEvents: registerWelcomeEvents,
-  description: "Send beautiful welcome images when new members join",
+  description: "Greet new members with a custom image, text, or both",
   meta: {
-    displayName: "Welcome Image",
+    displayName: "Welcome",
     category: "engagement",
     icon: "i-lucide-party-popper",
     color: "purple",

@@ -3,130 +3,14 @@
     <!-- TOP TOOLBAR -->
     <div class="we-toolbar we-glass-panel rounded-2xl">
       <div class="we-toolbar-group">
-        <USelectMenu
-          v-if="!channelsLoading"
-          v-model="template.channelId"
-          :items="channelOptions"
-          placeholder="Channel..."
-          icon="i-heroicons-hashtag"
+        <UButton
+          :to="`/dashboard/server/${guildId}/modules/welcome`"
+          icon="i-heroicons-arrow-left"
+          label="Welcome"
+          color="neutral"
+          variant="ghost"
           size="xs"
-          class="w-44"
         />
-        <span v-else class="text-[11px] text-zinc-500 flex items-center gap-1">
-          <UIcon name="i-heroicons-arrow-path" class="animate-spin" /> Loading…
-        </span>
-        <UPopover>
-          <UTooltip text="What gets posted with the image">
-            <UButton
-              color="neutral"
-              variant="outline"
-              size="xs"
-              icon="i-heroicons-chat-bubble-bottom-center-text"
-              :label="messageModeLabel"
-              aria-label="Welcome message"
-            />
-          </UTooltip>
-          <template #content>
-            <div class="p-3 space-y-3 w-80 select-text">
-              <div>
-                <p class="we-prop-label mb-1.5">Send</p>
-                <UFieldGroup size="xs" class="w-full">
-                  <UButton
-                    v-for="opt in MESSAGE_MODES"
-                    :key="opt.value"
-                    :label="opt.label"
-                    :color="template.message.mode === opt.value ? 'primary' : 'neutral'"
-                    :variant="template.message.mode === opt.value ? 'solid' : 'outline'"
-                    class="flex-1 justify-center"
-                    @click="template.message.mode = opt.value"
-                  />
-                </UFieldGroup>
-              </div>
-
-              <div v-if="template.message.mode === 'both'">
-                <p class="we-prop-label mb-1.5">Order</p>
-                <UFieldGroup size="xs" class="w-full">
-                  <UButton
-                    v-for="opt in MESSAGE_ORDERS"
-                    :key="opt.value"
-                    :label="opt.label"
-                    :icon="opt.icon"
-                    :color="template.message.order === opt.value ? 'primary' : 'neutral'"
-                    :variant="template.message.order === opt.value ? 'solid' : 'outline'"
-                    class="flex-1 justify-center"
-                    @click="template.message.order = opt.value"
-                  />
-                </UFieldGroup>
-              </div>
-
-              <template v-if="template.message.mode !== 'image'">
-                <div>
-                  <p class="we-prop-label mb-1">Title</p>
-                  <UInput
-                    v-model="template.message.title"
-                    :maxlength="256"
-                    placeholder="Optional heading"
-                    size="xs"
-                    class="w-full"
-                  />
-                </div>
-
-                <div>
-                  <p class="we-prop-label mb-1">Text</p>
-                  <MarkdownToolbar
-                    v-model="template.message.body"
-                    :target="messageBodyRef"
-                  />
-                  <textarea
-                    ref="messageBodyRef"
-                    v-model="template.message.body"
-                    :maxlength="2000"
-                    rows="5"
-                    placeholder="Welcome to **{server_name}**, {user}! 🎉"
-                    class="w-full rounded-b-xl border border-white/10 bg-gray-950/60 px-2.5 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-primary-500/60 resize-y"
-                  />
-                  <div class="flex items-center justify-between mt-1">
-                    <div class="flex flex-wrap gap-1">
-                      <button
-                        v-for="ph in MESSAGE_PLACEHOLDERS"
-                        :key="ph"
-                        type="button"
-                        class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[10px] font-mono text-zinc-400 hover:text-zinc-200 transition-colors"
-                        @click="insertMessagePlaceholder(ph)"
-                      >
-                        {{ ph }}
-                      </button>
-                    </div>
-                    <span class="text-[10px] text-zinc-600 tabular-nums shrink-0 ml-2">
-                      {{ template.message.body.length }}/2000
-                    </span>
-                  </div>
-                </div>
-              </template>
-
-              <div class="border-t border-white/10 pt-3">
-                <div class="flex items-center justify-between mb-1.5">
-                  <p class="we-prop-label">Accent color</p>
-                  <USwitch
-                    :model-value="template.message.accentColor !== null"
-                    size="xs"
-                    @update:model-value="
-                      template.message.accentColor = $event ? '#a78bfa' : null
-                    "
-                  />
-                </div>
-                <div v-if="template.message.accentColor !== null" class="space-y-2">
-                  <UColorPicker v-model="template.message.accentColor" size="sm" />
-                  <UInput
-                    v-model="template.message.accentColor"
-                    size="xs"
-                    class="font-mono w-full"
-                  />
-                </div>
-              </div>
-            </div>
-          </template>
-        </UPopover>
       </div>
 
       <div class="we-toolbar-sep" />
@@ -1515,8 +1399,6 @@ const { loadFont, loadTemplateFonts } = useGoogleFonts();
 
 const props = defineProps<{
   guildId: string;
-  channels: any[];
-  channelsLoading: boolean;
 }>();
 
 const emit = defineEmits<{ (e: "saved"): void }>();
@@ -1576,52 +1458,31 @@ interface WelcomeTemplate {
   backgroundColor: string;
   backgroundImage?: string;
   elements: TemplateElement[];
-  channelId?: string;
-  message: WelcomeMessage;
 }
 
-// Mirrors WelcomeMessageSchema in bot/lib/schemas.ts.
-interface WelcomeMessage {
-  mode: "image" | "text" | "both";
-  order: "text-first" | "image-first";
-  title: string;
-  body: string;
-  accentColor: string | null;
+// Only these keys belong to the canvas editor. The rest of the welcome
+// settings (channel, message) are owned by the welcome overview page.
+const CANVAS_KEYS = [
+  "canvasWidth",
+  "canvasHeight",
+  "backgroundColor",
+  "backgroundImage",
+  "elements",
+] as const;
+
+function pickCanvas(settings: Record<string, any>): Partial<WelcomeTemplate> {
+  return Object.fromEntries(
+    CANVAS_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]]),
+  );
 }
 
-const DEFAULT_MESSAGE: WelcomeMessage = {
-  mode: "both",
-  order: "text-first",
-  title: "",
-  body: "Welcome to **{server_name}**, {user}! 🎉",
-  accentColor: null,
-};
-
-const MESSAGE_MODES: { label: string; value: WelcomeMessage["mode"] }[] = [
-  { label: "Image", value: "image" },
-  { label: "Text", value: "text" },
-  { label: "Both", value: "both" },
-];
-
-const MESSAGE_ORDERS: {
-  label: string;
-  icon: string;
-  value: WelcomeMessage["order"];
-}[] = [
-  { label: "Text first", icon: "i-heroicons-bars-3-bottom-left", value: "text-first" },
-  { label: "Image first", icon: "i-heroicons-photo", value: "image-first" },
-];
-
-const MESSAGE_PLACEHOLDERS = [
-  "{user}",
-  "{username}",
-  "{displayname}",
-  "{server_name}",
-  "{member_count}",
-];
+// Every canvas key, even unset ones: an absent backgroundImage must override
+// (and so clear) the saved one when merged, e.g. after Reset.
+function canvasPatch(t: WelcomeTemplate): Record<string, unknown> {
+  return Object.fromEntries(CANVAS_KEYS.map((k) => [k, t[k]]));
+}
 
 const DEFAULT_TEMPLATE: WelcomeTemplate = {
-  message: DEFAULT_MESSAGE,
   canvasWidth: 1024,
   canvasHeight: 500,
   backgroundColor: "#1a1a2e",
@@ -1708,8 +1569,7 @@ const DEFAULT_TEMPLATE: WelcomeTemplate = {
 interface TemplatePreset {
   name: string;
   preview: string;
-  // Presets only describe the canvas; the message settings are kept as-is.
-  template: Omit<WelcomeTemplate, "message">;
+  template: WelcomeTemplate;
 }
 
 const PRESETS: TemplatePreset[] = [
@@ -2204,12 +2064,9 @@ function removeBgImage() {
 }
 
 function applyPreset(preset: TemplatePreset) {
-  const channelId = template.value.channelId;
   const bgImage = template.value.backgroundImage;
-  const message = template.value.message;
-  template.value = { ...JSON.parse(JSON.stringify(preset.template)), message };
-  // Preserve channel selection, message text and background image
-  if (channelId) template.value.channelId = channelId;
+  template.value = JSON.parse(JSON.stringify(preset.template));
+  // Preserve background image
   if (bgImage) template.value.backgroundImage = bgImage;
   selectedElementIds.value = new Set();
 }
@@ -2272,33 +2129,6 @@ const toolTypes = [
     color: "text-pink-400",
   },
 ];
-
-const channelOptions = computed(() =>
-  props.channels.map((c) => ({ label: `#${c.name}`, value: c.id })),
-);
-
-// ── Welcome message (text posted with the image) ──
-
-const messageBodyRef = ref<HTMLTextAreaElement | null>(null);
-
-const messageModeLabel = computed(() => {
-  const { mode, order } = template.value.message;
-  if (mode === "image") return "Image only";
-  if (mode === "text") return "Text only";
-  return order === "text-first" ? "Text + image" : "Image + text";
-});
-
-function insertMessagePlaceholder(placeholder: string) {
-  const el = messageBodyRef.value;
-  const body = template.value.message.body;
-  const start = el?.selectionStart ?? body.length;
-  const end = el?.selectionEnd ?? body.length;
-  template.value.message.body = body.slice(0, start) + placeholder + body.slice(end);
-  nextTick(() => {
-    el?.focus();
-    el?.setSelectionRange(start + placeholder.length, start + placeholder.length);
-  });
-}
 
 const reversedElements = computed(() => [...template.value.elements].reverse());
 
@@ -3284,9 +3114,7 @@ async function loadTemplate() {
     if (cfg.settings && Object.keys(cfg.settings).length > 0) {
       template.value = {
         ...JSON.parse(JSON.stringify(DEFAULT_TEMPLATE)),
-        ...cfg.settings,
-        // Templates saved before the message options existed have no `message`.
-        message: { ...DEFAULT_MESSAGE, ...cfg.settings.message },
+        ...pickCanvas(cfg.settings),
       };
     }
   } catch (err) {
@@ -3305,15 +3133,18 @@ async function saveTemplate() {
   }
   saving.value = true;
   try {
-    await $fetch(
-      `/api/guild-configs/${encodeURIComponent(
-        props.guildId,
-      )}/${encodeURIComponent("welcome")}`,
-      {
-        method: "PUT",
-        body: { settings: template.value },
+    const url = `/api/guild-configs/${encodeURIComponent(
+      props.guildId,
+    )}/${encodeURIComponent("welcome")}`;
+    // PUT replaces the whole settings blob, so merge the canvas over the
+    // latest saved settings rather than a copy loaded when the page opened.
+    const current = await $fetch<{ settings: Record<string, any> | null }>(url);
+    await $fetch(url, {
+      method: "PUT",
+      body: {
+        settings: { ...(current.settings ?? {}), ...canvasPatch(template.value) },
       },
-    );
+    });
     toast.add({
       title: "Saved!",
       description: "Welcome template saved.",
