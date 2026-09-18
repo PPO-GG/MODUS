@@ -290,7 +290,7 @@ pnpm run licenses:generate
 - **delegates** `1.0.0` ([source](https://github.com/visionmedia/node-delegates#readme))
 - **depd** `2.0.0` — Douglas Christopher Wilson ([source](https://github.com/dougwilson/nodejs-depd#readme))
 - **destr** `2.0.5` ([source](https://github.com/unjs/destr#readme))
-- **devalue** `5.9.0` ([source](https://github.com/sveltejs/devalue#readme))
+- **devalue** `5.9.2` ([source](https://github.com/sveltejs/devalue#readme))
 - **devframe** `0.7.16` — Anthony Fu ([source](https://github.com/devframes/devframe#readme))
 - **discord-api-types** `0.38.52` — Vlad Frangu ([source](https://discord-api-types.dev))
 - **dom-serializer** `2.0.0` — Felix Boehm ([source](https://github.com/cheeriojs/dom-serializer#readme))
