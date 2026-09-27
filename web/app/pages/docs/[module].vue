@@ -65,7 +65,8 @@ definePageMeta({
 });
 
 const route = useRoute();
-const { modules, pending, error } = useDocs();
+const { modules, pending, error, ready } = useDocs();
+await ready;
 
 const currentModule = computed(() =>
   (modules.value ?? []).find(
@@ -73,9 +74,28 @@ const currentModule = computed(() =>
   ),
 );
 
-useHead(() => ({
-  title: currentModule.value
-    ? `${currentModule.value.name.charAt(0).toUpperCase()}${currentModule.value.name.slice(1)} — Docs`
-    : "Documentation",
-}));
+const moduleLabel = computed(() =>
+  currentModule.value
+    ? `${currentModule.value.name.charAt(0).toUpperCase()}${currentModule.value.name.slice(1)}`
+    : "",
+);
+const moduleDescription = computed(() =>
+  currentModule.value
+    ? `${currentModule.value.description} ${currentModule.value.commands.length} slash command${currentModule.value.commands.length !== 1 ? "s" : ""} in the MODUS Discord bot.`
+    : "MODUS Discord bot documentation.",
+);
+
+useSeoMeta({
+  title: () =>
+    moduleLabel.value ? `${moduleLabel.value} Commands — Docs` : "Documentation",
+  description: moduleDescription,
+  ogTitle: () =>
+    moduleLabel.value ? `${moduleLabel.value} — MODUS Docs` : "MODUS Docs",
+  ogDescription: moduleDescription,
+});
+defineOgImage("Modus", {
+  eyebrow: "Docs",
+  title: moduleLabel.value || "Documentation",
+  description: currentModule.value?.description ?? "",
+});
 </script>

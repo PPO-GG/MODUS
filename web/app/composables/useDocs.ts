@@ -24,14 +24,16 @@ export interface DocsModule {
  * request instead of both fetching independently.
  */
 export function useDocs() {
-  const { data, pending, error } = useFetch<DocsModule[]>(
-    "/api/docs/modules",
-    { key: "docs-modules" },
-  );
+  const request = useFetch<DocsModule[]>("/api/docs/modules", {
+    key: "docs-modules",
+  });
 
   return {
-    modules: data,
-    pending,
-    error,
+    modules: request.data,
+    pending: request.pending,
+    error: request.error,
+    // Await when something must read the data during setup (e.g. OG image
+    // props, which are captured once rather than tracked reactively).
+    ready: Promise.resolve(request).then(() => {}),
   };
 }

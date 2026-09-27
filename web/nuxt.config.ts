@@ -6,20 +6,51 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "pinia-plugin-persistedstate/nuxt",
     "nuxt-auth-utils",
+    "@nuxtjs/robots",
+    "@nuxtjs/sitemap",
+    "nuxt-og-image",
   ],
+  // Shared by robots/sitemap/og-image for absolute URLs. Override with
+  // NUXT_SITE_URL for staging or self-hosted deployments.
+  site: {
+    url: "https://modus.ppo.gg",
+    name: "MODUS",
+    description:
+      "Free all-in-one Discord bot: music, moderation, anti-raid, AI, voice recordings, XP leaderboards and tickets — configured from a web dashboard.",
+    defaultLocale: "en",
+  },
+  robots: {
+    // Private / app-only surfaces. /api stays crawlable because public pages
+    // fetch from it client-side (e.g. XP pagination) and Google needs those
+    // responses to render them. /ticket is deliberately NOT disallowed:
+    // it's noindexed via routeRules instead, because a robots.txt block
+    // stops crawlers from ever seeing the noindex, so already-known links
+    // could linger in the index as bare URLs.
+    disallow: ["/dashboard", "/auth", "/login", "/register"],
+  },
+  sitemap: {
+    // Dynamic entries (docs modules, public XP leaderboards).
+    sources: ["/api/__sitemap__/urls"],
+    exclude: ["/ticket/**", "/xp/*/*"],
+  },
   app: {
     head: {
       title: "MODUS | Modular Discord Utility System",
       // titleTemplate is set at runtime in app.vue via useHead — the static
       // config here only accepts a string template, but we need function
       // logic to avoid double-wrapping the default title (see app.vue).
+      htmlAttrs: { lang: "en" },
       link: [{ rel: "icon", type: "image/svg+xml", href: "/modus.svg" }],
       meta: [
         {
           name: "description",
           content:
-            "MODUS | A modular system for managing and configuring your Discord bot.",
+            "Free all-in-one Discord bot: music, moderation, anti-raid, AI, voice recordings, XP leaderboards and tickets — configured from a web dashboard.",
         },
+        { name: "theme-color", content: "#0a0a0f" },
+        { property: "og:site_name", content: "MODUS" },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
       ],
     },
   },
@@ -84,6 +115,8 @@ export default defineNuxtConfig({
     // Keeping them SPA-only avoids 404/500 on hard refresh.
     "/dashboard": { ssr: false },
     "/dashboard/**": { ssr: false },
+    // Support transcripts are shared by link only — never index them.
+    "/ticket/**": { robots: false },
   },
   future: {
     compatibilityVersion: 4,

@@ -330,4 +330,5 @@ useHead({
     },
   ],
 });
+defineOgImage("Modus", { eyebrow: "Legal", title: "Terms of Service" });
 </script>

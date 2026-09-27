@@ -14,6 +14,13 @@ useHead({
 
 const userStore = useUserStore();
 const route = useRoute();
+
+// Canonical + og:url for every page, query string stripped so paginated or
+// filtered variants (?page=2, ?search=) consolidate onto one indexed URL.
+const siteUrl = useSiteConfig().url.replace(/\/$/, "");
+const canonicalUrl = computed(() => `${siteUrl}${route.path}`);
+useHead({ link: [{ rel: "canonical", href: canonicalUrl }] });
+useSeoMeta({ ogUrl: canonicalUrl });
 const isAuthReady = ref(false);
 
 // Only /dashboard/** renders per-user content that needs to wait on the
