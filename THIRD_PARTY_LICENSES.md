@@ -347,7 +347,7 @@ pnpm run licenses:generate
 - **fast-xml-builder** `1.3.1` — Amit Gupta ([source](https://github.com/NaturalIntelligence/fast-xml-builder#readme))
 - **fast-xml-parser** `5.11.1` — Amit Gupta ([source](https://github.com/NaturalIntelligence/fast-xml-parser#readme))
 - **fdir** `6.5.0` — thecodrr ([source](https://github.com/thecodrr/fdir#readme))
-- **fflate** `0.7.3` — Arjun Barrett ([source](https://101arrowz.github.io/fflate))
+- **fflate** `0.7.5` — Arjun Barrett ([source](https://101arrowz.github.io/fflate))
 - **file-uri-to-path** `1.0.0` — Nathan Rajlich ([source](https://github.com/TooTallNate/file-uri-to-path))
 - **fill-range** `7.1.1` — Jon Schlinkert ([source](https://github.com/jonschlinkert/fill-range))
 - **flattie** `1.1.1` — Luke Edwards ([source](https://github.com/lukeed/flattie#readme))
