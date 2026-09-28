@@ -525,11 +525,16 @@ const dashboardRoleOptions = computed(() =>
     })),
 );
 
-// Module counts
+// Module counts — only modules that declare dashboard meta (a category),
+// matching what the grid renders. Meta-less modules like `reload` and the
+// hidden legacy `milestones` would otherwise inflate "All Categories".
+const listedModules = computed(() =>
+  state.value.modules.filter((m) => getModuleDisplay(m).category),
+);
 const activeModuleCount = computed(() => {
-  return state.value.modules.filter((m) => isModuleEnabled(m.name)).length;
+  return listedModules.value.filter((m) => isModuleEnabled(m.name)).length;
 });
-const totalModuleCount = computed(() => state.value.modules.length);
+const totalModuleCount = computed(() => listedModules.value.length);
 
 // Category module counts
 const categoryCounts = computed(() => {
