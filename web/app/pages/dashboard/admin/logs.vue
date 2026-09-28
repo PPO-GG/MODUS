@@ -33,9 +33,9 @@
       <div v-if="historyLoading && !state.visible.length" class="flex h-full min-h-[24rem] items-center justify-center text-sm text-gray-400" aria-busy="true"><UIcon name="i-lucide-loader-circle" class="mr-2 size-5 animate-spin" /> Searching retained logs</div>
       <div v-else-if="!state.visible.length" class="flex h-full min-h-[24rem] flex-col items-center justify-center px-6 text-center"><UIcon name="i-lucide-terminal" class="size-8 text-gray-600" /><p class="mt-3 text-sm font-semibold text-gray-200">No logs in this view</p><p class="mt-1 max-w-md text-xs text-gray-500">Adjust the filters, refresh retained history, or wait for a matching live event.</p></div>
       <div v-else ref="terminal" class="h-full overflow-auto font-mono text-[11px] leading-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary" tabindex="0" aria-label="Scrollable log entries">
-        <article v-for="log in state.visible" :key="log.$id" class="group grid min-w-[48rem] grid-cols-[5.5rem_3.5rem_3rem_minmax(0,1fr)] gap-x-3 border-b border-white/[0.035] px-4 py-1.5 hover:bg-white/[0.035]">
-          <time class="text-gray-500" :datetime="String(log.timestamp)">{{ formatTime(log.timestamp) }}</time><span class="font-black uppercase" :class="levelClass(log.level)">[{{ log.level }}]</span><span class="text-cyan-400/70">S{{ log.shardId ?? '—' }}</span>
-          <div class="min-w-0"><div class="flex flex-wrap items-baseline gap-x-2"><NuxtLink v-if="guildLink(log.guildId)" :to="guildLink(log.guildId)!" class="rounded text-violet-300/80 underline-offset-2 hover:text-violet-200 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">[{{ log.guildId }}]</NuxtLink><span v-else-if="log.guildId" class="text-gray-500">[{{ log.guildId }}]</span><span v-if="log.source" class="text-emerald-300/70">[{{ log.source }}]</span><span class="break-words text-gray-200">{{ log.message }}</span></div></div>
+        <article v-for="{ log, count, oldestTimestamp } in groupedLogs" :key="log.$id" class="group grid min-w-[48rem] grid-cols-[5.5rem_3.5rem_3rem_minmax(0,1fr)] gap-x-3 border-b border-white/[0.035] px-4 py-1.5 hover:bg-white/[0.035]">
+          <time class="text-gray-500" :datetime="String(log.timestamp)" :title="count > 1 ? `${formatTime(oldestTimestamp)} – ${formatTime(log.timestamp)}` : undefined">{{ formatTime(log.timestamp) }}</time><span class="font-black uppercase" :class="levelClass(log.level)">[{{ log.level }}]</span><span class="text-cyan-400/70">S{{ log.shardId ?? '—' }}</span>
+          <div class="min-w-0"><div class="flex flex-wrap items-baseline gap-x-2"><NuxtLink v-if="guildLink(log.guildId)" :to="guildLink(log.guildId)!" class="rounded text-violet-300/80 underline-offset-2 hover:text-violet-200 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">[{{ log.guildId }}]</NuxtLink><span v-else-if="log.guildId" class="text-gray-500">[{{ log.guildId }}]</span><span v-if="log.source" class="text-emerald-300/70">[{{ log.source }}]</span><span class="break-words text-gray-200">{{ log.message }}</span><span v-if="count > 1" class="rounded bg-white/[0.06] px-1.5 font-semibold text-gray-400" :title="`Repeated ${count} times since ${formatTime(oldestTimestamp)}`">(x{{ count }})</span></div></div>
         </article>
         <div v-if="state.nextCursor" class="sticky bottom-0 flex justify-center border-t border-white/8 bg-gray-950/90 p-3 backdrop-blur"><UButton size="sm" color="neutral" variant="soft" icon="i-lucide-history" :loading="olderLoading" @click="loadOlder">Load older</UButton></div>
       </div>
@@ -56,6 +56,7 @@ import {
   createRouteSyncCoordinator,
   historyQuery,
   formatLogHistoryError,
+  groupConsecutiveLogs,
   matchesLogFilters,
   refreshLogHistory,
   resumeExplorerView,
@@ -87,6 +88,7 @@ let eventStream: { close(): void } | null = null
 let applyingRoute = false
 const levelItems = [{ label: 'All levels', value: 'all' }, { label: 'Info', value: 'info' }, { label: 'Warnings', value: 'warn' }, { label: 'Errors', value: 'error' }]
 const scopeItems = [{ label: 'All scopes', value: 'all' }, { label: 'System', value: 'global' }, { label: 'Guild', value: 'guild' }]
+const groupedLogs = computed(() => groupConsecutiveLogs(state.value.visible))
 const connectionLabel = computed(() => ({ connecting: 'Connecting', connected: 'Connected', reconnecting: 'Reconnecting' })[connection.value])
 const connectionDotClass = computed(() => connection.value === 'connected' ? 'bg-success' : connection.value === 'reconnecting' ? 'bg-warning' : 'bg-gray-500')
 

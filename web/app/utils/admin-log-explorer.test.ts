@@ -10,6 +10,7 @@ import {
   createLogEventStream,
   createRouteSyncCoordinator,
   formatLogHistoryError,
+  groupConsecutiveLogs,
   historyQuery,
   localDateTimeToUtc,
   matchesLogFilters,
@@ -180,6 +181,34 @@ describe('admin log explorer history orchestration', () => {
     expect(refreshed).toMatchObject({ pending: state.pending, pendingCount: 1, nextCursor: null })
     expect(resumed.visible.map(item => item.$id)).toEqual(['pending', 'history'])
     expect(resumed).toMatchObject({ pending: [], pendingCount: 0, paused: false })
+  })
+})
+
+describe('admin log explorer repeat grouping', () => {
+  const heartbeat = (id: string, timestamp: string): ClientLogDoc => ({ ...log(id, timestamp), guildId: 'global', message: '[MusicHealth] music=healthy' })
+
+  it('collapses only uninterrupted runs of identical entries', () => {
+    const groups = groupConsecutiveLogs([
+      heartbeat('h3', '2026-08-23T10:15:00Z'),
+      heartbeat('h2', '2026-08-23T10:10:00Z'),
+      { ...log('sweep', '2026-08-23T10:07:00Z'), message: 'Transcript retention sweep' },
+      heartbeat('h1', '2026-08-23T10:05:00Z'),
+      heartbeat('h0', '2026-08-23T10:00:00Z'),
+    ])
+    expect(groups.map(group => [group.log.$id, group.count])).toEqual([['h3', 2], ['sweep', 1], ['h1', 2]])
+    expect(groups[0]!.oldestTimestamp).toBe('2026-08-23T10:10:00Z')
+  })
+
+  it('keeps entries separate when level, shard, guild, or source differ', () => {
+    const base = heartbeat('a', '2026-08-23T10:00:00Z')
+    const groups = groupConsecutiveLogs([
+      base,
+      { ...base, $id: 'b', level: 'warn' },
+      { ...base, $id: 'c', shardId: 1 },
+      { ...base, $id: 'd', guildId: '123' },
+      { ...base, $id: 'e', source: 'music' },
+    ])
+    expect(groups.every(group => group.count === 1)).toBe(true)
   })
 })
 

@@ -127,6 +127,34 @@ export function matchesLogFilters(log: ClientLogDoc, filters: AdminLogExplorerFi
   return !Number.isNaN(timestamp) && timestamp >= from && timestamp <= to
 }
 
+export interface GroupedLogEntry {
+  log: ClientLogDoc
+  count: number
+  oldestTimestamp: ClientLogDoc['timestamp']
+}
+
+function repeatKey(log: ClientLogDoc): string {
+  return JSON.stringify([log.level, log.shardId ?? null, log.guildId ?? null, log.source ?? null, log.message])
+}
+
+/** Collapses runs of identical adjacent entries so periodic heartbeats render as one row with a repeat count. */
+export function groupConsecutiveLogs(logs: readonly ClientLogDoc[]): GroupedLogEntry[] {
+  const groups: GroupedLogEntry[] = []
+  let previousKey: string | null = null
+  for (const log of logs) {
+    const key = repeatKey(log)
+    const current = groups[groups.length - 1]
+    if (current && key === previousKey) {
+      current.count += 1
+      current.oldestTimestamp = log.timestamp
+    } else {
+      groups.push({ log, count: 1, oldestTimestamp: log.timestamp })
+    }
+    previousKey = key
+  }
+  return groups
+}
+
 export function createAdminLogExplorerState(): AdminLogExplorerState {
   return { visible: [], pending: [], paused: false, pendingCount: 0, nextCursor: null, liveIds: [] }
 }
