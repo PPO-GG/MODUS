@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.24.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.23.1...modus-v1.24.0) (2026-09-28)
+
+
+### ✨ Features
+
+* **web:** add SEO metadata, sitemap, robots rules and generated OG images ([#77](https://github.com/PPO-GG/MODUS/issues/77)) ([1584e83](https://github.com/PPO-GG/MODUS/commit/1584e834156224105956e562c146c6d83c2f14f2))
+* **web:** collapse repeated entries in admin log explorer ([#76](https://github.com/PPO-GG/MODUS/issues/76)) ([56afc4c](https://github.com/PPO-GG/MODUS/commit/56afc4cda5ce4c6abeddf2ef8e44643c43458030))
+
 ## [1.23.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.23.0...modus-v1.23.1) (2026-09-13)
 
 
