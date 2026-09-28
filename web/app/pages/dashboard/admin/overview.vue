@@ -2,7 +2,7 @@
   <main class="operations-overview p-5 sm:p-8 space-y-6 sm:space-y-8">
     <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300/80">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary-300/80">
           Fleet operations
         </p>
         <h1 class="mt-1 text-2xl font-black tracking-tight text-white gradient-text">
@@ -31,7 +31,7 @@
       aria-live="polite"
       aria-busy="true"
     >
-      <UIcon name="i-lucide-loader-circle" class="mx-auto size-8 animate-spin text-violet-400" />
+      <UIcon name="i-lucide-loader-circle" class="mx-auto size-8 animate-spin text-primary-400" />
       <p class="mt-3 text-sm font-medium text-white">Loading operations overview</p>
       <p class="mt-1 text-sm text-gray-300">Checking the latest reported fleet state.</p>
     </section>
@@ -123,7 +123,7 @@
               <p class="mt-1 text-sm text-gray-300">{{ item.description }}</p>
               <p v-if="item.occurredAt" class="mt-1 text-xs text-gray-300">Reported {{ formatTimestamp(item.occurredAt) }}</p>
             </div>
-            <UIcon v-if="item.href" name="i-lucide-arrow-up-right" class="mt-1 size-5 shrink-0 text-gray-400 transition-colors group-hover:text-violet-300" aria-hidden="true" />
+            <UIcon v-if="item.href" name="i-lucide-arrow-up-right" class="mt-1 size-5 shrink-0 text-gray-400 transition-colors group-hover:text-primary-300" aria-hidden="true" />
           </component>
         </div>
       </section>
@@ -132,7 +132,7 @@
         <article v-for="summary in fleetSummary" :key="summary.label" class="glass-card rounded-2xl border border-white/8 p-5 motion-reduce:hover:transform-none">
           <div class="flex items-start justify-between gap-3">
             <p class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-300">{{ summary.label }}</p>
-            <UIcon :name="summary.icon" class="size-4 shrink-0 text-violet-300" aria-hidden="true" />
+            <UIcon :name="summary.icon" class="size-4 shrink-0 text-primary-300" aria-hidden="true" />
           </div>
           <p class="mt-3 text-2xl font-black tracking-tight text-white">{{ summary.value }}</p>
           <p class="mt-1 text-xs text-gray-400">{{ summary.detail }}</p>

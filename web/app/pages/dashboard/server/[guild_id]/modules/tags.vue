@@ -77,7 +77,7 @@
                 class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                 :class="
                   tag.embed_data
-                    ? 'bg-indigo-500/10 border border-indigo-500/20'
+                    ? 'bg-secondary-500/10 border border-secondary-500/20'
                     : 'bg-emerald-500/10 border border-emerald-500/20'
                 "
               >
@@ -88,7 +88,7 @@
                       : 'i-heroicons-document-text'
                   "
                   :class="
-                    tag.embed_data ? 'text-indigo-400' : 'text-emerald-400'
+                    tag.embed_data ? 'text-secondary-400' : 'text-emerald-400'
                   "
                   class="w-5 h-5"
                 />

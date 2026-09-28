@@ -13,7 +13,7 @@
         <div v-if="state.rolesLoading || loadingGrant" class="flex items-center gap-2 py-3">
           <UIcon
             name="i-lucide-loader-circle"
-            class="w-4 h-4 animate-spin text-indigo-400"
+            class="w-4 h-4 animate-spin text-secondary-400"
           />
           <span class="text-sm text-gray-400">Loading server roles from Discord...</span>
         </div>

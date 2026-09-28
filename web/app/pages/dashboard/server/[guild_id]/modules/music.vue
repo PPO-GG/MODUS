@@ -10,11 +10,11 @@
       </NuxtLink>
       <div class="flex items-center gap-3">
         <div
-          class="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0"
+          class="w-9 h-9 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
         >
           <UIcon
             name="i-heroicons-musical-note"
-            class="w-5 h-5 text-violet-400"
+            class="w-5 h-5 text-primary-400"
           />
         </div>
         <div>
@@ -50,7 +50,7 @@
         />
         <div
           v-else
-          class="w-full h-full bg-gradient-to-br from-violet-950/80 via-gray-950 to-indigo-950/80"
+          class="w-full h-full bg-gradient-to-br from-primary-950/80 via-gray-950 to-secondary-950/80"
         />
         <!-- Overlay gradient for readability -->
         <div
@@ -132,7 +132,7 @@
                   v-if="playerState.currentTrack.url"
                   :href="playerState.currentTrack.url"
                   target="_blank"
-                  class="inline-flex items-center gap-1 mt-2 text-[10px] text-violet-400 hover:text-violet-300 transition-colors"
+                  class="inline-flex items-center gap-1 mt-2 text-[10px] text-primary-400 hover:text-primary-300 transition-colors"
                 >
                   <UIcon
                     name="i-heroicons-arrow-top-right-on-square"
@@ -149,7 +149,7 @@
                 class="w-full h-1.5 rounded-full bg-white/10 overflow-hidden group cursor-pointer"
               >
                 <div
-                  class="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-400 transition-all duration-1000 ease-linear group-hover:from-violet-400 group-hover:to-indigo-300"
+                  class="h-full rounded-full bg-gradient-to-r from-primary-500 to-secondary-400 transition-all duration-1000 ease-linear group-hover:from-primary-400 group-hover:to-secondary-300"
                   :style="{ width: `${progressPercent}%` }"
                 />
               </div>
@@ -165,7 +165,7 @@
             <div class="flex items-center justify-center gap-3">
               <button
                 class="player-btn p-2 rounded-full"
-                :class="{ '!text-violet-400 !bg-violet-500/20 !border-violet-500/30': playerState.autoplay }"
+                :class="{ '!text-primary-400 !bg-primary-500/20 !border-primary-500/30': playerState.autoplay }"
                 title="Autoplay (Play recommended songs when queue ends)"
                 :disabled="actionLoading"
                 @click="setAutoplayFn(!playerState.autoplay)"
@@ -281,7 +281,7 @@
             </p>
             <p
               v-if="preQueueList.length > 0"
-              class="text-[10px] text-violet-400 mt-2"
+              class="text-[10px] text-primary-400 mt-2"
             >
               📋 {{ preQueueList.length }} song{{
                 preQueueList.length !== 1 ? "s" : ""
@@ -362,21 +362,21 @@
               <!-- Playlist header banner -->
               <div
                 v-if="isPlaylistResult && searchResultsList.length > 1"
-                class="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-violet-500/10 border-b border-violet-500/20 backdrop-blur-xl"
+                class="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-primary-500/10 border-b border-primary-500/20 backdrop-blur-xl"
               >
                 <div class="flex items-center gap-2 min-w-0">
                   <UIcon
                     name="i-heroicons-queue-list"
-                    class="text-violet-400 w-4 h-4 shrink-0"
+                    class="text-primary-400 w-4 h-4 shrink-0"
                   />
-                  <span class="text-xs font-medium text-violet-300 truncate">
+                  <span class="text-xs font-medium text-primary-300 truncate">
                     {{ playlistTitle || "Playlist" }} ·
                     {{ playlistTrackCount || searchResultsList.length }} tracks
                   </span>
                 </div>
                 <button
                   type="button"
-                  class="shrink-0 text-[10px] font-medium px-2.5 py-1 rounded-md bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 hover:text-violet-200 transition-colors border border-violet-500/20"
+                  class="shrink-0 text-[10px] font-medium px-2.5 py-1 rounded-md bg-primary-500/20 hover:bg-primary-500/30 text-primary-300 hover:text-primary-200 transition-colors border border-primary-500/20"
                   :disabled="actionLoading"
                   @click="addAllPlaylistTracks"
                 >
@@ -413,7 +413,7 @@
                 </div>
                 <UIcon
                   name="i-heroicons-plus-circle"
-                  class="text-violet-400 w-5 h-5 shrink-0"
+                  class="text-primary-400 w-5 h-5 shrink-0"
                 />
               </button>
             </div>
@@ -424,7 +424,7 @@
             <!-- Currently playing row -->
             <div
               v-if="playerState.currentTrack"
-              class="flex items-center gap-3 px-4 py-2.5 bg-violet-500/10 border-l-2 border-violet-500"
+              class="flex items-center gap-3 px-4 py-2.5 bg-primary-500/10 border-l-2 border-primary-500"
             >
               <div class="w-5 flex items-center justify-center">
                 <div v-if="playerState.isPlaying" class="playing-bars">
@@ -433,7 +433,7 @@
                 <UIcon
                   v-else
                   name="i-heroicons-pause-solid"
-                  class="text-violet-400 w-3.5 h-3.5"
+                  class="text-primary-400 w-3.5 h-3.5"
                 />
               </div>
               <img
@@ -444,15 +444,15 @@
                 :alt="playerState.currentTrack.title"
               />
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-medium text-violet-300 truncate">
+                <p class="text-xs font-medium text-primary-300 truncate">
                   {{ playerState.currentTrack.title }}
                 </p>
-                <p class="text-[10px] text-violet-400/60 truncate">
+                <p class="text-[10px] text-primary-400/60 truncate">
                   {{ playerState.currentTrack.author }}
                 </p>
               </div>
               <span
-                class="text-[10px] text-violet-400/60 tabular-nums shrink-0"
+                class="text-[10px] text-primary-400/60 tabular-nums shrink-0"
               >
                 {{ playerState.currentTrack.duration }}
               </span>
@@ -626,7 +626,7 @@
                 <p class="text-xs text-gray-600">Playlist is empty</p>
                 <p class="text-[10px] text-gray-700 mt-0.5 max-w-[220px]">
                   Search above to queue songs, then use
-                  <code class="text-violet-400">/playqueue</code> in Discord
+                  <code class="text-primary-400">/playqueue</code> in Discord
                 </p>
               </div>
             </template>
@@ -644,14 +644,14 @@
         class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5 space-y-5"
       >
         <div
-          class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none"
+          class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
         />
         <div class="relative space-y-5">
           <div class="flex items-center gap-2 mb-1">
             <div
-              class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"
+              class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
             >
-              <UIcon name="i-heroicons-key" class="text-indigo-400" />
+              <UIcon name="i-heroicons-key" class="text-secondary-400" />
             </div>
             <h3 class="font-semibold text-white">Permissions</h3>
           </div>
@@ -668,7 +668,7 @@
             >
               <UIcon
                 name="i-heroicons-arrow-path"
-                class="animate-spin text-indigo-400"
+                class="animate-spin text-secondary-400"
               />
               <span class="text-sm">Loading roles…</span>
             </div>
@@ -716,14 +716,14 @@
       class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
     >
       <div
-        class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent pointer-events-none"
+        class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
       />
       <div class="relative">
         <div class="flex items-center gap-2 mb-4">
           <div
-            class="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0"
+            class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
           >
-            <UIcon name="i-heroicons-sparkles" class="text-violet-400" />
+            <UIcon name="i-heroicons-sparkles" class="text-primary-400" />
           </div>
           <div>
             <h4 class="text-sm font-semibold text-white">Audio Effects</h4>
@@ -750,7 +750,7 @@
             class="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 text-left"
             :class="
               musicSettings.activeFilters.includes(key as string)
-                ? 'bg-violet-500/20 border border-violet-500/40 text-violet-300 ring-1 ring-violet-500/30'
+                ? 'bg-primary-500/20 border border-primary-500/40 text-primary-300 ring-1 ring-primary-500/30'
                 : 'bg-gray-800/50 border border-white/5 text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
             "
             @click="toggleFilter(key as string)"
@@ -765,7 +765,7 @@
             <UIcon
               v-if="musicSettings.activeFilters.includes(key as string)"
               name="i-heroicons-check-circle-solid"
-              class="ml-auto text-violet-400 shrink-0"
+              class="ml-auto text-primary-400 shrink-0"
             />
           </button>
         </div>
@@ -803,7 +803,7 @@
         <div class="p-6 space-y-4 max-h-[80vh] flex flex-col">
           <div class="flex items-center justify-between border-b border-white/10 pb-3">
             <div class="flex items-center gap-2">
-              <UIcon name="i-heroicons-document-text" class="w-5 h-5 text-violet-400" />
+              <UIcon name="i-heroicons-document-text" class="w-5 h-5 text-primary-400" />
               <h3 class="text-lg font-bold text-white">
                 {{ lyricsData?.trackTitle || playerState.currentTrack?.title || "Lyrics" }}
               </h3>
@@ -814,7 +814,7 @@
           </div>
 
           <div v-if="lyricsLoading" class="flex items-center justify-center py-12">
-            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-violet-400 animate-spin" />
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary-400 animate-spin" />
           </div>
 
           <div

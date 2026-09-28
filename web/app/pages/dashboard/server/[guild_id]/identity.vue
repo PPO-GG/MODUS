@@ -2,7 +2,7 @@
   <div class="p-6 lg:p-8 space-y-6">
     <div class="mb-6">
       <h2
-        class="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-400 to-fuchsia-500 bg-clip-text text-transparent"
+        class="text-2xl font-bold mb-2 bg-gradient-to-r from-primary-400 to-fuchsia-500 bg-clip-text text-transparent"
       >
         Bot Identity
       </h2>
@@ -23,7 +23,7 @@
       class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
     >
       <div
-        class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent pointer-events-none"
+        class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
       />
       <div class="relative space-y-5">
         <div class="flex items-center gap-4">

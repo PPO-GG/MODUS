@@ -188,7 +188,7 @@ const columns: TableColumn<ServerRow>[] = [
               "div",
               {
                 class:
-                  "w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600/30 to-indigo-600/30 border border-white/10 flex items-center justify-center flex-shrink-0",
+                  "w-8 h-8 rounded-lg bg-gradient-to-br from-primary-600/30 to-secondary-600/30 border border-white/10 flex items-center justify-center flex-shrink-0",
               },
               h(
                 "span",
@@ -211,7 +211,7 @@ const columns: TableColumn<ServerRow>[] = [
         NuxtLink,
         {
           to: `/dashboard/admin/logs?guildId=${encodeURIComponent(row.original.guild_id || row.original.$id)}`,
-          class: "rounded text-xs text-violet-300/80 font-mono hover:text-violet-200 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+          class: "rounded text-xs text-primary-300/80 font-mono hover:text-primary-200 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
           title: `View logs for ${row.original.name}`,
         },
         () => row.original.guild_id || row.original.$id,

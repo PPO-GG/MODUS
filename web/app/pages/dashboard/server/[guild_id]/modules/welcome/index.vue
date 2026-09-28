@@ -10,9 +10,9 @@
       </NuxtLink>
       <div class="flex items-center gap-3">
         <div
-          class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0"
+          class="w-9 h-9 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
         >
-          <UIcon name="i-lucide-party-popper" class="w-5 h-5 text-purple-400" />
+          <UIcon name="i-lucide-party-popper" class="w-5 h-5 text-primary-400" />
         </div>
         <div>
           <h2 class="text-xl font-bold text-white">Welcome</h2>
@@ -36,14 +36,14 @@
         class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
       >
         <div
-          class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"
+          class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
         />
         <div class="relative space-y-5">
           <div class="flex items-center gap-2 mb-1">
             <div
-              class="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0"
+              class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
             >
-              <UIcon name="i-heroicons-adjustments-horizontal" class="text-purple-400" />
+              <UIcon name="i-heroicons-adjustments-horizontal" class="text-primary-400" />
             </div>
             <div>
               <h3 class="font-semibold text-white">Message</h3>
@@ -189,9 +189,9 @@
         <div class="relative space-y-4">
           <div class="flex items-center gap-2">
             <div
-              class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"
+              class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
             >
-              <UIcon name="i-heroicons-eye" class="text-indigo-400" />
+              <UIcon name="i-heroicons-eye" class="text-secondary-400" />
             </div>
             <div>
               <h3 class="font-semibold text-white">Preview</h3>
@@ -203,7 +203,7 @@
 
           <div class="bg-[#313338] rounded-lg p-4 flex gap-3">
             <div
-              class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center shrink-0"
+              class="w-10 h-10 rounded-full bg-secondary-500 flex items-center justify-center shrink-0"
             >
               <UIcon name="i-lucide-bot" class="w-5 h-5 text-white" />
             </div>
@@ -211,7 +211,7 @@
               <div class="flex items-center gap-1.5 mb-1">
                 <span class="text-sm font-medium text-white">MODUS</span>
                 <span
-                  class="px-1 rounded bg-indigo-500 text-[10px] font-semibold text-white leading-4"
+                  class="px-1 rounded bg-secondary-500 text-[10px] font-semibold text-white leading-4"
                   >APP</span
                 >
                 <span class="text-[11px] text-gray-400">Today at {{ previewTime }}</span>

@@ -144,14 +144,14 @@
         class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
       >
         <div
-          class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"
+          class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
         />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20"
+              class="p-1.5 rounded-lg bg-primary-500/10 border border-primary-500/20"
             >
-              <UIcon name="i-heroicons-user" class="text-purple-400 text-sm" />
+              <UIcon name="i-heroicons-user" class="text-primary-400 text-sm" />
             </div>
             <h3 class="text-sm font-semibold text-white">Author</h3>
             <UBadge
@@ -407,16 +407,16 @@
         class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
       >
         <div
-          class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none"
+          class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
         />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20"
+              class="p-1.5 rounded-lg bg-secondary-500/10 border border-secondary-500/20"
             >
               <UIcon
                 name="i-heroicons-cursor-arrow-rays"
-                class="text-indigo-400 text-sm"
+                class="text-secondary-400 text-sm"
               />
             </div>
             <h3 class="text-sm font-semibold text-white">Buttons</h3>

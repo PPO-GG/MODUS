@@ -124,21 +124,6 @@ const route = useRoute();
 const isScrolled = ref(false);
 const isMenuOpen = ref(false);
 
-useHead({
-  link: [
-    { rel: "preconnect", href: "https://fonts.googleapis.com" },
-    {
-      rel: "preconnect",
-      href: "https://fonts.gstatic.com",
-      crossorigin: "",
-    },
-    {
-      rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&family=DM+Mono:wght@400;500&display=swap",
-    },
-  ],
-});
-
 const botInviteUrl = computed(() => {
   const clientId = config.public.discordClientId as string;
   if (!clientId) return "#";
@@ -234,25 +219,6 @@ onMounted(() => {
    ============================================ */
 
 .landing-layout {
-  --glide-bg: #030712;
-  --glide-ink: #f9fafb;
-  --glide-ink-2: #d1d5db;
-  --glide-ink-3: #9ca3af;
-  --glide-ink-4: #6b7280;
-  --glide-line: rgba(243, 244, 246, 0.2);
-  --glide-glass: rgba(229, 231, 235, 0.1);
-  --glide-a1: #2dd4bf; /* teal-400 */
-  --glide-a2: #38bdf8; /* sky-400 */
-  --glide-a3: #22d3ee; /* cyan-400 */
-  --glide-glow-1: rgba(3, 105, 161, 0.5); /* sky-700/50 */
-  --glide-glow-2: rgba(13, 148, 136, 0.5); /* teal-600/50 */
-  --glide-glow-solid: #0369a1;
-  --glide-hot: #0284c7;
-  --glide-icon-bg: #0c4a6e;
-  --glide-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
-  --glide-mono: "DM Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
-
   position: relative;
   display: flex;
   flex-direction: column;
@@ -382,89 +348,6 @@ onMounted(() => {
   .landing-drawer {
     display: none;
   }
-}
-
-/* Pill button (Glide .buttonLink) */
-.glide-btn {
-  position: relative;
-  isolation: isolate;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  padding: 0.5rem 1.125rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(224, 242, 254, 0.2);
-  background: rgba(186, 230, 253, 0.1);
-  color: #bae6fd;
-  font-weight: 500;
-  transition:
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.glide-btn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: 9999px;
-  background: #ccfbf1;
-  opacity: 0;
-  filter: blur(12px);
-  transition: opacity 0.5s ease;
-}
-
-.glide-btn:hover {
-  color: #5eead4;
-  border-color: rgba(153, 246, 228, 0.4);
-}
-
-.glide-btn:hover::after {
-  opacity: 0.15;
-}
-
-.glide-btn:focus-visible {
-  outline: 2px solid #5eead4;
-  outline-offset: 2px;
-}
-
-.glide-btn-ghost {
-  background: transparent;
-  border-color: transparent;
-  color: var(--glide-ink-2);
-}
-
-.glide-btn-ghost:hover {
-  color: var(--glide-ink);
-  border-color: transparent;
-}
-
-/* Glass frame (Glide .glass-container) */
-.glide-glass {
-  position: relative;
-  isolation: isolate;
-}
-
-.glide-glass::before {
-  content: "";
-  position: absolute;
-  inset: -10px;
-  z-index: -1;
-  border-radius: 14px;
-  border: 1px solid var(--glide-line);
-  background: var(--glide-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-/* Gradient emphasis (Glide GlideText) */
-.glide-text {
-  font-style: normal;
-  background: linear-gradient(to bottom, var(--glide-a1), var(--glide-a2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* Footer */

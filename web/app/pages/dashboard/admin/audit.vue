@@ -52,7 +52,7 @@
 
     <!-- Loading -->
     <div v-if="loading && events.length === 0" class="flex justify-center py-12">
-      <UIcon name="i-lucide-loader-circle" class="w-8 h-8 animate-spin text-violet-400" />
+      <UIcon name="i-lucide-loader-circle" class="w-8 h-8 animate-spin text-primary-400" />
     </div>
 
     <!-- Empty -->
