@@ -1,81 +1,97 @@
 <template>
-  <div
-    class="landing-layout flex flex-col min-h-screen w-full bg-[#050507] text-slate-200 selection:bg-purple-500/30 relative"
-  >
-    <!-- Background Ambient Effects -->
-    <div class="landing-bg-orb landing-bg-orb-1"></div>
-    <div class="landing-bg-orb landing-bg-orb-2"></div>
-    <div class="landing-bg-orb landing-bg-orb-3"></div>
-
-    <!-- Grid pattern overlay -->
-    <div class="landing-grid-pattern"></div>
-
-    <!-- Sticky Navbar -->
-    <nav class="landing-navbar" :class="{ scrolled: isScrolled }">
-      <div class="landing-container flex items-center justify-between h-16">
-        <!-- Brand -->
-        <NuxtLink
-          to="/"
-          class="flex items-center gap-3 group"
-          @click="handleLogoClick"
-        >
-          <img
-            src="/modus2-animated.svg"
-            alt="MODUS"
-            class="w-10 h-10 rounded-lg group-hover:scale-110 transition-transform duration-300"
-          />
-          <div>
-            <span class="text-lg font-black text-white tracking-tight"
-              >MODUS</span
-            >
-          </div>
+  <div class="landing-layout">
+    <!-- Navbar -->
+    <header class="landing-navbar" :class="{ scrolled: isScrolled }">
+      <nav class="landing-container landing-nav" aria-label="Main">
+        <NuxtLink to="/" class="landing-brand" @click="handleLogoClick">
+          <img src="/modus2-animated.svg" alt="" class="w-9 h-9" />
+          <span>MODUS</span>
         </NuxtLink>
 
-        <!-- Nav Links (desktop) -->
-        <div class="hidden md:flex items-center gap-1">
-          <a
-            v-for="link in navLinks"
-            :key="link.href"
-            :href="link.href"
-            class="nav-link inline-flex items-center gap-1.5"
-            @click="handleNavLinkClick($event, link.href)"
-          >
-            <UIcon v-if="link.icon" :name="link.icon" class="w-4 h-4" />
-            <span>{{ link.label }}</span>
-          </a>
-        </div>
+        <!-- Desktop -->
+        <ul class="landing-links">
+          <li v-for="link in navLinks" :key="link.href">
+            <a
+              :href="link.href"
+              class="landing-link"
+              @click="handleNavLinkClick($event, link.href)"
+              >{{ link.label }}</a
+            >
+          </li>
+          <li><NuxtLink to="/docs" class="landing-link">Docs</NuxtLink></li>
+          <li>
+            <NuxtLink to="/login" class="landing-link">Dashboard</NuxtLink>
+          </li>
+          <li>
+            <a
+              :href="botInviteUrl"
+              target="_blank"
+              rel="noopener"
+              class="glide-btn"
+            >
+              <UIcon name="i-simple-icons-discord" class="w-4 h-4" />
+              Add to Discord
+            </a>
+          </li>
+        </ul>
 
-        <!-- CTA -->
-        <div class="flex items-center gap-3">
-          <NuxtLink
-            to="/docs"
-            class="nav-link hidden sm:inline-flex items-center gap-2"
-          >
-            <UIcon name="i-heroicons-book-open" class="w-4 h-4" />
-            Docs
-          </NuxtLink>
-          <NuxtLink
-            to="/login"
-            class="nav-link hidden sm:inline-flex items-center gap-2"
-          >
-            <UIcon
-              name="i-heroicons-arrow-right-on-rectangle"
-              class="w-4 h-4"
-            />
-            Dashboard
-          </NuxtLink>
-          <a
-            :href="botInviteUrl"
-            target="_blank"
-            rel="noopener"
-            class="landing-btn-primary"
-          >
-            <UIcon name="i-simple-icons-discord" class="w-4 h-4" />
-            Add MODUS
-          </a>
-        </div>
+        <!-- Mobile toggle -->
+        <button
+          type="button"
+          class="landing-menu-btn"
+          :aria-expanded="isMenuOpen"
+          aria-label="Open menu"
+          @click="isMenuOpen = true"
+        >
+          <UIcon name="i-lucide-menu" class="w-7 h-7" />
+        </button>
+      </nav>
+
+      <!-- Mobile drawer -->
+      <div
+        class="landing-drawer"
+        :class="isMenuOpen ? 'translate-x-0' : 'translate-x-full'"
+        :aria-hidden="!isMenuOpen"
+      >
+        <button
+          type="button"
+          class="landing-menu-btn"
+          aria-label="Close menu"
+          @click="isMenuOpen = false"
+        >
+          <UIcon name="i-lucide-x" class="w-7 h-7" />
+        </button>
+        <ul class="grid justify-items-end gap-6 text-3xl">
+          <li v-for="link in navLinks" :key="link.href">
+            <a
+              :href="link.href"
+              @click="
+                isMenuOpen = false;
+                handleNavLinkClick($event, link.href);
+              "
+              >{{ link.label }}</a
+            >
+          </li>
+          <li>
+            <NuxtLink to="/docs" @click="isMenuOpen = false">Docs</NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/login" @click="isMenuOpen = false"
+              >Dashboard</NuxtLink
+            >
+          </li>
+          <li>
+            <a
+              :href="botInviteUrl"
+              target="_blank"
+              rel="noopener"
+              class="glide-btn text-xl"
+              >Add to Discord</a
+            >
+          </li>
+        </ul>
       </div>
-    </nav>
+    </header>
 
     <!-- Page Content -->
     <main class="flex-1 w-full">
@@ -84,55 +100,20 @@
 
     <!-- Footer -->
     <footer class="landing-footer">
-      <div class="landing-container">
-        <div class="divider-gradient mb-8"></div>
-        <div
-          class="flex flex-col md:flex-row items-center justify-between gap-6"
-        >
-          <div class="flex items-center gap-3">
-            <img
-              src="/modus2-animated.svg"
-              alt="MODUS"
-              class="w-8 h-8 rounded-lg opacity-60"
-            />
-            <div>
-              <p class="text-sm font-bold text-white/60">MODUS</p>
-              <p
-                class="text-[9px] font-bold uppercase tracking-widest text-gray-600"
-              >
-                Modular Discord Utility System
-              </p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-6">
-            <NuxtLink
-              to="/docs"
-              class="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >Docs</NuxtLink
-            >
-            <NuxtLink
-              to="/legal/terms"
-              class="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >Terms</NuxtLink
-            >
-            <NuxtLink
-              to="/legal/privacy"
-              class="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >Privacy</NuxtLink
-            >
-            <NuxtLink
-              to="/login"
-              class="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >Dashboard</NuxtLink
-            >
-          </div>
-
-          <p class="text-[10px] text-gray-600 font-medium">
-            &copy; {{ new Date().getFullYear() }} MODUS. All rights reserved.
-          </p>
-        </div>
-      </div>
+      <nav class="landing-footer-nav" aria-label="Footer">
+        <NuxtLink to="/" class="landing-brand" @click="handleLogoClick">
+          <img src="/modus2-animated.svg" alt="" class="w-8 h-8" />
+          <span>MODUS</span>
+        </NuxtLink>
+        <ul>
+          <li><NuxtLink to="/docs">Docs</NuxtLink></li>
+          <li><NuxtLink to="/xp">Leaderboards</NuxtLink></li>
+          <li><NuxtLink to="/legal/terms">Terms</NuxtLink></li>
+          <li><NuxtLink to="/legal/privacy">Privacy</NuxtLink></li>
+          <li><NuxtLink to="/login">Dashboard</NuxtLink></li>
+        </ul>
+        <p>&copy; {{ new Date().getFullYear() }} MODUS</p>
+      </nav>
     </footer>
   </div>
 </template>
@@ -141,6 +122,22 @@
 const config = useRuntimeConfig();
 const route = useRoute();
 const isScrolled = ref(false);
+const isMenuOpen = ref(false);
+
+useHead({
+  link: [
+    { rel: "preconnect", href: "https://fonts.googleapis.com" },
+    {
+      rel: "preconnect",
+      href: "https://fonts.gstatic.com",
+      crossorigin: "",
+    },
+    {
+      rel: "stylesheet",
+      href: "https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&family=DM+Mono:wght@400;500&display=swap",
+    },
+  ],
+});
 
 const botInviteUrl = computed(() => {
   const clientId = config.public.discordClientId as string;
@@ -152,10 +149,9 @@ const botInviteUrl = computed(() => {
 // (e.g. /docs), let the browser navigate to "/#section" normally instead
 // of trying to scroll a section that isn't on the current page.
 const navLinks = [
-  { label: "Features", href: "/#features", icon: "i-lucide-sparkles" },
-  { label: "Modules", href: "/#modules", icon: "i-lucide-layout-grid" },
-  { label: "Stats", href: "/#stats", icon: "i-lucide-bar-chart-2" },
-  { label: "XP", href: "/xp", icon: "i-lucide-trophy" },
+  { label: "Features", href: "/#features" },
+  { label: "Modules", href: "/#modules" },
+  { label: "Leaderboards", href: "/xp" },
 ];
 
 /**
@@ -168,7 +164,7 @@ const scrollToSection = async (hash: string) => {
   for (let frame = 0; frame < 30; frame++) {
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -213,14 +209,10 @@ const handleNavLinkClick = async (event: MouseEvent, href: string) => {
   if (hash) await scrollToSection(hash);
 };
 
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
-
 const handleLogoClick = (event: MouseEvent) => {
   if (route.path === "/") {
     event.preventDefault();
-    scrollToTop();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 };
 
@@ -235,150 +227,289 @@ onMounted(() => {
 
 <style>
 /* ============================================
-   LANDING PAGE LAYOUT STYLES
+   LANDING LAYOUT — "Glide" visual system
+   Dark gray-950 ground with film grain, DM Sans,
+   teal→sky accents, pill buttons, glass frames.
+   Shared by index, /xp and /docs (.landing-container).
    ============================================ */
 
+.landing-layout {
+  --glide-bg: #030712;
+  --glide-ink: #f9fafb;
+  --glide-ink-2: #d1d5db;
+  --glide-ink-3: #9ca3af;
+  --glide-ink-4: #6b7280;
+  --glide-line: rgba(243, 244, 246, 0.2);
+  --glide-glass: rgba(229, 231, 235, 0.1);
+  --glide-a1: #2dd4bf; /* teal-400 */
+  --glide-a2: #38bdf8; /* sky-400 */
+  --glide-a3: #22d3ee; /* cyan-400 */
+  --glide-glow-1: rgba(3, 105, 161, 0.5); /* sky-700/50 */
+  --glide-glow-2: rgba(13, 148, 136, 0.5); /* teal-600/50 */
+  --glide-glow-solid: #0369a1;
+  --glide-hot: #0284c7;
+  --glide-icon-bg: #0c4a6e;
+  --glide-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --glide-mono: "DM Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  color: var(--glide-ink);
+  font-family: var(--glide-sans);
+  background-color: var(--glide-bg);
+  /* Specular-lit grain from the Glide template (public/assets). */
+  background-image: url("/assets/noise-texture.svg");
+  background-repeat: repeat;
+  overflow-x: clip;
+}
+
+.landing-layout ::selection {
+  background: rgba(45, 212, 191, 0.3);
+}
+
+.landing-container {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .landing-container {
+    padding: 0 1.5rem;
+  }
+}
+
+/* Navbar */
 .landing-navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  background: transparent;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease;
+  border-bottom: 1px solid transparent;
 }
 
 .landing-navbar.scrolled {
-  background: rgba(5, 5, 7, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.4);
+  background: rgba(3, 7, 18, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-.landing-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
+.landing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4.5rem;
+  font-weight: 500;
 }
 
-.nav-link {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+.landing-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
-  border-radius: 0.75rem;
-  transition: all 0.2s ease;
-  text-decoration: none;
+  letter-spacing: 0.02em;
+  color: var(--glide-ink);
+  z-index: 110;
 }
 
-.nav-link:hover {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.05);
+.landing-links {
+  display: none;
+  align-items: center;
+  gap: 1.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.landing-btn-primary {
+@media (min-width: 820px) {
+  .landing-links {
+    display: flex;
+  }
+}
+
+.landing-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--glide-ink-2);
+  transition: color 0.2s ease;
+}
+
+.landing-link:hover,
+.landing-link.router-link-exact-active {
+  color: var(--glide-ink);
+}
+
+.landing-menu-btn {
+  display: inline-flex;
+  padding: 0.5rem;
+  color: var(--glide-ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+@media (min-width: 820px) {
+  .landing-menu-btn {
+    display: none;
+  }
+}
+
+.landing-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2rem;
+  padding: 1.25rem 1rem;
+  background: var(--glide-bg);
+  transition: transform 0.3s ease-in-out;
+}
+
+@media (min-width: 820px) {
+  .landing-drawer {
+    display: none;
+  }
+}
+
+/* Pill button (Glide .buttonLink) */
+.glide-btn {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(135deg, #7c3aed, #6366f1);
-  border-radius: 0.75rem;
-  border: none;
-  text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+  min-height: 2.75rem;
+  padding: 0.5rem 1.125rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(224, 242, 254, 0.2);
+  background: rgba(186, 230, 253, 0.1);
+  color: #bae6fd;
+  font-weight: 500;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.landing-btn-primary:hover {
-  background: linear-gradient(135deg, #8b5cf6, #818cf8);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.5);
-}
-
-.landing-footer {
-  padding: 3rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.03);
-}
-
-/* Background Effects */
-.landing-bg-orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(120px);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.landing-bg-orb-1 {
-  top: -5%;
-  left: 20%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(
-    circle,
-    rgba(124, 58, 237, 0.12) 0%,
-    transparent 70%
-  );
-  animation: landing-float 20s ease-in-out infinite;
-}
-
-.landing-bg-orb-2 {
-  top: 40%;
-  right: -5%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(
-    circle,
-    rgba(99, 102, 241, 0.08) 0%,
-    transparent 70%
-  );
-  animation: landing-float 25s ease-in-out infinite reverse;
-}
-
-.landing-bg-orb-3 {
-  bottom: 10%;
-  left: -5%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(
-    circle,
-    rgba(139, 92, 246, 0.06) 0%,
-    transparent 70%
-  );
-  animation: landing-float 30s ease-in-out infinite;
-}
-
-.landing-grid-pattern {
-  position: fixed;
+.glide-btn::after {
+  content: "";
+  position: absolute;
   inset: 0;
-  pointer-events: none;
   z-index: -1;
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.03) 1px,
-    transparent 1px
-  );
-  background-size: 40px 40px;
-  mask-image: radial-gradient(
-    ellipse 80% 50% at 50% 0%,
-    black 30%,
-    transparent 70%
-  );
+  border-radius: 9999px;
+  background: #ccfbf1;
+  opacity: 0;
+  filter: blur(12px);
+  transition: opacity 0.5s ease;
 }
 
-@keyframes landing-float {
-  0%,
-  100% {
-    transform: translateY(0) translateX(0);
+.glide-btn:hover {
+  color: #5eead4;
+  border-color: rgba(153, 246, 228, 0.4);
+}
+
+.glide-btn:hover::after {
+  opacity: 0.15;
+}
+
+.glide-btn:focus-visible {
+  outline: 2px solid #5eead4;
+  outline-offset: 2px;
+}
+
+.glide-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--glide-ink-2);
+}
+
+.glide-btn-ghost:hover {
+  color: var(--glide-ink);
+  border-color: transparent;
+}
+
+/* Glass frame (Glide .glass-container) */
+.glide-glass {
+  position: relative;
+  isolation: isolate;
+}
+
+.glide-glass::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  z-index: -1;
+  border-radius: 14px;
+  border: 1px solid var(--glide-line);
+  background: var(--glide-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Gradient emphasis (Glide GlideText) */
+.glide-text {
+  font-style: normal;
+  background: linear-gradient(to bottom, var(--glide-a1), var(--glide-a2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Footer */
+.landing-footer-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.75rem 1rem;
+  border-top: 1px solid #4b5563;
+}
+
+@media (min-width: 768px) {
+  .landing-footer-nav {
+    flex-direction: row;
+    padding: 1.75rem 2rem;
   }
-  33% {
-    transform: translateY(-30px) translateX(15px);
-  }
-  66% {
-    transform: translateY(15px) translateX(-10px);
-  }
+}
+
+.landing-footer-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--glide-ink-2);
+}
+
+.landing-footer-nav li a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  transition: color 0.2s ease;
+}
+
+.landing-footer-nav li a:hover {
+  color: var(--glide-ink);
+}
+
+.landing-footer-nav p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--glide-ink-4);
 }
 </style>
