@@ -1,7 +1,7 @@
 # Third-Party Licenses
 
 MODUS is licensed under the MIT License (see [LICENSE](./LICENSE)). It depends on
-866 third-party packages, which are distributed under their own licenses. This
+867 third-party packages, which are distributed under their own licenses. This
 file is generated from production dependencies across the pnpm workspace (`bot`, `web`,
 `packages/db`) via `pnpm licenses list --prod --json`.
 
@@ -904,6 +904,10 @@ pnpm run licenses:generate
 ## GPL-3.0-or-later (1)
 
 - **ffmpeg-static** `5.3.0` ([source](https://github.com/eugeneware/ffmpeg-static#readme))
+
+## Standard 'no charge' license: https://gsap.com/standard-license. (1)
+
+- **gsap** `3.15.0` ([source](https://gsap.com))
 
 ## (MIT OR GPL-3.0-or-later) (1)
 
