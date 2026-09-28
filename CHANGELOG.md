@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.24.0...modus-v1.24.1) (2026-09-28)
+
+
+### 🐛 Bug Fixes
+
+* **web:** regenerate lockfile after devalue bump merge race ([2e2f2ab](https://github.com/PPO-GG/MODUS/commit/2e2f2abebfe1b48c615263d349c623494972445d))
+
 ## [1.24.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.23.1...modus-v1.24.0) (2026-09-28)
 
 
