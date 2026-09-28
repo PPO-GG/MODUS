@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.2](https://github.com/PPO-GG/MODUS/compare/modus-v1.24.1...modus-v1.24.2) (2026-09-28)
+
+
+### 🐛 Bug Fixes
+
+* **web:** dedupe unhead to fix missing legacy.mjs in production build ([b89fbe0](https://github.com/PPO-GG/MODUS/commit/b89fbe0fa7ea247e611a1ba68ce78579bb9a04f2))
+
 ## [1.24.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.24.0...modus-v1.24.1) (2026-09-28)
 
 
