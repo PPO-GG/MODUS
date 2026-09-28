@@ -731,7 +731,17 @@ function rankBadgeClass(rank: number) {
   }
 }
 
-useHead({
-  title: "Server XP Leaderboards • MODUS",
+const XP_DESCRIPTION =
+  "Browse public Discord server XP leaderboards powered by MODUS — see the most active communities and their top members.";
+useSeoMeta({
+  title: "Discord Server XP Leaderboards",
+  description: XP_DESCRIPTION,
+  ogTitle: "Discord Server XP Leaderboards — MODUS",
+  ogDescription: XP_DESCRIPTION,
+});
+defineOgImage("Modus", {
+  eyebrow: "XP Leaderboards",
+  title: "The most active Discord servers",
+  description: XP_DESCRIPTION,
 });
 </script>

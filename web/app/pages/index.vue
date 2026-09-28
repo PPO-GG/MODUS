@@ -358,6 +358,43 @@ interface BotStats {
 }
 const { data: stats } = await useFetch<BotStats>("/api/stats");
 
+const LANDING_DESCRIPTION =
+  "MODUS is a free all-in-one Discord bot: music, moderation, anti-raid, AI, multi-track voice recordings, XP leaderboards and tickets — configured from a web dashboard.";
+useSeoMeta({
+  // Wrapped by app.vue's titleTemplate → "… | MODUS".
+  title: "Free All-in-One Discord Bot with Web Dashboard",
+  description: LANDING_DESCRIPTION,
+  ogTitle: "MODUS — Your Discord Server, Supercharged",
+  ogDescription: LANDING_DESCRIPTION,
+});
+defineOgImage("Modus", {
+  title: "Your Discord Server, Supercharged",
+  description:
+    "Music, moderation, anti-raid, AI, voice recordings, XP leaderboards and tickets — all from one web dashboard.",
+});
+
+// schema.org SoftwareApplication so search engines can show MODUS as an app
+// (price, category) rather than a generic web page.
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "MODUS",
+        alternateName: "Modular Discord Utility System",
+        applicationCategory: "CommunicationApplication",
+        operatingSystem: "Discord",
+        description: LANDING_DESCRIPTION,
+        url: useSiteConfig().url,
+        image: `${useSiteConfig().url}/modus2.svg`,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      }),
+    },
+  ],
+});
+
 const highlights = [
   {
     title: "Music & Audio",

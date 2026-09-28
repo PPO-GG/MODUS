@@ -659,11 +659,29 @@ function openUserCard(user: any) {
   isModalOpen.value = true;
 }
 
+const leaderboardDescription = computed(() =>
+  `XP leaderboard for ${data.value?.guild?.name || "this Discord server"} — see the most active members, levels and ranks. Powered by MODUS.`,
+);
+useSeoMeta({
+  description: leaderboardDescription,
+  ogTitle: () => `${data.value?.guild?.name || "Server"} XP Leaderboard`,
+  ogDescription: leaderboardDescription,
+});
+// Private boards get no podium in the payload, so the card degrades to just
+// the server name — never leaks members.
+defineOgImage("XpLeaderboard", {
+  guildName: data.value?.guild?.name || "Discord Server",
+  iconUrl: guildIconUrl.value ?? "",
+  top: (podium.value as { username?: string; level?: number }[])
+    .slice(0, 3)
+    .map((m) => ({ username: m.username ?? "Unknown", level: m.level ?? 0 })),
+});
+
 useHead(() => {
   const isUnlisted = data.value?.visibility === "unlisted";
   const isPrivate = data.value?.isPrivate || data.value?.visibility === "private";
   return {
-    title: `${data.value?.guild?.name || "XP"} Leaderboard • MODUS`,
+    title: `${data.value?.guild?.name || "XP"} Leaderboard`,
     meta: [
       ...(isUnlisted || isPrivate
         ? [{ name: "robots", content: "noindex, nofollow" }]

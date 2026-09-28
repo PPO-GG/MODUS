@@ -57,7 +57,19 @@ definePageMeta({
   layout: false,
 });
 
-useHead({ title: "Documentation" });
+const DOCS_DESCRIPTION =
+  "Every MODUS slash command, grouped by module — music, moderation, anti-raid, AI, recordings, XP, tickets and more.";
+useSeoMeta({
+  title: "Discord Bot Commands & Documentation",
+  description: DOCS_DESCRIPTION,
+  ogTitle: "MODUS Documentation",
+  ogDescription: DOCS_DESCRIPTION,
+});
+defineOgImage("Modus", {
+  eyebrow: "Documentation",
+  title: "Every command, every module",
+  description: DOCS_DESCRIPTION,
+});
 
 const { modules, pending, error } = useDocs();
 </script>
