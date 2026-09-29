@@ -2,18 +2,20 @@
   <div class="we font-sans flex flex-col h-full select-none">
     <!-- TOP TOOLBAR -->
     <div class="we-toolbar we-glass-panel rounded-2xl">
-      <div class="we-toolbar-group">
-        <UButton
-          :to="`/dashboard/server/${guildId}/modules/welcome`"
-          icon="i-heroicons-arrow-left"
-          label="Welcome"
-          color="neutral"
-          variant="ghost"
-          size="xs"
-        />
-      </div>
+      <template v-if="!embedded">
+        <div class="we-toolbar-group">
+          <UButton
+            :to="`/dashboard/server/${guildId}/modules/welcome`"
+            icon="i-heroicons-arrow-left"
+            label="Welcome"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+          />
+        </div>
 
-      <div class="we-toolbar-sep" />
+        <div class="we-toolbar-sep" />
+      </template>
 
       <div class="we-toolbar-group">
         <UPopover>
@@ -1400,9 +1402,11 @@ const { loadFont, loadTemplateFonts } = useGoogleFonts();
 
 const props = defineProps<{
   guildId: string;
+  /** Rendered inside the Welcome page's tabs, so the "back to Welcome" link is hidden. */
+  embedded?: boolean;
 }>();
 
-const emit = defineEmits<{ (e: "saved"): void }>();
+const emit = defineEmits<{ (e: "saved"): void; (e: "dirty", value: boolean): void }>();
 const toast = useToast();
 
 
@@ -3152,6 +3156,7 @@ async function saveTemplate() {
       description: "Welcome template saved.",
       color: "success",
     });
+    savedCanvas.value = canvasSnapshot();
     emit("saved");
   } catch (err) {
     console.error("[WelcomeEditor] save error:", err);
@@ -3165,8 +3170,17 @@ async function saveTemplate() {
   }
 }
 
+// ── Unsaved changes ──
+// The canvas is compared with what was last loaded or saved so the page can
+// warn before its state is thrown away (switching tabs, leaving).
+const savedCanvas = ref<string | null>(null);
+const canvasSnapshot = () => JSON.stringify(canvasPatch(template.value));
+const dirty = computed(() => savedCanvas.value !== null && canvasSnapshot() !== savedCanvas.value);
+watch(dirty, (value) => emit("dirty", value));
+
 onMounted(() => {
   loadTemplate().then(async () => {
+    savedCanvas.value = canvasSnapshot();
     // Load Google Fonts used in the template, then repaint once every
     // one of them is actually ready to draw (fixes flash-of-fallback).
     await loadTemplateFonts(template.value.elements);

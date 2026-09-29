@@ -1,48 +1,56 @@
 <template>
   <div
-    class="relative rounded-md overflow-hidden bg-black/20"
+    class="relative overflow-hidden rounded-md bg-black/20"
     :class="{ 'aspect-[1024/500]': !loaded }"
   >
     <img
       v-if="!failed"
       :src="src"
       alt="Welcome image preview"
-      class="block w-full h-auto"
+      class="block h-auto w-full"
       :class="{ 'absolute inset-0 opacity-0': !loaded }"
       @load="loaded = true"
       @error="failed = true"
     />
     <div
       v-if="!loaded"
-      class="absolute inset-0 flex items-center justify-center text-xs text-gray-500"
+      class="absolute inset-0 flex items-center justify-center text-xs text-gray-400"
     >
       <span v-if="failed">Couldn't render the preview image.</span>
-      <UIcon v-else name="i-heroicons-arrow-path" class="w-5 h-5 animate-spin" />
+      <UIcon v-else name="i-lucide-loader-circle" class="h-5 w-5 animate-spin" />
     </div>
     <div class="absolute bottom-2 right-2">
       <UButton
-        :to="editTo"
-        icon="i-heroicons-pencil-square"
+        icon="i-lucide-pencil"
         label="Edit image"
         color="neutral"
         variant="solid"
         size="sm"
         class="shadow-lg"
+        @click="emit('edit')"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
-defineProps<{
+const props = defineProps<{
   /** Rendered welcome image URL. */
   src: string;
-  /** Route to the welcome image editor. */
-  editTo: string;
 }>();
+const emit = defineEmits<{ edit: [] }>();
 
 const loaded = ref(false);
 const failed = ref(false);
+
+// A new URL (after the design is saved) loads afresh.
+watch(
+  () => props.src,
+  () => {
+    loaded.value = false;
+    failed.value = false;
+  },
+);
 </script>

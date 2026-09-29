@@ -1,5 +1,11 @@
 <template>
-  <div class="mx-auto max-w-6xl space-y-6">
+  <div
+    :class="
+      activeTab === 'image'
+        ? 'flex h-full flex-col gap-4 p-4 md:p-6'
+        : 'mx-auto max-w-6xl space-y-6'
+    "
+  >
     <DashboardModuleHeader
       :guild-id="guildId"
       icon="i-lucide-party-popper"
@@ -8,7 +14,50 @@
       :enabled="isModuleEnabled('welcome')"
     />
 
-    <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
+    <!-- ── Tabs ── -->
+    <div
+      class="inline-flex self-start rounded-full bg-white/[0.04] p-1 ring-1 ring-inset ring-white/10"
+      role="tablist"
+      aria-label="Welcome sections"
+    >
+      <button
+        v-for="tab in tabs"
+        :key="tab.value"
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === tab.value"
+        class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
+        :class="
+          activeTab === tab.value
+            ? 'bg-sky-200/15 text-white ring-1 ring-inset ring-sky-100/25'
+            : 'text-gray-400 hover:text-white'
+        "
+        @click="selectTab(tab.value)"
+      >
+        <UIcon :name="tab.icon" class="h-4 w-4" />
+        {{ tab.label }}
+        <span
+          v-if="tab.value === 'image' ? imageDirty : dirty"
+          class="h-1.5 w-1.5 rounded-full bg-amber-400"
+          aria-label="Unsaved changes"
+        />
+      </button>
+    </div>
+
+    <!-- ── Image designer ── -->
+    <WelcomeEditor
+      v-if="activeTab === 'image'"
+      embedded
+      :guild-id="guildId"
+      class="min-h-0 flex-1"
+      @dirty="imageDirty = $event"
+      @saved="onImageSaved"
+    />
+
+    <div
+      v-else
+      class="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]"
+    >
       <!-- ══════════════ Settings ══════════════ -->
       <div class="min-w-0 space-y-6">
         <div v-if="loading" class="space-y-6" aria-busy="true">
@@ -204,20 +253,26 @@
             :description="
               message.mode === 'text'
                 ? 'Text only is selected, so no image is sent. You can still design one and switch back later.'
-                : 'The picture members get: background, their avatar, text and other layers.'
+                : 'The picture members get. Design it in the Image tab: background, their avatar, text and other layers.'
             "
           >
-            <UButton
-              :to="editorPath"
-              color="neutral"
-              variant="soft"
-              icon="i-lucide-pencil-ruler"
-            >
-              Open image editor
-            </UButton>
-            <p v-if="dirty" class="mt-2 text-[13px] text-amber-200">
-              Save your changes here first. Leaving this page asks before discarding them.
-            </p>
+            <template #actions>
+              <UButton
+                color="neutral"
+                variant="soft"
+                size="sm"
+                icon="i-lucide-pencil-ruler"
+                @click="selectTab('image')"
+              >
+                Design image
+              </UButton>
+            </template>
+            <DashboardWelcomePreviewImage
+              :src="imageUrl"
+              class="max-w-[520px]"
+              :class="{ 'opacity-50': message.mode === 'text' }"
+              @edit="selectTab('image')"
+            />
           </DashboardModuleSection>
 
           <DashboardModuleAccessSection :guild-id="guildId" module-name="welcome" />
@@ -259,7 +314,7 @@
               <DashboardWelcomePreviewImage
                 v-if="showImage && (!hasText || message.order === 'image-first')"
                 :src="imageUrl"
-                :edit-to="editorPath"
+                @edit="selectTab('image')"
                 class="mb-2 max-w-[520px]"
               />
 
@@ -282,7 +337,7 @@
                 <DashboardWelcomePreviewImage
                   v-if="showImage && message.order === 'text-first'"
                   :src="imageUrl"
-                  :edit-to="editorPath"
+                  @edit="selectTab('image')"
                   class="!mt-3"
                 />
               </div>
@@ -295,7 +350,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { renderDiscordMarkdown } from "~/utils/discord-markdown";
 import {
   WELCOME_MESSAGE_ORDERS as ORDERS,
@@ -468,17 +523,57 @@ const renderMd = (text: string) => renderDiscordMarkdown(text, markdownContext.v
 
 const showImage = computed(() => message.value.mode !== "text");
 
-const editorPath = `/dashboard/server/${guildId}/modules/welcome/editor`;
-
-// Cache-bust once per visit so returning from the editor shows the new design.
-const imageUrl = `/api/welcome/preview/${encodeURIComponent(guildId)}?t=${Date.now()}`;
+// Refreshed when the image design is saved, so the preview shows the new render.
+const imageUrl = ref(previewImageUrl());
+function previewImageUrl() {
+  return `/api/welcome/preview/${encodeURIComponent(guildId)}?t=${Date.now()}`;
+}
+const onImageSaved = () => {
+  imageUrl.value = previewImageUrl();
+};
 
 const previewTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// ── Tabs ──
+const tabs = [
+  { value: "message", label: "Message", icon: "i-lucide-message-square-text" },
+  { value: "image", label: "Image", icon: "i-lucide-image" },
+] as const;
+type TabValue = (typeof tabs)[number]["value"];
+
+const router = useRouter();
+const { setFullBleed, reset: resetPageChrome } = usePageChrome();
+const activeTab = ref<TabValue>(route.query.tab === "image" ? "image" : "message");
+// The canvas keeps its own state, so its unsaved changes are reported up.
+const imageDirty = ref(false);
+
+const UNSAVED_IMAGE = "You have unsaved changes to the welcome image. Leave them behind?";
+
+function selectTab(tab: TabValue) {
+  if (tab === activeTab.value) return;
+  if (activeTab.value === "image" && imageDirty.value && !window.confirm(UNSAVED_IMAGE)) return;
+  if (activeTab.value === "image") imageDirty.value = false;
+  activeTab.value = tab;
+}
+
+watch(
+  activeTab,
+  (tab) => {
+    // The designer fills the page, like the XP rank card tab.
+    if (tab === "image") setFullBleed(true);
+    else resetPageChrome();
+    router.replace({ query: tab === "image" ? { tab } : {} });
+  },
+  { immediate: true },
+);
+
+onUnmounted(resetPageChrome);
 
 onBeforeRouteLeave(() => {
   if (dirty.value && !window.confirm("You have unsaved welcome changes. Leave anyway?")) {
     return false;
   }
+  if (imageDirty.value && !window.confirm(UNSAVED_IMAGE)) return false;
 });
 
 onMounted(() => {
