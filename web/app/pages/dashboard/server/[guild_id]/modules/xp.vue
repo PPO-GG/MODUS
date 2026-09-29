@@ -1,492 +1,379 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-8 w-full">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
-      <div class="flex items-center gap-4">
-        <NuxtLink
-          :to="`/dashboard/server/${guildId}/modules`"
-          class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
-        >
-          <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-        </NuxtLink>
-        <div class="flex items-center gap-3.5">
-          <div
-            class="w-12 h-12 rounded-2xl bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0 shadow-lg shadow-secondary-500/10"
-          >
-            <UIcon name="i-heroicons-trophy" class="w-6 h-6 text-secondary-400" />
-          </div>
+  <div
+    :class="
+      activeTab === 'card'
+        ? 'flex h-full flex-col gap-4 p-4 md:p-6'
+        : 'mx-auto max-w-3xl space-y-6'
+    "
+  >
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-trophy"
+      title="XP & Leveling"
+      description="How members earn XP, how levels are announced, and their rank cards."
+      :enabled="isModuleEnabled('xp')"
+    />
+
+    <!-- ── Tabs ── -->
+    <div
+      class="inline-flex self-start rounded-full bg-white/[0.04] p-1 ring-1 ring-inset ring-white/10"
+      role="tablist"
+      aria-label="XP sections"
+    >
+      <button
+        v-for="tab in tabs"
+        :key="tab.value"
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === tab.value"
+        class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
+        :class="
+          activeTab === tab.value
+            ? 'bg-sky-200/15 text-white ring-1 ring-inset ring-sky-100/25'
+            : 'text-gray-400 hover:text-white'
+        "
+        @click="activeTab = tab.value"
+      >
+        <UIcon :name="tab.icon" class="h-4 w-4" />
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- ── General ── -->
+    <template v-if="activeTab === 'general'">
+      <!-- XP earning -->
+      <DashboardModuleSection
+        title="XP earning"
+        description="How members gain XP from chat messages."
+      >
+        <div class="space-y-5">
           <div>
-            <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-bold text-white tracking-tight">XP & Leveling System</h1>
-              <UBadge
-                :color="isModuleEnabled('xp') ? 'success' : 'neutral'"
-                variant="soft"
-                class="font-semibold text-xs"
-              >
-                {{ isModuleEnabled("xp") ? "Active" : "Disabled" }}
-              </UBadge>
-            </div>
-            <p class="text-sm text-gray-400 mt-0.5">
-              Configure XP earning rates, level-up announcements, and design custom rank cards
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3 self-start sm:self-auto shrink-0">
-        <NuxtLink
-          :to="`/xp/${guildId}`"
-          target="_blank"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary-500/10 border border-secondary-500/20 text-xs font-semibold text-secondary-300 hover:bg-secondary-500/20 transition-all hover:scale-[1.02] shadow-sm"
-        >
-          <UIcon name="i-heroicons-globe-alt" class="w-4 h-4" />
-          <span>Public Server Leaderboard</span>
-          <UIcon name="i-heroicons-arrow-top-right-on-square" class="w-3.5 h-3.5 opacity-60" />
-        </NuxtLink>
-      </div>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <div class="flex items-center p-1 bg-white/[0.04] border border-white/[0.08] rounded-xl self-start max-w-md">
-      <button
-        type="button"
-        class="flex-1 flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold transition-all duration-150"
-        :class="
-          activeTab === 'general'
-            ? 'bg-secondary-600 text-white shadow-md shadow-secondary-600/30'
-            : 'text-gray-400 hover:text-white'
-        "
-        @click="activeTab = 'general'"
-      >
-        <UIcon name="i-heroicons-adjustments-horizontal" class="w-4 h-4" />
-        <span>General Configuration</span>
-      </button>
-      <button
-        type="button"
-        class="flex-1 flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold transition-all duration-150"
-        :class="
-          activeTab === 'card'
-            ? 'bg-secondary-600 text-white shadow-md shadow-secondary-600/30'
-            : 'text-gray-400 hover:text-white'
-        "
-        @click="activeTab = 'card'"
-      >
-        <UIcon name="i-heroicons-paint-brush" class="w-4 h-4" />
-        <span>Rank Card Designer</span>
-      </button>
-    </div>
-
-    <!-- ======================================================== -->
-    <!-- GENERAL SETTINGS TAB                                     -->
-    <!-- ======================================================== -->
-    <div v-if="activeTab === 'general'" class="space-y-8">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <!-- 1. XP Gain & Activity Rules -->
-        <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 backdrop-blur-xl p-6 sm:p-7 space-y-6 shadow-xl">
-          <!-- Card Header -->
-          <div class="flex items-center justify-between border-b border-white/10 pb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0">
-                <UIcon name="i-heroicons-bolt" class="w-5 h-5 text-secondary-400" />
-              </div>
-              <div>
-                <h2 class="text-base font-bold text-white">XP Earning Rules</h2>
-                <p class="text-xs text-gray-400">Controls how members gain XP per valid chat message</p>
-              </div>
-            </div>
-            <UBadge color="primary" variant="subtle" class="text-xs">
-              ~{{ Math.round((settings.minXpPerMessage + settings.maxXpPerMessage) / 2) }} XP / msg avg
-            </UBadge>
-          </div>
-
-          <!-- Min / Max XP Per Message -->
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <label class="text-xs font-semibold text-gray-200">XP Range per Message</label>
-              <span class="text-xs text-secondary-300 font-mono font-medium">
-                {{ settings.minXpPerMessage }} – {{ settings.maxXpPerMessage }} XP
+            <div class="mb-2 flex items-baseline justify-between gap-3">
+              <span class="text-sm font-medium text-white">XP per message</span>
+              <span class="text-sm text-sky-200">
+                {{ settings.minXpPerMessage }} to {{ settings.maxXpPerMessage }} XP,
+                about {{ avgXp }} on average
               </span>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-2">
-                <span class="text-[11px] font-medium text-gray-400 block">Minimum XP</span>
-                <div class="flex items-center gap-2">
-                  <UInput
-                    v-model.number="settings.minXpPerMessage"
-                    type="number"
-                    :min="1"
-                    :max="settings.maxXpPerMessage"
-                    class="w-full"
-                    size="md"
-                  />
-                  <span class="text-xs text-gray-500 shrink-0 font-medium">XP</span>
-                </div>
-              </div>
-              <div class="bg-black/30 border border-white/5 rounded-xl p-3.5 space-y-2">
-                <span class="text-[11px] font-medium text-gray-400 block">Maximum XP</span>
-                <div class="flex items-center gap-2">
-                  <UInput
-                    v-model.number="settings.maxXpPerMessage"
-                    type="number"
-                    :min="settings.minXpPerMessage"
-                    :max="500"
-                    class="w-full"
-                    size="md"
-                  />
-                  <span class="text-xs text-gray-500 shrink-0 font-medium">XP</span>
-                </div>
-              </div>
-            </div>
-            <p class="text-[11px] text-gray-500">
-              Each message awards a randomized amount of XP between the minimum and maximum threshold.
-            </p>
-          </div>
-
-          <!-- Cooldown -->
-          <div class="space-y-3 pt-2 border-t border-white/5">
-            <div class="flex items-center justify-between">
-              <label class="text-xs font-semibold text-gray-200">Message Cooldown</label>
-              <span class="text-xs text-secondary-300 font-mono font-medium">
-                {{ formatCooldown(settings.cooldownSeconds) }}
-              </span>
-            </div>
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <div class="flex items-center gap-2 bg-black/30 border border-white/5 rounded-xl p-3 flex-1">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <UFormField label="Minimum" class="w-full">
                 <UInput
-                  v-model.number="settings.cooldownSeconds"
+                  v-model.number="settings.minXpPerMessage"
                   type="number"
-                  :min="5"
-                  :max="3600"
+                  :min="1"
+                  :max="settings.maxXpPerMessage"
                   class="w-full"
-                  size="md"
                 />
-                <span class="text-xs text-gray-500 shrink-0 font-medium">seconds</span>
-              </div>
-
-              <!-- Quick Presets -->
-              <div class="flex items-center gap-1.5 shrink-0 bg-white/[0.02] border border-white/5 p-1 rounded-xl">
-                <button
-                  v-for="preset in [30, 60, 120, 300]"
-                  :key="preset"
-                  type="button"
-                  class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                  :class="settings.cooldownSeconds === preset ? 'bg-secondary-600 text-white font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/5'"
-                  @click="settings.cooldownSeconds = preset"
-                >
-                  {{ preset >= 60 ? `${preset / 60}m` : `${preset}s` }}
-                </button>
-              </div>
+              </UFormField>
+              <UFormField label="Maximum" class="w-full">
+                <UInput
+                  v-model.number="settings.maxXpPerMessage"
+                  type="number"
+                  :min="settings.minXpPerMessage"
+                  :max="500"
+                  class="w-full"
+                />
+              </UFormField>
             </div>
-            <p class="text-[11px] text-gray-500">
-              Prevents spam by only granting XP once per cooldown interval per user.
+            <p
+              v-if="settings.minXpPerMessage > settings.maxXpPerMessage"
+              class="mt-3 flex items-center gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+            >
+              <UIcon name="i-lucide-triangle-alert" class="h-4 w-4 shrink-0" />
+              The minimum is higher than the maximum.
+            </p>
+            <p class="mt-2 text-[13px] text-gray-400">
+              Each message awards a random amount between the two.
             </p>
           </div>
 
-          <!-- Minimum Message Length -->
-          <div class="space-y-3 pt-2 border-t border-white/5">
-            <div class="flex items-center justify-between">
-              <label class="text-xs font-semibold text-gray-200">Minimum Message Length</label>
-              <span class="text-xs text-secondary-300 font-mono font-medium">
-                {{ settings.minMessageLength }} characters
-              </span>
+          <div class="border-t border-white/[0.06] pt-5">
+            <div class="mb-2 flex items-baseline justify-between gap-3">
+              <label class="text-sm font-medium text-white" for="xp-cooldown">Message cooldown</label>
+              <span class="text-sm text-sky-200">{{ formatCooldown(settings.cooldownSeconds) }}</span>
             </div>
-            <div class="bg-black/30 border border-white/5 rounded-xl p-3.5 flex items-center gap-3">
-              <UIcon name="i-heroicons-chat-bubble-bottom-center-text" class="w-5 h-5 text-gray-500 shrink-0" />
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                v-for="preset in cooldownPresets"
+                :key="preset"
+                type="button"
+                class="rounded-full px-3 py-1.5 text-xs ring-1 ring-inset transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
+                :class="
+                  settings.cooldownSeconds === preset
+                    ? 'bg-sky-200/[0.06] text-white ring-2 ring-teal-300/60'
+                    : 'text-gray-300 ring-white/10 hover:bg-white/[0.04]'
+                "
+                @click="settings.cooldownSeconds = preset"
+              >
+                {{ preset >= 60 ? `${preset / 60} min` : `${preset}s` }}
+              </button>
               <UInput
-                v-model.number="settings.minMessageLength"
+                id="xp-cooldown"
+                v-model.number="settings.cooldownSeconds"
                 type="number"
-                :min="1"
-                :max="100"
-                class="flex-1"
-                size="md"
+                :min="5"
+                :max="3600"
+                size="sm"
+                class="w-24"
+                aria-label="Cooldown in seconds"
               />
-              <span class="text-xs text-gray-500 shrink-0 font-medium">characters minimum</span>
+              <span class="text-xs text-gray-400">seconds</span>
             </div>
-            <p class="text-[11px] text-gray-500">
-              Messages shorter than this character length (such as single emojis or "k") are ignored.
+            <p class="mt-2 text-[13px] text-gray-400">
+              XP is granted once per cooldown per member, which stops spam farming.
+            </p>
+          </div>
+
+          <div class="border-t border-white/[0.06] pt-5">
+            <div class="mb-2 flex items-baseline justify-between gap-3">
+              <label class="text-sm font-medium text-white" for="xp-minlen">Minimum message length</label>
+              <span class="text-sm text-sky-200">{{ settings.minMessageLength }} characters</span>
+            </div>
+            <UInput
+              id="xp-minlen"
+              v-model.number="settings.minMessageLength"
+              type="number"
+              :min="1"
+              :max="100"
+              icon="i-lucide-message-square"
+              class="w-full sm:w-48"
+            />
+            <p class="mt-2 text-[13px] text-gray-400">
+              Shorter messages, like a single emoji or "k", don't earn XP.
             </p>
           </div>
         </div>
+      </DashboardModuleSection>
 
-        <!-- 2. Level-Up Announcements & Live Preview -->
-        <div class="space-y-6">
-          <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 backdrop-blur-xl p-6 sm:p-7 space-y-6 shadow-xl">
-            <!-- Card Header -->
-            <div class="flex items-center gap-3 border-b border-white/10 pb-4">
-              <div class="w-10 h-10 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0">
-                <UIcon name="i-heroicons-megaphone" class="w-5 h-5 text-primary-400" />
-              </div>
-              <div>
-                <h2 class="text-base font-bold text-white">Level-Up Announcements</h2>
-                <p class="text-xs text-gray-400">Where and how the bot celebrates member level-ups</p>
+      <!-- Progression -->
+      <DashboardModuleSection
+        title="Progression"
+        description="What the rates above mean in practice. Pick a level to see its cost."
+      >
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <USlider v-model="calcLevel" :min="1" :max="100" :step="1" class="flex-1" />
+            <span class="w-16 shrink-0 text-right font-mono text-sm text-sky-200">Lv. {{ calcLevel }}</span>
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="rounded-lg bg-white/[0.04] p-3">
+              <div class="text-xs text-gray-400">Total XP to reach level {{ calcLevel }}</div>
+              <div class="mt-0.5 font-mono text-lg font-semibold text-white">
+                {{ simulatedLevelStats.totalXp.toLocaleString() }}
               </div>
             </div>
-
-            <!-- Target Channel -->
-            <div class="space-y-2">
-              <label class="text-xs font-semibold text-gray-200 block">Announcement Channel</label>
-              <USelectMenu
-                v-model="settings.announcementChannel"
-                :items="channelItems"
-                value-key="value"
-                placeholder="💬 Post in the channel where user leveled up"
-                :loading="state.channelsLoading"
-                :clear="{ ariaLabel: 'Clear channel selection' }"
-                size="md"
-                class="w-full"
-              />
-              <p class="text-[11px] text-gray-500">
-                Choose a specific broadcast channel, or leave empty to announce in the active conversation channel.
-              </p>
-            </div>
-
-            <!-- Message Template -->
-            <div class="space-y-2.5 pt-2 border-t border-white/5">
-              <div class="flex items-center justify-between">
-                <label class="text-xs font-semibold text-gray-200">Celebration Message</label>
-                <span class="text-[11px] text-gray-500">Click tags to insert</span>
+            <div class="rounded-lg bg-white/[0.04] p-3">
+              <div class="text-xs text-gray-400">XP for level {{ calcLevel + 1 }}</div>
+              <div class="mt-0.5 font-mono text-lg font-semibold text-sky-200">
+                {{ simulatedLevelStats.xpForNext.toLocaleString() }}
               </div>
+            </div>
+            <div class="rounded-lg bg-white/[0.04] p-3">
+              <div class="text-xs text-gray-400">Messages to get there</div>
+              <div class="mt-0.5 font-mono text-lg font-semibold text-teal-300">
+                ~{{ simulatedLevelStats.estimatedMessages.toLocaleString() }}
+              </div>
+            </div>
+          </div>
+          <p class="text-[13px] text-gray-400">
+            Each level costs <code class="font-mono text-gray-300">5 × L² + 50 × L + 100</code> XP.
+          </p>
+        </div>
+      </DashboardModuleSection>
+
+      <!-- Level-up announcements -->
+      <DashboardModuleSection
+        title="Level-up announcements"
+        description="Where and how the bot celebrates a level-up."
+      >
+        <div class="space-y-5">
+          <UFormField
+            label="Announcement channel"
+            hint="Optional"
+            description="Leave empty to announce in the channel where the member levelled up."
+            class="w-full"
+          >
+            <USelectMenu
+              v-model="settings.announcementChannel"
+              :items="channelItems"
+              value-key="value"
+              placeholder="Same channel as the level-up"
+              searchable
+              icon="i-lucide-hash"
+              :loading="state.channelsLoading"
+              :clear="{ ariaLabel: 'Clear channel selection' }"
+              class="w-full"
+            />
+          </UFormField>
+
+          <div>
+            <UFormField label="Celebration message" class="w-full">
               <UInput
                 v-model="settings.levelUpMessage"
-                placeholder="🎉 Congratulations {user}, you reached Level {level}!"
-                size="lg"
-                class="w-full font-medium"
+                placeholder="Congratulations {user}, you reached level {level}!"
+                class="w-full"
               />
-
-              <!-- Clickable Variable Insert Chips -->
-              <div class="flex flex-wrap gap-1.5 pt-1">
-                <button
-                  v-for="tag in ['{user}', '{username}', '{level}', '{server}']"
-                  :key="tag"
-                  type="button"
-                  class="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-mono text-secondary-300 hover:text-white transition-all duration-150 flex items-center gap-1"
-                  @click="insertVariable(tag)"
-                >
-                  <span class="text-secondary-400 font-bold">+</span>
-                  <span>{{ tag }}</span>
-                </button>
-              </div>
+            </UFormField>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <span class="text-[13px] text-gray-400">Insert:</span>
+              <button
+                v-for="tag in messageTags"
+                :key="tag"
+                type="button"
+                class="rounded-md bg-white/5 px-2 py-0.5 font-mono text-[12px] text-sky-200 ring-1 ring-inset ring-white/10 transition-colors hover:bg-sky-200/10 hover:ring-sky-200/30 focus-visible:outline-2 focus-visible:outline-teal-300"
+                @click="insertVariable(tag)"
+              >
+                {{ tag }}
+              </button>
             </div>
+          </div>
 
-            <!-- Live Discord Chat Mock Preview -->
-            <div class="space-y-2 pt-3 border-t border-white/5">
-              <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                <UIcon name="i-lucide-sparkles" class="w-3.5 h-3.5 text-secondary-400" />
-                Live Discord Message Preview
+          <div>
+            <span class="mb-2 block text-sm font-medium text-white">Preview</span>
+            <div class="flex items-start gap-3 rounded-xl bg-[#313338] p-4">
+              <span
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-sky-600 to-teal-500"
+              >
+                <UIcon name="i-lucide-bot" class="h-5 w-5 text-white" />
               </span>
-
-              <div class="rounded-xl border border-white/10 bg-[#313338] p-4 flex items-start gap-3.5 shadow-inner">
-                <!-- Bot Avatar -->
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-secondary-600 to-primary-600 flex items-center justify-center shrink-0 shadow-md">
-                  <UIcon name="i-lucide-bot" class="w-5 h-5 text-white" />
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-semibold text-white">MODUS</span>
+                  <span class="rounded bg-[#5865F2] px-1.5 text-[10px] font-semibold leading-4 text-white">BOT</span>
+                  <span class="text-[11px] text-[#949ba4]">Today at 4:20 PM</span>
                 </div>
-                <!-- Message Content -->
-                <div class="flex-1 min-w-0 space-y-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-bold text-sm text-white">MODUS</span>
-                    <span class="bg-[#5865F2] text-white text-[10px] font-semibold px-1.5 py-0.2 rounded">BOT</span>
-                    <span class="text-[11px] text-gray-400">Today at 4:20 PM</span>
-                  </div>
-                  <p class="text-sm text-gray-200 leading-relaxed break-words font-normal">
-                    {{ previewRenderedMessage }}
-                  </p>
-                </div>
+                <p class="mt-0.5 break-words text-sm text-[#dbdee1]">{{ previewRenderedMessage }}</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </DashboardModuleSection>
 
-      <!-- 3. Interactive Progression Calculator Helper -->
-      <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-secondary-950/40 via-gray-900/60 to-gray-950/90 backdrop-blur-xl p-6 sm:p-7 space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-secondary-500/20 border border-secondary-500/30 flex items-center justify-center shrink-0">
-              <UIcon name="i-heroicons-calculator" class="w-5 h-5 text-secondary-300" />
+      <!-- Exclusions -->
+      <DashboardModuleSection
+        title="Exclusions"
+        description="Messages in these channels, or from members with these roles, never earn XP."
+      >
+        <div class="space-y-5">
+          <UFormField label="Excluded channels" class="w-full">
+            <div v-if="state.channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
+              <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+              <span class="text-sm">Loading channels…</span>
             </div>
-            <div>
-              <h3 class="text-base font-bold text-white">XP Level Progression Simulator</h3>
-              <p class="text-xs text-gray-400">
-                Formula: <span class="font-mono text-secondary-300">5×L² + 50×L + 100 XP</span> per level
-              </p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3 bg-black/40 border border-white/10 px-4 py-2 rounded-xl">
-            <span class="text-xs text-gray-400 font-medium">Test Level:</span>
-            <input
-              type="range"
-              v-model.number="calcLevel"
-              min="1"
-              max="100"
-              class="w-32 accent-secondary-500 cursor-pointer"
+            <USelectMenu
+              v-else
+              v-model="settings.excludedChannelIds"
+              :items="excludableChannels"
+              value-key="value"
+              multiple
+              searchable
+              placeholder="No excluded channels"
+              icon="i-lucide-hash"
+              class="w-full"
             />
-            <span class="font-bold font-mono text-base text-secondary-300 min-w-[2.5rem] text-right">
-              Lv. {{ calcLevel }}
-            </span>
-          </div>
-        </div>
+          </UFormField>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-white/10">
-          <div class="bg-white/[0.03] border border-white/5 rounded-xl p-4 space-y-1">
-            <span class="text-[11px] font-medium text-gray-400">Total Lifetime XP Needed</span>
-            <p class="text-xl font-bold font-mono text-white">
-              {{ simulatedLevelStats.totalXp.toLocaleString() }} <span class="text-xs text-gray-500 font-normal">XP</span>
-            </p>
-          </div>
-          <div class="bg-white/[0.03] border border-white/5 rounded-xl p-4 space-y-1">
-            <span class="text-[11px] font-medium text-gray-400">XP to Reach Level {{ calcLevel + 1 }}</span>
-            <p class="text-xl font-bold font-mono text-secondary-400">
-              {{ simulatedLevelStats.xpForNext.toLocaleString() }} <span class="text-xs text-gray-500 font-normal">XP</span>
-            </p>
-          </div>
-          <div class="bg-white/[0.03] border border-white/5 rounded-xl p-4 space-y-1">
-            <span class="text-[11px] font-medium text-gray-400">Estimated Messages Needed</span>
-            <p class="text-xl font-bold font-mono text-emerald-400">
-              ~{{ simulatedLevelStats.estimatedMessages.toLocaleString() }} <span class="text-xs text-gray-500 font-normal">messages</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. Leaderboard Visibility & Privacy Settings -->
-      <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 backdrop-blur-xl p-6 sm:p-7 space-y-5 shadow-xl">
-        <div class="flex items-center justify-between border-b border-white/10 pb-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0">
-              <UIcon name="i-heroicons-lock-closed" class="w-5 h-5 text-primary-400" />
+          <UFormField label="Excluded roles" class="w-full">
+            <div v-if="state.rolesLoading" class="flex items-center gap-2 py-2 text-gray-400">
+              <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+              <span class="text-sm">Loading roles…</span>
             </div>
-            <div>
-              <h2 class="text-base font-bold text-white">Leaderboard Visibility & Privacy</h2>
-              <p class="text-xs text-gray-400">Control who can view your server's leaderboard on the web</p>
-            </div>
-          </div>
-          <UBadge :color="settings.leaderboardVisibility === 'public' ? 'success' : settings.leaderboardVisibility === 'unlisted' ? 'warning' : 'neutral'" variant="subtle" class="capitalize text-xs">
-            {{ settings.leaderboardVisibility }}
-          </UBadge>
+            <USelectMenu
+              v-else
+              v-model="settings.excludedRoleIds"
+              :items="roleOptions"
+              value-key="value"
+              multiple
+              searchable
+              placeholder="No excluded roles"
+              icon="i-lucide-users"
+              class="w-full"
+            />
+          </UFormField>
         </div>
+      </DashboardModuleSection>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Private Option -->
-          <div
-            class="relative rounded-xl border p-4.5 cursor-pointer transition-all duration-200 flex flex-col justify-between"
-            :class="
-              settings.leaderboardVisibility === 'private'
-                ? 'border-secondary-500 bg-secondary-500/10 shadow-lg shadow-secondary-500/10'
-                : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
-            "
-            @click="settings.leaderboardVisibility = 'private'"
+      <!-- Leaderboard -->
+      <DashboardModuleSection
+        title="Leaderboard visibility"
+        description="Who can see this server's leaderboard on the web."
+      >
+        <template #actions>
+          <UButton
+            :to="`/xp/${guildId}`"
+            target="_blank"
+            color="neutral"
+            variant="soft"
+            size="sm"
+            trailing-icon="i-lucide-external-link"
           >
-            <div class="space-y-2">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <UIcon name="i-heroicons-lock-closed" class="w-4 h-4 text-secondary-400" />
-                  <span class="text-sm font-bold text-white">Private</span>
+            Open leaderboard
+          </UButton>
+        </template>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-3" role="radiogroup" aria-label="Leaderboard visibility">
+            <label v-for="opt in visibilityOptions" :key="opt.value" class="block cursor-pointer">
+              <input
+                v-model="settings.leaderboardVisibility"
+                type="radio"
+                name="xp-visibility"
+                :value="opt.value"
+                class="peer sr-only"
+              />
+              <div
+                class="flex h-full flex-col gap-2 rounded-xl p-3.5 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="flex items-center gap-2 text-sm font-semibold text-white">
+                    <span
+                      class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
+                    >
+                      <UIcon :name="opt.icon" class="h-4 w-4" />
+                    </span>
+                    {{ opt.label }}
+                  </span>
+                  <UIcon
+                    v-if="settings.leaderboardVisibility === opt.value"
+                    name="i-lucide-circle-check"
+                    class="h-5 w-5 text-teal-300"
+                  />
                 </div>
-                <UBadge color="primary" variant="subtle" size="xs">Default</UBadge>
+                <p class="text-[13px] leading-relaxed text-gray-400">{{ opt.description }}</p>
+                <p class="mt-auto pt-1 text-xs text-gray-500">{{ opt.footnote }}</p>
               </div>
-              <p class="text-xs text-gray-400 leading-relaxed">
-                Leaderboards and ranks are only viewable inside Discord via bot commands (<code class="text-secondary-300">/rank</code>, <code class="text-secondary-300">/xp</code>). The web page is restricted and never indexed.
-              </p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-white/5 flex items-center gap-1.5 text-[11px] text-gray-500">
-              <UIcon name="i-heroicons-shield-check" class="w-3.5 h-3.5 text-emerald-400" />
-              <span>Highest privacy protection</span>
-            </div>
+            </label>
           </div>
 
-          <!-- Unlisted Option -->
-          <div
-            class="relative rounded-xl border p-4.5 cursor-pointer transition-all duration-200 flex flex-col justify-between"
-            :class="
-              settings.leaderboardVisibility === 'unlisted'
-                ? 'border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10'
-                : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
-            "
-            @click="settings.leaderboardVisibility = 'unlisted'"
+          <p
+            class="flex items-start gap-2 rounded-lg bg-sky-200/[0.06] px-3 py-2 text-[13px] text-sky-200"
           >
-            <div class="space-y-2">
-              <div class="flex items-center gap-2">
-                <UIcon name="i-heroicons-link" class="w-4 h-4 text-amber-400" />
-                <span class="text-sm font-bold text-white">Unlisted</span>
-              </div>
-              <p class="text-xs text-gray-400 leading-relaxed">
-                Accessible to anyone with your direct leaderboard link. Protected with <code class="text-amber-300">noindex</code> so search engines will not crawl it, and hidden from global directory listings.
-              </p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-white/5 flex items-center gap-1.5 text-[11px] text-gray-500">
-              <UIcon name="i-heroicons-eye-slash" class="w-3.5 h-3.5 text-amber-400" />
-              <span>Direct URL only</span>
-            </div>
-          </div>
-
-          <!-- Public Option -->
-          <div
-            class="relative rounded-xl border p-4.5 cursor-pointer transition-all duration-200 flex flex-col justify-between"
-            :class="
-              settings.leaderboardVisibility === 'public'
-                ? 'border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
-                : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
-            "
-            @click="settings.leaderboardVisibility = 'public'"
-          >
-            <div class="space-y-2">
-              <div class="flex items-center gap-2">
-                <UIcon name="i-heroicons-globe-alt" class="w-4 h-4 text-emerald-400" />
-                <span class="text-sm font-bold text-white">Public</span>
-              </div>
-              <p class="text-xs text-gray-400 leading-relaxed">
-                Publicly discoverable and indexable by search engines. Listed on the global server leaderboards directory for maximum community engagement.
-              </p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-white/5 flex items-center gap-1.5 text-[11px] text-gray-500">
-              <UIcon name="i-heroicons-magnifying-glass" class="w-3.5 h-3.5 text-emerald-400" />
-              <span>Search & directory listed</span>
-            </div>
-          </div>
+            <UIcon name="i-lucide-info" class="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              Members can also hide their own profile from the web leaderboard with
+              <code class="font-mono">/xp privacy hidden:true</code>.
+            </span>
+          </p>
         </div>
+      </DashboardModuleSection>
 
-        <div class="flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-3 text-xs text-gray-400">
-          <UIcon name="i-heroicons-information-circle" class="w-4 h-4 text-secondary-400 shrink-0" />
-          <span>
-            <strong>Member Anonymity:</strong> Individual members can also hide their own profile and stats from the web leaderboard at any time using the <code class="text-secondary-300 font-mono">/xp privacy hidden:true</code> command.
-          </span>
-        </div>
+      <div class="flex justify-start">
+        <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-rotate-cw" @click="resetToDefaults">
+          Reset to recommended defaults
+        </UButton>
       </div>
 
       <DashboardModuleAccessSection :guild-id="guildId" module-name="xp" />
 
-      <!-- Action Bar -->
-      <div class="flex items-center justify-between pt-4 border-t border-white/10">
-        <button
-          type="button"
-          class="text-xs font-medium text-gray-400 hover:text-white transition-colors"
-          @click="resetToDefaults"
-        >
-          Reset to recommended defaults
-        </button>
+      <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save()" @discard="discard" />
+    </template>
 
-        <UButton
-          color="primary"
-          size="lg"
-          icon="i-heroicons-check"
-          :loading="saving"
-          @click="save()"
-          class="min-w-[220px] font-bold shadow-lg shadow-primary-500/20"
-        >
-          Save XP Configuration
-        </UButton>
-      </div>
-    </div>
-
-    <!-- ======================================================== -->
-    <!-- RANK CARD DESIGNER TAB                                   -->
-    <!-- ======================================================== -->
+    <!-- ── Rank card designer ── -->
     <RankCardEditor
       v-else
       :guild-id="guildId"
       v-model="settings.cardTemplate"
-      class="h-full"
+      class="min-h-0 flex-1"
       @save="save"
     />
   </div>
@@ -509,9 +396,15 @@ const {
   saveModuleSettings,
   getModuleConfig,
   loadChannels,
-  channelOptions,
+  loadRoles,
+  roleOptions,
 } = useServerSettings(guildId);
 const { setFullBleed, reset: resetPageChrome } = usePageChrome();
+
+const tabs = [
+  { value: "general", label: "General", icon: "i-lucide-sliders-horizontal" },
+  { value: "card", label: "Rank card", icon: "i-lucide-palette" },
+] as const;
 
 const activeTab = ref<"general" | "card">("general");
 
@@ -525,18 +418,80 @@ watch(activeTab, (tab) => {
 const saving = ref(false);
 const calcLevel = ref(10);
 
-const settings = ref({
+// ── Settings ──
+
+const DEFAULT_LEVEL_UP_MESSAGE = "🎉 Congratulations {user}, you leveled up to **Level {level}**!";
+
+const defaults = () => ({
   cooldownSeconds: 60,
   minXpPerMessage: 15,
   maxXpPerMessage: 25,
   minMessageLength: 5,
-  announcementChannel: "",
-  levelUpMessage: "🎉 Congratulations {user}, you leveled up to **Level {level}**!",
+  announcementChannel: "" as string | null,
+  levelUpMessage: DEFAULT_LEVEL_UP_MESSAGE,
   leaderboardVisibility: "private" as "private" | "unlisted" | "public",
   cardTemplate: JSON.parse(JSON.stringify(DEFAULT_RANK_CARD_TEMPLATE)) as RankCardTemplate,
+  excludedChannelIds: [] as string[],
+  excludedRoleIds: [] as string[],
 });
 
-const channelItems = computed(() => channelOptions.value);
+const settings = ref(defaults());
+
+// Last loaded/saved values (JSON); drives the unsaved-changes bar and Discard.
+// A cleared channel select can come back as null, so normalise it.
+const snapshot = () =>
+  JSON.stringify({ ...settings.value, announcementChannel: settings.value.announcementChannel || "" });
+const baseline = ref(snapshot());
+const dirty = computed(() => snapshot() !== baseline.value);
+
+// ── Options ──
+
+const cooldownPresets = [30, 60, 120, 300];
+const messageTags = ["{user}", "{username}", "{level}", "{server}"];
+
+const visibilityOptions = [
+  {
+    value: "private",
+    label: "Private",
+    icon: "i-lucide-lock",
+    description:
+      "Ranks are only visible in Discord through /rank and /xp. The web page is restricted and never indexed.",
+    footnote: "Default. Highest privacy.",
+  },
+  {
+    value: "unlisted",
+    label: "Unlisted",
+    icon: "i-lucide-link",
+    description:
+      "Anyone with your direct leaderboard link can view it. It's noindexed and left out of the directory.",
+    footnote: "Direct URL only.",
+  },
+  {
+    value: "public",
+    label: "Public",
+    icon: "i-lucide-globe",
+    description:
+      "Discoverable by search engines and listed in the global server leaderboards directory.",
+    footnote: "Search and directory listed.",
+  },
+] as const;
+
+// Every channel except categories, which can't hold messages.
+const CATEGORY_CHANNEL = 4;
+const channelItems = computed(() =>
+  state.value.channels.map((c: any) => ({ label: `#${c.name}`, value: c.id })),
+);
+const excludableChannels = computed(() =>
+  state.value.channels
+    .filter((c: any) => c.type !== CATEGORY_CHANNEL)
+    .map((c: any) => ({ label: `#${c.name}`, value: c.id })),
+);
+
+// ── Helpers ──
+
+const avgXp = computed(() =>
+  Math.round((settings.value.minXpPerMessage + settings.value.maxXpPerMessage) / 2),
+);
 
 const formatCooldown = (seconds: number) => {
   if (seconds < 60) return `${seconds}s`;
@@ -575,13 +530,16 @@ const simulatedLevelStats = computed(() => {
 });
 
 const resetToDefaults = () => {
-  settings.value.cooldownSeconds = 60;
-  settings.value.minXpPerMessage = 15;
-  settings.value.maxXpPerMessage = 25;
-  settings.value.minMessageLength = 5;
-  settings.value.levelUpMessage = "🎉 Congratulations {user}, you leveled up to **Level {level}**!";
-  settings.value.leaderboardVisibility = "private";
+  const d = defaults();
+  settings.value.cooldownSeconds = d.cooldownSeconds;
+  settings.value.minXpPerMessage = d.minXpPerMessage;
+  settings.value.maxXpPerMessage = d.maxXpPerMessage;
+  settings.value.minMessageLength = d.minMessageLength;
+  settings.value.levelUpMessage = d.levelUpMessage;
+  settings.value.leaderboardVisibility = d.leaderboardVisibility;
 };
+
+// ── Save ──
 
 const save = async (customTemplate?: RankCardTemplate) => {
   saving.value = true;
@@ -589,7 +547,10 @@ const save = async (customTemplate?: RankCardTemplate) => {
     settings.value.cardTemplate = customTemplate;
   }
 
-  await saveModuleSettings("xp", {
+  const ok = await saveModuleSettings("xp", {
+    // The save replaces the module's whole settings blob, so keep any keys
+    // this page doesn't know about.
+    ...getModuleConfig("xp"),
     cooldownSeconds: settings.value.cooldownSeconds,
     minXpPerMessage: settings.value.minXpPerMessage,
     maxXpPerMessage: settings.value.maxXpPerMessage,
@@ -598,9 +559,17 @@ const save = async (customTemplate?: RankCardTemplate) => {
     levelUpMessage: settings.value.levelUpMessage,
     leaderboardVisibility: settings.value.leaderboardVisibility,
     cardTemplate: settings.value.cardTemplate,
+    excludedChannelIds: settings.value.excludedChannelIds,
+    excludedRoleIds: settings.value.excludedRoleIds,
   });
+  // A failed save keeps the form dirty so the bar stays and Save can retry.
+  if (ok) baseline.value = snapshot();
 
   saving.value = false;
+};
+
+const discard = () => {
+  settings.value = JSON.parse(baseline.value);
 };
 
 onMounted(() => {
@@ -612,12 +581,16 @@ onMounted(() => {
       maxXpPerMessage: saved.maxXpPerMessage ?? 25,
       minMessageLength: saved.minMessageLength ?? 5,
       announcementChannel: saved.announcementChannel ?? "",
-      levelUpMessage: saved.levelUpMessage ?? "🎉 Congratulations {user}, you leveled up to **Level {level}**!",
+      levelUpMessage: saved.levelUpMessage ?? DEFAULT_LEVEL_UP_MESSAGE,
       leaderboardVisibility: saved.leaderboardVisibility ?? "private",
       cardTemplate: saved.cardTemplate ?? JSON.parse(JSON.stringify(DEFAULT_RANK_CARD_TEMPLATE)),
+      excludedChannelIds: Array.isArray(saved.excludedChannelIds) ? [...saved.excludedChannelIds] : [],
+      excludedRoleIds: Array.isArray(saved.excludedRoleIds) ? [...saved.excludedRoleIds] : [],
     };
   }
+  baseline.value = snapshot();
   loadChannels();
+  loadRoles();
 });
 
 onUnmounted(() => {
