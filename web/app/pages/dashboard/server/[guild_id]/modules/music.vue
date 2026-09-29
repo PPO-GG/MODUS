@@ -1,690 +1,410 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
+  <div class="mx-auto max-w-5xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-music"
+      title="Music"
+      description="Control playback and queue songs, and set how music works in this server."
+      :enabled="isModuleEnabled('Music')"
+    />
+
+    <!-- ── Tabs ── -->
+    <div
+      class="inline-flex rounded-full bg-white/[0.04] p-1 ring-1 ring-inset ring-white/10"
+      role="tablist"
+      aria-label="Music sections"
+    >
+      <button
+        v-for="tab in tabs"
+        :key="tab.value"
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === tab.value"
+        class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
+        :class="
+          activeTab === tab.value
+            ? 'bg-sky-200/15 text-white ring-1 ring-inset ring-sky-100/25'
+            : 'text-gray-400 hover:text-white'
+        "
+        @click="activeTab = tab.value"
       >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
-        >
-          <UIcon
-            name="i-heroicons-musical-note"
-            class="w-5 h-5 text-primary-400"
-          />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-white">Music</h2>
-          <p class="text-xs text-gray-500">
-            Now playing, queue & server configuration
-          </p>
-        </div>
-      </div>
-      <UBadge
-        :color="isModuleEnabled('Music') ? 'success' : 'neutral'"
-        variant="soft"
-        class="ml-auto"
-      >
-        {{ isModuleEnabled("Music") ? "Module Active" : "Module Disabled" }}
-      </UBadge>
+        <UIcon :name="tab.icon" class="h-4 w-4" />
+        {{ tab.label }}
+      </button>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         NOW PLAYING — Spotify-inspired full-width player
-         ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- ══════════════ Player ══════════════ -->
     <div
-      class="now-playing-container relative overflow-hidden rounded-2xl border border-white/10"
+      v-if="activeTab === 'player'"
+      class="relative overflow-hidden rounded-2xl bg-gray-950/80 ring-1 ring-inset ring-white/10"
     >
-      <!-- Album art background — blurred, desaturated -->
-      <div class="absolute inset-0 z-0">
+      <!-- Album art, blurred and dimmed behind the content -->
+      <div class="absolute inset-0 z-0" aria-hidden="true">
         <img
           v-if="playerState.currentTrack?.thumbnail"
           :src="playerState.currentTrack.thumbnail"
-          class="w-full h-full object-cover scale-110"
+          class="h-full w-full scale-110 object-cover"
           style="filter: blur(60px) saturate(0.5) brightness(0.3)"
           alt=""
         />
-        <div
-          v-else
-          class="w-full h-full bg-gradient-to-br from-primary-950/80 via-gray-950 to-secondary-950/80"
-        />
-        <!-- Overlay gradient for readability -->
-        <div
-          class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/40"
-        />
-        <div
-          class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30"
-        />
+        <div v-else class="h-full w-full bg-gradient-to-br from-sky-950/60 via-gray-950 to-teal-950/40" />
+        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/40" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30" />
       </div>
 
-      <!-- Content layout: Left = Player | Right = Queue -->
-      <div
-        class="relative z-10 flex flex-col lg:flex-row min-h-[420px] max-h-[600px]"
-      >
-        <!-- ─── Left: Now Playing ─── -->
-        <div
-          class="flex-shrink-0 w-full lg:w-[480px] p-6 lg:p-8 flex flex-col justify-between"
-        >
-          <!-- Top: Connection status -->
-          <div class="flex items-center gap-2 mb-4">
-            <div
-              class="w-2 h-2 rounded-full"
+      <div class="relative z-10 flex min-h-[420px] flex-col lg:max-h-[600px] lg:flex-row">
+        <!-- ─── Now playing ─── -->
+        <div class="flex w-full shrink-0 flex-col justify-between gap-4 p-5 sm:p-6 lg:w-[26rem]">
+          <div class="flex items-center gap-2">
+            <span
+              class="h-2 w-2 rounded-full"
               :class="
                 connected
                   ? playerState.isPlaying
-                    ? 'bg-green-400 animate-pulse'
-                    : 'bg-yellow-400'
+                    ? 'animate-pulse bg-emerald-400'
+                    : 'bg-amber-400'
                   : 'bg-red-400'
               "
+              aria-hidden="true"
             />
-            <span
-              class="text-[10px] font-medium uppercase tracking-widest text-gray-400"
-            >
-              {{
-                !connected
-                  ? "Bot Offline"
-                  : playerState.isPlaying
-                    ? `Playing in ${playerState.voiceChannel || "voice"}`
-                    : playerState.isPaused
-                      ? "Paused"
-                      : "Nothing Playing"
-              }}
+            <span class="font-mono text-[11px] uppercase tracking-wider text-gray-300">
+              {{ statusText }}
             </span>
           </div>
 
-          <!-- Track Info -->
-          <div
-            v-if="playerState.currentTrack"
-            class="space-y-4 flex-1 flex flex-col justify-center"
-          >
-            <!-- Thumbnail -->
-            <div class="flex items-start gap-5">
-              <div
-                class="w-28 h-28 lg:w-36 lg:h-36 rounded-xl overflow-hidden shadow-2xl shadow-black/50 shrink-0 border border-white/10"
-              >
-                <img
-                  :src="
-                    playerState.currentTrack.thumbnail ||
-                    '/placeholder-album.png'
-                  "
-                  :alt="playerState.currentTrack.title"
-                  class="w-full h-full object-cover"
-                />
-              </div>
+          <div v-if="playerState.currentTrack" class="flex flex-1 flex-col justify-center gap-5">
+            <div class="flex items-start gap-4">
+              <DashboardMusicArt
+                :src="playerState.currentTrack.thumbnail"
+                :alt="playerState.currentTrack.title"
+                class="h-28 w-28 rounded-xl shadow-2xl shadow-black/50 ring-1 ring-white/10"
+              />
               <div class="min-w-0 flex-1 pt-1">
                 <h3
-                  class="text-xl lg:text-2xl font-bold text-white truncate leading-tight"
+                  class="truncate text-xl font-semibold leading-tight text-white"
                   :title="playerState.currentTrack.title"
                 >
                   {{ playerState.currentTrack.title }}
                 </h3>
-                <p class="text-sm text-gray-400 mt-1 truncate">
-                  {{ playerState.currentTrack.author }}
-                </p>
-                <p class="text-xs text-gray-500 mt-0.5">
+                <p class="mt-1 truncate text-sm text-gray-300">{{ playerState.currentTrack.author }}</p>
+                <p class="mt-0.5 text-xs text-gray-400">
                   Requested by {{ playerState.currentTrack.requestedBy }}
                 </p>
                 <a
                   v-if="playerState.currentTrack.url"
                   :href="playerState.currentTrack.url"
                   target="_blank"
-                  class="inline-flex items-center gap-1 mt-2 text-[10px] text-primary-400 hover:text-primary-300 transition-colors"
+                  rel="noopener noreferrer"
+                  class="mt-2 inline-flex items-center gap-1 text-xs text-teal-300 hover:text-teal-200 focus-visible:outline-2 focus-visible:outline-teal-300"
                 >
-                  <UIcon
-                    name="i-heroicons-arrow-top-right-on-square"
-                    class="w-3 h-3"
-                  />
+                  <UIcon name="i-lucide-external-link" class="h-3 w-3" />
                   Open in browser
                 </a>
               </div>
             </div>
 
-            <!-- Progress bar -->
+            <!-- Progress (read-only: the bot exposes seek to commands, not the dashboard) -->
             <div class="space-y-1.5">
               <div
-                class="w-full h-1.5 rounded-full bg-white/10 overflow-hidden group cursor-pointer"
+                class="h-1.5 w-full overflow-hidden rounded-full bg-white/10"
+                role="progressbar"
+                aria-label="Track progress"
+                :aria-valuenow="Math.round(progressPercent)"
+                aria-valuemin="0"
+                aria-valuemax="100"
               >
                 <div
-                  class="h-full rounded-full bg-gradient-to-r from-primary-500 to-secondary-400 transition-all duration-1000 ease-linear group-hover:from-primary-400 group-hover:to-secondary-300"
+                  class="h-full rounded-full bg-teal-300 transition-all duration-1000 ease-linear"
                   :style="{ width: `${progressPercent}%` }"
                 />
               </div>
-              <div
-                class="flex justify-between text-[10px] text-gray-500 tabular-nums"
-              >
+              <div class="flex justify-between text-xs tabular-nums text-gray-400">
                 <span>{{ formatMs(playerState.progress) }}</span>
                 <span>{{ playerState.currentTrack.duration }}</span>
               </div>
             </div>
 
             <!-- Controls -->
-            <div class="flex items-center justify-center gap-3">
+            <div class="flex items-center justify-center gap-2 sm:gap-3">
               <button
-                class="player-btn p-2 rounded-full"
-                :class="{ '!text-primary-400 !bg-primary-500/20 !border-primary-500/30': playerState.autoplay }"
-                title="Autoplay (Play recommended songs when queue ends)"
+                type="button"
+                class="player-btn"
+                :class="{ 'player-btn-on': playerState.autoplay }"
+                :aria-pressed="playerState.autoplay"
+                aria-label="Autoplay recommended songs when the queue ends"
+                title="Autoplay recommended songs when the queue ends"
                 :disabled="actionLoading"
                 @click="setAutoplayFn(!playerState.autoplay)"
               >
-                <UIcon name="i-heroicons-sparkles" class="w-4 h-4" />
+                <UIcon name="i-lucide-sparkles" class="h-4 w-4" />
               </button>
-
               <button
-                class="player-btn p-2 rounded-full"
-                title="Shuffle"
+                type="button"
+                class="player-btn"
+                aria-label="Shuffle queue"
+                title="Shuffle queue"
                 :disabled="actionLoading"
                 @click="shuffleFn"
               >
-                <UIcon name="i-heroicons-arrows-right-left" class="w-4 h-4" />
+                <UIcon name="i-lucide-shuffle" class="h-4 w-4" />
               </button>
-
               <button
-                class="player-btn p-2.5 rounded-full"
-                title="Skip"
-                :disabled="actionLoading"
-                @click="skipFn"
-              >
-                <UIcon name="i-heroicons-backward" class="w-5 h-5" />
-              </button>
-
-              <button
-                class="player-btn-primary p-3.5 rounded-full"
-                :title="playerState.isPaused ? 'Resume' : 'Pause'"
+                type="button"
+                class="player-btn-primary"
+                :aria-label="playerState.isPaused ? 'Resume' : 'Pause'"
                 :disabled="actionLoading"
                 @click="playerState.isPaused ? resumeFn() : pauseFn()"
               >
-                <UIcon
-                  :name="
-                    playerState.isPaused
-                      ? 'i-heroicons-play-solid'
-                      : 'i-heroicons-pause-solid'
-                  "
-                  class="w-6 h-6"
-                />
+                <UIcon :name="playerState.isPaused ? 'i-lucide-play' : 'i-lucide-pause'" class="h-5 w-5" />
               </button>
-
               <button
-                class="player-btn p-2.5 rounded-full"
+                type="button"
+                class="player-btn"
+                aria-label="Skip"
                 title="Skip"
                 :disabled="actionLoading"
                 @click="skipFn"
               >
-                <UIcon name="i-heroicons-forward" class="w-5 h-5" />
+                <UIcon name="i-lucide-skip-forward" class="h-4 w-4" />
               </button>
-
               <button
-                class="player-btn p-2 rounded-full"
-                title="Stop"
+                type="button"
+                class="player-btn"
+                aria-label="Stop and clear the queue"
+                title="Stop and clear the queue"
                 :disabled="actionLoading"
                 @click="stopFn"
               >
-                <UIcon name="i-heroicons-stop" class="w-4 h-4" />
+                <UIcon name="i-lucide-square" class="h-4 w-4" />
               </button>
-
               <button
-                class="player-btn p-2 rounded-full"
+                type="button"
+                class="player-btn"
+                aria-label="Lyrics"
                 title="Lyrics"
                 @click="openLyricsModal"
               >
-                <UIcon name="i-heroicons-document-text" class="w-4 h-4" />
+                <UIcon name="i-lucide-file-text" class="h-4 w-4" />
               </button>
             </div>
 
             <!-- Volume -->
-            <div class="flex items-center gap-3 mt-1">
-              <UIcon
-                :name="
-                  playerState.volume === 0
-                    ? 'i-heroicons-speaker-x-mark'
-                    : playerState.volume < 50
-                      ? 'i-heroicons-speaker-wave'
-                      : 'i-heroicons-speaker-wave'
-                "
-                class="text-gray-400 w-4 h-4 shrink-0"
-              />
+            <div class="flex items-center gap-3">
+              <UIcon :name="volumeIcon" class="h-4 w-4 shrink-0 text-gray-300" />
               <USlider
                 :model-value="volumeLocal"
                 :min="0"
                 :max="100"
                 :step="1"
                 class="flex-1"
+                aria-label="Volume"
                 @update:model-value="onVolumeChange"
               />
-              <span
-                class="text-[10px] text-gray-500 w-7 text-right tabular-nums"
-              >
-                {{ volumeLocal }}%
-              </span>
+              <span class="w-9 text-right text-xs tabular-nums text-gray-300">{{ volumeLocal }}%</span>
             </div>
           </div>
 
-          <!-- Empty state -->
-          <div
-            v-else
-            class="flex-1 flex flex-col items-center justify-center text-center py-8"
-          >
+          <div v-else class="flex flex-1 flex-col items-center justify-center py-8 text-center">
             <div
-              class="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4"
+              class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.04] ring-1 ring-inset ring-white/10"
             >
-              <UIcon
-                name="i-heroicons-musical-note"
-                class="w-10 h-10 text-gray-600"
-              />
+              <UIcon name="i-lucide-music" class="h-8 w-8 text-gray-500" />
             </div>
-            <p class="text-gray-400 font-medium">Nothing playing</p>
-            <p class="text-xs text-gray-600 mt-1">
-              Play a song from Discord or add to the queue below
-            </p>
-            <p
-              v-if="preQueueList.length > 0"
-              class="text-[10px] text-primary-400 mt-2"
-            >
-              📋 {{ preQueueList.length }} song{{
-                preQueueList.length !== 1 ? "s" : ""
-              }}
-              queued — use
-              <code class="bg-white/5 px-1 rounded">/playqueue</code> in Discord
+            <p class="font-medium text-gray-200">Nothing playing</p>
+            <p class="mt-1 max-w-xs text-[13px] text-gray-400">
+              Play a song from Discord, or add songs to the playlist and start them with
+              <code class="rounded bg-white/[0.06] px-1 text-teal-300">/playqueue</code>.
             </p>
           </div>
         </div>
 
-        <!-- ─── Right: Queue Playlist ─── -->
-        <div
-          class="flex-1 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col min-h-0"
-        >
-          <!-- Queue header -->
-          <div
-            class="flex items-center justify-between px-5 py-3.5 border-b border-white/5"
-          >
+        <!-- ─── Queue ─── -->
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col border-t border-white/[0.06] lg:border-l lg:border-t-0">
+          <div class="flex items-center justify-between gap-2 border-b border-white/[0.06] px-5 py-3.5">
             <div class="flex items-center gap-2">
-              <UIcon
-                name="i-heroicons-queue-list"
-                class="text-gray-400 w-4 h-4"
-              />
-              <span class="text-sm font-semibold text-white">{{
-                isBotActive ? "Queue" : "Playlist"
-              }}</span>
-              <UBadge
-                v-if="isBotActive && playerState.queue.length > 0"
-                color="neutral"
-                variant="soft"
-                size="xs"
+              <UIcon name="i-lucide-list-music" class="h-4 w-4 text-gray-300" />
+              <span class="text-sm font-semibold text-white">{{ isBotActive ? "Queue" : "Playlist" }}</span>
+              <span
+                v-if="queueRows.length > 0"
+                class="rounded-full bg-white/[0.08] px-2 text-[11px] text-gray-300"
               >
-                {{ playerState.queue.length }} track{{
-                  playerState.queue.length !== 1 ? "s" : ""
-                }}
-              </UBadge>
-              <UBadge
-                v-else-if="!isBotActive && preQueueList.length > 0"
-                color="primary"
-                variant="soft"
-                size="xs"
-              >
-                {{ preQueueList.length }} pending
-              </UBadge>
+                {{ queueRows.length }}{{ isBotActive ? "" : " pending" }}
+              </span>
             </div>
-            <button
+            <UButton
               v-if="!isBotActive && preQueueList.length > 0"
-              class="text-[10px] text-gray-500 hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-white/5"
+              color="neutral"
+              variant="ghost"
+              size="xs"
               @click="clearPreQueueFn"
             >
               Clear all
-            </button>
+            </UButton>
           </div>
 
-          <!-- Add song input -->
-          <div
-            ref="searchContainerRef"
-            class="px-4 py-3 border-b border-white/5"
-          >
-            <div class="relative">
-              <UInput
-                v-model="searchQuery"
-                placeholder="Search or paste a URL to add..."
-                icon="i-heroicons-magnifying-glass"
-                size="sm"
-                :loading="searchLoadingState"
-                class="w-full"
-                @keydown.enter="onSearchSubmit"
-                @keydown.escape="clearSearchFn"
-              />
-            </div>
+          <!-- Add a song -->
+          <div ref="searchContainerRef" class="border-b border-white/[0.06] px-4 py-3">
+            <UInput
+              v-model="searchQuery"
+              placeholder="Search or paste a URL to add…"
+              icon="i-lucide-search"
+              size="sm"
+              :loading="searchLoadingState"
+              class="w-full"
+              aria-label="Search for a song or paste a URL"
+              @keydown.enter="onSearchSubmit"
+              @keydown.escape="clearSearchFn"
+            />
 
-            <!-- Search results dropdown -->
             <div
               v-if="searchResultsList.length > 0"
-              class="mt-2 rounded-lg border border-white/10 bg-gray-900/95 backdrop-blur-xl max-h-64 overflow-y-auto"
+              class="mt-2 max-h-64 overflow-y-auto rounded-lg bg-gray-900/95 ring-1 ring-inset ring-white/10 backdrop-blur-xl"
             >
-              <!-- Playlist header banner -->
               <div
                 v-if="isPlaylistResult && searchResultsList.length > 1"
-                class="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 bg-primary-500/10 border-b border-primary-500/20 backdrop-blur-xl"
+                class="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-teal-300/20 bg-teal-300/10 px-3 py-2 backdrop-blur-xl"
               >
-                <div class="flex items-center gap-2 min-w-0">
-                  <UIcon
-                    name="i-heroicons-queue-list"
-                    class="text-primary-400 w-4 h-4 shrink-0"
-                  />
-                  <span class="text-xs font-medium text-primary-300 truncate">
-                    {{ playlistTitle || "Playlist" }} ·
-                    {{ playlistTrackCount || searchResultsList.length }} tracks
+                <div class="flex min-w-0 items-center gap-2">
+                  <UIcon name="i-lucide-list-music" class="h-4 w-4 shrink-0 text-teal-300" />
+                  <span class="truncate text-xs font-medium text-teal-200">
+                    {{ playlistTitle || "Playlist" }} · {{ playlistTrackCount || searchResultsList.length }} tracks
                   </span>
                 </div>
-                <button
-                  type="button"
-                  class="shrink-0 text-[10px] font-medium px-2.5 py-1 rounded-md bg-primary-500/20 hover:bg-primary-500/30 text-primary-300 hover:text-primary-200 transition-colors border border-primary-500/20"
-                  :disabled="actionLoading"
-                  @click="addAllPlaylistTracks"
-                >
-                  Add all
-                  {{ playlistTrackCount || searchResultsList.length }} tracks
-                </button>
+                <UButton size="xs" color="primary" variant="soft" :disabled="actionLoading" @click="addAllPlaylistTracks">
+                  Add all {{ playlistTrackCount || searchResultsList.length }}
+                </UButton>
               </div>
 
               <button
                 v-for="(result, i) in searchResultsList"
                 :key="i"
                 type="button"
-                class="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors text-left"
+                class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-white/[0.05] focus-visible:bg-white/[0.05] focus-visible:outline-none"
                 @click="addToQueue(result)"
               >
-                <span
-                  v-if="isPlaylistResult"
-                  class="w-5 text-center text-[10px] text-gray-600 tabular-nums shrink-0"
-                >
+                <span v-if="isPlaylistResult" class="w-5 shrink-0 text-center text-[11px] tabular-nums text-gray-500">
                   {{ i + 1 }}
                 </span>
-                <img
-                  :src="result.thumbnail || '/placeholder-album.png'"
-                  class="w-10 h-10 rounded object-cover shrink-0"
-                  :alt="result.title"
-                />
+                <DashboardMusicArt :src="result.thumbnail" :alt="result.title" class="h-10 w-10 rounded" />
                 <div class="min-w-0 flex-1">
-                  <p class="text-xs font-medium text-white truncate">
-                    {{ result.title }}
-                  </p>
-                  <p class="text-[10px] text-gray-500 truncate">
-                    {{ result.author }} · {{ result.duration }}
-                  </p>
+                  <p class="truncate text-xs font-medium text-white">{{ result.title }}</p>
+                  <p class="truncate text-[11px] text-gray-400">{{ result.author }} · {{ result.duration }}</p>
                 </div>
-                <UIcon
-                  name="i-heroicons-plus-circle"
-                  class="text-primary-400 w-5 h-5 shrink-0"
-                />
+                <UIcon name="i-lucide-circle-plus" class="h-5 w-5 shrink-0 text-teal-300" />
               </button>
             </div>
           </div>
 
-          <!-- Queue list -->
-          <div class="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-            <!-- Currently playing row -->
+          <!-- Rows -->
+          <div class="custom-scrollbar max-h-96 min-h-0 flex-1 overflow-y-auto lg:max-h-none">
             <div
               v-if="playerState.currentTrack"
-              class="flex items-center gap-3 px-4 py-2.5 bg-primary-500/10 border-l-2 border-primary-500"
+              class="flex items-center gap-3 border-l-2 border-teal-300 bg-teal-300/10 px-4 py-2.5"
             >
-              <div class="w-5 flex items-center justify-center">
-                <div v-if="playerState.isPlaying" class="playing-bars">
+              <div class="flex w-5 items-center justify-center">
+                <div v-if="playerState.isPlaying" class="playing-bars" aria-label="Playing">
                   <span /><span /><span />
                 </div>
-                <UIcon
-                  v-else
-                  name="i-heroicons-pause-solid"
-                  class="text-primary-400 w-3.5 h-3.5"
-                />
+                <UIcon v-else name="i-lucide-pause" class="h-3.5 w-3.5 text-teal-300" />
               </div>
-              <img
-                :src="
-                  playerState.currentTrack.thumbnail || '/placeholder-album.png'
-                "
-                class="w-10 h-10 rounded object-cover shrink-0"
+              <DashboardMusicArt
+                :src="playerState.currentTrack.thumbnail"
                 :alt="playerState.currentTrack.title"
+                class="h-10 w-10 rounded"
               />
               <div class="min-w-0 flex-1">
-                <p class="text-xs font-medium text-primary-300 truncate">
-                  {{ playerState.currentTrack.title }}
-                </p>
-                <p class="text-[10px] text-primary-400/60 truncate">
-                  {{ playerState.currentTrack.author }}
-                </p>
+                <p class="truncate text-xs font-medium text-teal-100">{{ playerState.currentTrack.title }}</p>
+                <p class="truncate text-[11px] text-teal-200/60">{{ playerState.currentTrack.author }}</p>
               </div>
-              <span
-                class="text-[10px] text-primary-400/60 tabular-nums shrink-0"
-              >
+              <span class="shrink-0 text-[11px] tabular-nums text-teal-200/60">
                 {{ playerState.currentTrack.duration }}
               </span>
             </div>
 
-            <!-- Queued tracks (live) -->
-            <template v-if="isBotActive">
-              <div
-                v-for="(track, idx) in playerState.queue"
-                :key="`live-${idx}-${track.url}`"
-                class="queue-row flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] transition-colors group"
-              >
-                <span
-                  class="w-5 text-center text-[10px] text-gray-600 tabular-nums"
-                >
-                  {{ idx + 1 }}
-                </span>
-                <img
-                  :src="track.thumbnail || '/placeholder-album.png'"
-                  class="w-10 h-10 rounded object-cover shrink-0"
-                  :alt="track.title"
-                />
-                <div class="min-w-0 flex-1">
-                  <p class="text-xs font-medium text-gray-300 truncate">
-                    {{ track.title }}
-                  </p>
-                  <p class="text-[10px] text-gray-600 truncate">
-                    {{ track.author }}
-                  </p>
-                </div>
-                <span
-                  class="text-[10px] text-gray-600 tabular-nums shrink-0 mr-1"
-                >
-                  {{ track.duration }}
-                </span>
-                <!-- Reorder & Remove controls -->
-                <div
-                  class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <button
-                    v-if="idx > 0"
-                    class="p-1 rounded hover:bg-white/10 text-gray-500 hover:text-gray-300 transition-colors"
-                    title="Move up"
-                    @click="reorderTrackFn(idx, idx - 1)"
-                  >
-                    <UIcon name="i-heroicons-chevron-up" class="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    v-if="idx < playerState.queue.length - 1"
-                    class="p-1 rounded hover:bg-white/10 text-gray-500 hover:text-gray-300 transition-colors"
-                    title="Move down"
-                    @click="reorderTrackFn(idx, idx + 1)"
-                  >
-                    <UIcon
-                      name="i-heroicons-chevron-down"
-                      class="w-3.5 h-3.5"
-                    />
-                  </button>
-                  <button
-                    class="p-1 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors"
-                    title="Remove"
-                    @click="removeTrackFn(idx)"
-                  >
-                    <UIcon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
-                  </button>
-                </div>
+            <div
+              v-for="(row, idx) in queueRows"
+              :key="`${idx}-${row.url}`"
+              class="group flex items-center gap-3 border-b border-white/[0.03] px-4 py-2.5 transition-colors hover:bg-white/[0.03]"
+            >
+              <span class="w-5 text-center text-[11px] tabular-nums text-gray-500">{{ idx + 1 }}</span>
+              <DashboardMusicArt :src="row.thumbnail" :alt="row.title" class="h-10 w-10 rounded" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-xs font-medium text-gray-100">{{ row.title }}</p>
+                <p class="truncate text-[11px] text-gray-400">{{ row.author }}</p>
               </div>
-
-              <!-- Empty live queue state -->
+              <span class="mr-1 shrink-0 text-[11px] tabular-nums text-gray-400">{{ row.duration }}</span>
               <div
-                v-if="
-                  playerState.queue.length === 0 && !playerState.currentTrack
-                "
-                class="flex flex-col items-center justify-center py-16 text-center"
+                class="flex items-center gap-0.5 transition-opacity sm:opacity-0 sm:focus-within:opacity-100 sm:group-hover:opacity-100"
               >
-                <UIcon
-                  name="i-heroicons-queue-list"
-                  class="w-8 h-8 text-gray-700 mb-2"
-                />
-                <p class="text-xs text-gray-600">Queue is empty</p>
-                <p class="text-[10px] text-gray-700 mt-0.5">
-                  Search above to add songs
+                <button
+                  v-if="idx > 0"
+                  type="button"
+                  class="row-btn"
+                  :aria-label="`Move ${row.title} up`"
+                  @click="moveRow(idx, idx - 1)"
+                >
+                  <UIcon name="i-lucide-chevron-up" class="h-3.5 w-3.5" />
+                </button>
+                <button
+                  v-if="idx < queueRows.length - 1"
+                  type="button"
+                  class="row-btn"
+                  :aria-label="`Move ${row.title} down`"
+                  @click="moveRow(idx, idx + 1)"
+                >
+                  <UIcon name="i-lucide-chevron-down" class="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  class="row-btn hover:!bg-red-500/20 hover:!text-red-300"
+                  :aria-label="`Remove ${row.title}`"
+                  @click="removeRow(idx)"
+                >
+                  <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div
+              v-if="queueRows.length === 0"
+              class="flex flex-col items-center justify-center px-6 py-12 text-center"
+            >
+              <UIcon name="i-lucide-list-music" class="mb-2 h-8 w-8 text-gray-600" />
+              <template v-if="isBotActive">
+                <p class="text-sm text-gray-300">No upcoming tracks</p>
+                <p class="mt-0.5 text-xs text-gray-400">Search above to keep the music going.</p>
+              </template>
+              <template v-else>
+                <p class="text-sm text-gray-300">Playlist is empty</p>
+                <p class="mt-0.5 max-w-[15rem] text-xs text-gray-400">
+                  Search above to queue songs, then start them with
+                  <code class="text-teal-300">/playqueue</code> in Discord.
                 </p>
-              </div>
-
-              <div
-                v-else-if="
-                  playerState.queue.length === 0 && playerState.currentTrack
-                "
-                class="flex flex-col items-center justify-center py-12 text-center"
-              >
-                <p class="text-xs text-gray-600">No upcoming tracks</p>
-                <p class="text-[10px] text-gray-700 mt-0.5">
-                  Add more songs to keep the music going
-                </p>
-              </div>
-            </template>
-
-            <!-- Pre-queue tracks (bot offline) -->
-            <template v-else>
-              <div
-                v-for="(item, idx) in preQueueList"
-                :key="`pq-${idx}-${item.url}`"
-                class="queue-row flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] transition-colors group"
-              >
-                <span
-                  class="w-5 text-center text-[10px] text-gray-600 tabular-nums"
-                >
-                  {{ idx + 1 }}
-                </span>
-                <img
-                  :src="item.thumbnail || '/placeholder-album.png'"
-                  class="w-10 h-10 rounded object-cover shrink-0"
-                  :alt="item.title"
-                />
-                <div class="min-w-0 flex-1">
-                  <p class="text-xs font-medium text-gray-300 truncate">
-                    {{ item.title }}
-                  </p>
-                  <p class="text-[10px] text-gray-600 truncate">
-                    {{ item.author }}
-                  </p>
-                </div>
-                <span
-                  class="text-[10px] text-gray-600 tabular-nums shrink-0 mr-1"
-                >
-                  {{ item.duration }}
-                </span>
-                <!-- Reorder & Remove -->
-                <div
-                  class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <button
-                    v-if="idx > 0"
-                    class="p-1 rounded hover:bg-white/10 text-gray-500 hover:text-gray-300 transition-colors"
-                    title="Move up"
-                    @click="reorderPreQueueFn(idx, idx - 1)"
-                  >
-                    <UIcon name="i-heroicons-chevron-up" class="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    v-if="idx < preQueueList.length - 1"
-                    class="p-1 rounded hover:bg-white/10 text-gray-500 hover:text-gray-300 transition-colors"
-                    title="Move down"
-                    @click="reorderPreQueueFn(idx, idx + 1)"
-                  >
-                    <UIcon
-                      name="i-heroicons-chevron-down"
-                      class="w-3.5 h-3.5"
-                    />
-                  </button>
-                  <button
-                    class="p-1 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors"
-                    title="Remove"
-                    @click="removeFromPreQueueFn(idx)"
-                  >
-                    <UIcon name="i-heroicons-x-mark" class="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <!-- Empty pre-queue state -->
-              <div
-                v-if="preQueueList.length === 0"
-                class="flex flex-col items-center justify-center py-16 text-center"
-              >
-                <UIcon
-                  name="i-heroicons-queue-list"
-                  class="w-8 h-8 text-gray-700 mb-2"
-                />
-                <p class="text-xs text-gray-600">Playlist is empty</p>
-                <p class="text-[10px] text-gray-700 mt-0.5 max-w-[220px]">
-                  Search above to queue songs, then use
-                  <code class="text-primary-400">/playqueue</code> in Discord
-                </p>
-              </div>
-            </template>
+              </template>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         SETTINGS — Existing settings cards
-         ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      <!-- Permissions Section -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5 space-y-5"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-5">
-          <div class="flex items-center gap-2 mb-1">
-            <div
-              class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-heroicons-key" class="text-secondary-400" />
+    <!-- ══════════════ Settings ══════════════ -->
+    <div v-else class="mx-auto max-w-3xl space-y-6">
+      <DashboardModuleSection title="Playback" description="How music starts and how much can be queued.">
+        <div class="space-y-6">
+          <div>
+            <div class="mb-2 flex items-baseline justify-between gap-3">
+              <label for="music-volume" class="text-sm font-medium text-white">Default volume</label>
+              <span class="text-sm tabular-nums text-sky-200">{{ musicSettings.defaultVolume }}%</span>
             </div>
-            <h3 class="font-semibold text-white">Permissions</h3>
+            <USlider id="music-volume" v-model="musicSettings.defaultVolume" :min="1" :max="100" :step="1" />
+            <p class="mt-2 text-[13px] text-gray-400">
+              The volume new sessions start at. Changing the volume while music plays updates this too.
+            </p>
           </div>
 
           <UFormField
-            label="DJ Role"
-            description="Only users with this role can control music. Leave empty to allow everyone."
-            class="w-full"
-          >
-            <!-- Loading spinner while roles are being fetched -->
-            <div
-              v-if="state.rolesLoading"
-              class="flex items-center gap-2 py-2 text-gray-400"
-            >
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="animate-spin text-secondary-400"
-              />
-              <span class="text-sm">Loading roles…</span>
-            </div>
-            <USelectMenu
-              v-else
-              v-model="djRoleSelection"
-              :items="djRoleOptions"
-              value-key="value"
-              placeholder="No restriction — allow everyone"
-              class="w-full"
-            />
-          </UFormField>
-
-          <UFormField
-            label="Max Queue Size"
-            description="Maximum number of tracks allowed in the queue at once."
+            label="Maximum queue size"
+            description="The most tracks that can be queued at once."
             class="w-full"
           >
             <UInput
@@ -692,138 +412,117 @@
               type="number"
               :min="1"
               :max="1000"
-              icon="i-heroicons-queue-list"
-              class="w-full"
+              icon="i-lucide-list-music"
+              class="w-full sm:max-w-[14rem]"
             />
           </UFormField>
 
-          <UFormField
-            label="Nickname Sync"
-            description="Update the bot's nickname to show the currently playing track title."
-            class="w-full"
-          >
-            <USwitch
-              v-model="musicSettings.updateNickname"
-              label="Show current track in bot nickname"
-            />
-          </UFormField>
+          <label class="flex cursor-pointer items-start gap-3">
+            <USwitch v-model="musicSettings.updateNickname" class="mt-0.5" aria-label="Show the current track in the bot's nickname" />
+            <span>
+              <span class="block text-sm font-medium text-white">Show the current track in the bot's nickname</span>
+              <span class="block text-[13px] text-gray-400">
+                The nickname is reset when playback stops.
+              </span>
+            </span>
+          </label>
         </div>
-      </div>
-    </div>
+      </DashboardModuleSection>
 
-    <!-- Audio Effects Section (full width) -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative">
-        <div class="flex items-center gap-2 mb-4">
-          <div
-            class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
-          >
-            <UIcon name="i-heroicons-sparkles" class="text-primary-400" />
-          </div>
-          <div>
-            <h4 class="text-sm font-semibold text-white">Audio Effects</h4>
-            <p class="text-[10px] text-gray-500">
-              Auto-applied when music starts playing
-            </p>
-          </div>
-          <UBadge
-            v-if="musicSettings.activeFilters.length > 0"
-            color="primary"
-            variant="soft"
-            size="xs"
-            class="ml-auto"
-          >
-            {{ musicSettings.activeFilters.length }} active
-          </UBadge>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          <button
-            v-for="(info, key) in availableFilters"
-            :key="key"
-            type="button"
-            class="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 text-left"
-            :class="
-              musicSettings.activeFilters.includes(key as string)
-                ? 'bg-primary-500/20 border border-primary-500/40 text-primary-300 ring-1 ring-primary-500/30'
-                : 'bg-gray-800/50 border border-white/5 text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
-            "
-            @click="toggleFilter(key as string)"
-          >
-            <span class="text-base leading-none">{{ info.emoji }}</span>
-            <div class="min-w-0">
-              <div class="truncate">{{ info.label }}</div>
-              <div class="text-[9px] opacity-60 truncate">
-                {{ info.description }}
-              </div>
-            </div>
-            <UIcon
-              v-if="musicSettings.activeFilters.includes(key as string)"
-              name="i-heroicons-check-circle-solid"
-              class="ml-auto text-primary-400 shrink-0"
-            />
-          </button>
-        </div>
-
-        <button
-          v-if="musicSettings.activeFilters.length > 0"
-          type="button"
-          class="w-full mt-3 text-[10px] text-gray-500 hover:text-red-400 transition-colors py-1"
-          @click="musicSettings.activeFilters = []"
-        >
-          Clear all effects
-        </button>
-      </div>
-    </div>
-
-    <DashboardModuleAccessSection :guild-id="guildId" module-name="music" />
-
-    <!-- Save Button -->
-    <div class="flex justify-end">
-      <UButton
-        color="primary"
-        size="lg"
-        icon="i-heroicons-check"
-        :loading="saving"
-        class="min-w-[200px]"
-        @click="save"
+      <DashboardModuleSection
+        title="Who can control music"
+        description="Applies to playing, skipping, pausing, stopping, volume, effects and queueing, whether from commands, buttons or the AI assistant."
       >
-        Save Music Settings
-      </UButton>
-    </div>
-
-    <!-- Lyrics Modal -->
-    <UModal v-model:open="lyricsModalOpen">
-      <template #content>
-        <div class="p-6 space-y-4 max-h-[80vh] flex flex-col">
-          <div class="flex items-center justify-between border-b border-white/10 pb-3">
-            <div class="flex items-center gap-2">
-              <UIcon name="i-heroicons-document-text" class="w-5 h-5 text-primary-400" />
-              <h3 class="text-lg font-bold text-white">
-                {{ lyricsData?.trackTitle || playerState.currentTrack?.title || "Lyrics" }}
-              </h3>
-            </div>
-            <UBadge v-if="lyricsData?.source" color="neutral" variant="soft" size="xs">
-              {{ lyricsData.source }}
-            </UBadge>
+        <UFormField label="DJ role" class="w-full">
+          <div v-if="state.rolesLoading" class="flex items-center gap-2 py-2 text-gray-400">
+            <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+            <span class="text-sm">Loading roles…</span>
           </div>
-
-          <div v-if="lyricsLoading" class="flex items-center justify-center py-12">
-            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary-400 animate-spin" />
-          </div>
-
-          <div
+          <USelectMenu
             v-else
-            class="overflow-y-auto space-y-2 pr-2 text-sm text-gray-300 leading-relaxed custom-scrollbar whitespace-pre-wrap"
+            v-model="djRoleSelection"
+            :items="djRoleOptions"
+            value-key="value"
+            placeholder="Everyone can control music"
+            icon="i-lucide-headphones"
+            class="w-full"
+          />
+        </UFormField>
+        <p class="mt-3 text-[13px] text-gray-400">
+          {{
+            musicSettings.djRoleId
+              ? "Only members with this role, and anyone who can manage the server, can control music. Everyone can still see the queue and now playing."
+              : "No DJ role set, so anyone in a voice channel can control music."
+          }}
+          Who can open this dashboard page is set under Module access below.
+        </p>
+      </DashboardModuleSection>
+
+      <DashboardModuleSection
+        title="Audio effects"
+        description="Applied automatically when music starts. Pick as many as you like."
+      >
+        <template #actions>
+          <UButton
+            v-if="musicSettings.activeFilters.length > 0"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            @click="musicSettings.activeFilters = []"
           >
-            {{ lyricsData?.text || "No lyrics available for this track." }}
+            Clear all ({{ musicSettings.activeFilters.length }})
+          </UButton>
+        </template>
+
+        <div class="space-y-5">
+          <div v-for="group in filterGroups" :key="group.label">
+            <p class="mb-2 font-mono text-[11px] uppercase tracking-wider text-gray-500">{{ group.label }}</p>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <button
+                v-for="key in group.keys"
+                :key="key"
+                type="button"
+                :aria-pressed="musicSettings.activeFilters.includes(key)"
+                class="flex items-start gap-3 rounded-xl p-3 text-left ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300"
+                :class="
+                  musicSettings.activeFilters.includes(key)
+                    ? 'bg-sky-200/[0.06] !ring-2 !ring-teal-300/60'
+                    : ''
+                "
+                @click="toggleFilter(key)"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block text-sm font-medium text-white">{{ availableFilters[key]!.label }}</span>
+                  <span class="block text-[13px] text-gray-400">{{ availableFilters[key]!.description }}</span>
+                </span>
+                <UIcon
+                  v-if="musicSettings.activeFilters.includes(key)"
+                  name="i-lucide-circle-check"
+                  class="mt-0.5 h-4 w-4 shrink-0 text-teal-300"
+                />
+              </button>
+            </div>
           </div>
         </div>
+      </DashboardModuleSection>
+
+      <DashboardModuleAccessSection :guild-id="guildId" module-name="music" />
+
+      <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
+    </div>
+
+    <!-- Lyrics -->
+    <UModal v-model:open="lyricsModalOpen" :title="lyricsTitle" description="Lyrics for the current track">
+      <template #body>
+        <div v-if="lyricsLoading" class="flex items-center justify-center py-12">
+          <UIcon name="i-lucide-loader-circle" class="h-8 w-8 animate-spin text-sky-200" />
+        </div>
+        <div v-else class="custom-scrollbar max-h-[60vh] space-y-2 overflow-y-auto whitespace-pre-wrap pr-2 text-sm leading-relaxed text-gray-300">
+          {{ lyricsData?.text || "No lyrics available for this track." }}
+        </div>
+        <p v-if="lyricsData?.source && !lyricsLoading" class="mt-3 text-xs text-gray-500">
+          Source: {{ lyricsData.source }}
+        </p>
       </template>
     </UModal>
   </div>
@@ -834,14 +533,27 @@ import { ref, computed, onMounted } from "vue";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
-const { state, isModuleEnabled, saveModuleSettings, getModuleConfig, loadRoles, roleOptions } =
-  useServerSettings(guildId);
+const {
+  state,
+  isModuleEnabled,
+  saveModuleSettings,
+  getModuleConfig,
+  fetchGuildConfigs,
+  loadRoles,
+  roleOptions,
+} = useServerSettings(guildId);
 const toast = useToast();
 
-// ── Music Player (live state) ──
+// ── Tabs ──
+const tabs = [
+  { value: "player", label: "Player", icon: "i-lucide-disc-3" },
+  { value: "settings", label: "Settings", icon: "i-lucide-settings-2" },
+] as const;
+const activeTab = ref<(typeof tabs)[number]["value"]>("player");
+
+// ── Music player (live state) ──
 const {
   state: playerState,
-  loading: playerLoading,
   actionLoading,
   searchResults: searchResultsList,
   searchLoading: searchLoadingState,
@@ -849,7 +561,6 @@ const {
   playlistTrackCount,
   playlistTitle,
   connected,
-  error: playerError,
   isBotActive,
   skip: skipFn,
   pause: pauseFn,
@@ -871,18 +582,34 @@ const {
   clearPreQueue: clearPreQueueFn,
 } = useMusicPlayer(guildId);
 
-// ── Lyrics Modal State ──
+const statusText = computed(() => {
+  if (!connected.value) return "Bot offline";
+  if (playerState.value.isPlaying) return `Playing in ${playerState.value.voiceChannel || "voice"}`;
+  if (playerState.value.isPaused) return "Paused";
+  return "Nothing playing";
+});
+
+// The live queue while the bot is in a voice channel, otherwise the dashboard playlist.
+const queueRows = computed(() => (isBotActive.value ? playerState.value.queue : preQueueList.value));
+const moveRow = (from: number, to: number) =>
+  isBotActive.value ? reorderTrackFn(from, to) : reorderPreQueueFn(from, to);
+const removeRow = (index: number) =>
+  isBotActive.value ? removeTrackFn(index) : removeFromPreQueueFn(index);
+
+// ── Lyrics ──
 const lyricsModalOpen = ref(false);
 const lyricsLoading = ref(false);
 const lyricsData = ref<any>(null);
+const lyricsTitle = computed(
+  () => lyricsData.value?.trackTitle || playerState.value.currentTrack?.title || "Lyrics",
+);
 
 const openLyricsModal = async () => {
   lyricsModalOpen.value = true;
   lyricsLoading.value = true;
   lyricsData.value = null;
   try {
-    const data = await fetchLyricsFn();
-    lyricsData.value = data;
+    lyricsData.value = await fetchLyricsFn();
   } catch {
     lyricsData.value = {
       text: "No lyrics found for the current track.",
@@ -893,46 +620,15 @@ const openLyricsModal = async () => {
   }
 };
 
-// ── Settings ──
-const saving = ref(false);
-
-const musicSettings = ref({
-  defaultVolume: 50,
-  djRoleId: "",
-  updateNickname: true,
-  maxQueueSize: 200,
-  activeFilters: [] as string[],
-});
-
-// ── DJ Role dropdown ──
-// Prepend a null sentinel so the admin can explicitly clear the restriction.
-const djRoleOptions = computed(() => [
-  { label: "No restriction — allow everyone", value: null },
-  ...roleOptions.value,
-]);
-
-// Bridge between null (select sentinel) and "" (stored value).
-const djRoleSelection = computed({
-  get: () =>
-    musicSettings.value.djRoleId
-      ? roleOptions.value.find((r) => r.value === musicSettings.value.djRoleId) ?? null
-      : null,
-  set: (option: { label: string; value: string | null } | null) => {
-    musicSettings.value.djRoleId = option?.value ?? "";
-  },
-});
-
-// Volume local state (debounced)
+// ── Volume (debounced so dragging sends one request) ──
 const volumeLocal = ref(50);
 let volumeDebounce: ReturnType<typeof setTimeout> | null = null;
 
 watch(
   () => playerState.value.volume,
   (val) => {
-    // Only update local volume when we're not actively dragging
-    if (!volumeDebounce) {
-      volumeLocal.value = val;
-    }
+    // Don't fight the slider while it is being dragged.
+    if (!volumeDebounce) volumeLocal.value = val;
   },
   { immediate: true },
 );
@@ -946,6 +642,14 @@ const onVolumeChange = (val: number | undefined) => {
     volumeDebounce = null;
   }, 300);
 };
+
+const volumeIcon = computed(() =>
+  volumeLocal.value === 0
+    ? "i-lucide-volume-x"
+    : volumeLocal.value < 50
+      ? "i-lucide-volume-1"
+      : "i-lucide-volume-2",
+);
 
 // ── Progress ──
 const progressPercent = computed(() => {
@@ -962,7 +666,7 @@ const formatMs = (ms: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
-// ── Search / Add ──
+// ── Search / add ──
 const searchQuery = ref("");
 const searchContainerRef = ref<HTMLElement | null>(null);
 let searchDebounce: ReturnType<typeof setTimeout> | null = null;
@@ -973,293 +677,232 @@ watch(searchQuery, (val) => {
     clearSearchFn();
     return;
   }
-  searchDebounce = setTimeout(() => {
-    searchFn(val);
-  }, 400);
+  searchDebounce = setTimeout(() => searchFn(val), 400);
 });
 
-// Click-outside to close search results
+// Click outside closes the results.
 const onClickOutsideSearch = (e: MouseEvent) => {
-  if (
-    searchContainerRef.value &&
-    !searchContainerRef.value.contains(e.target as Node)
-  ) {
+  if (searchContainerRef.value && !searchContainerRef.value.contains(e.target as Node)) {
     clearSearchFn();
   }
 };
 
-onMounted(() => {
-  document.addEventListener("click", onClickOutsideSearch);
-  loadRoles();
-});
-
 onUnmounted(() => {
   document.removeEventListener("click", onClickOutsideSearch);
+  if (searchDebounce) clearTimeout(searchDebounce);
+  if (volumeDebounce) clearTimeout(volumeDebounce);
 });
+
+const addFailureText = () =>
+  isBotActive.value
+    ? "Could not add that song. Is the bot in a voice channel?"
+    : "Could not add that song to the playlist.";
+
+/** Adds a URL to the live queue, or to the playlist when the bot isn't playing. */
+async function addUrl(url: string, title?: string) {
+  if (isBotActive.value) {
+    await playFn(url);
+    toast.add({ title: "Added to queue", description: title, color: "success" });
+    return;
+  }
+  const result = await addToPreQueueFn(url);
+  const added = result?.addedCount ?? 1;
+  const total = result?.totalFound ?? added;
+  toast.add({
+    title:
+      added > 1 ? `Added ${added} song${added !== 1 ? "s" : ""} to playlist` : "Added to playlist",
+    description:
+      added < total ? `Playlist had ${total} tracks but only ${added} fit (queue limit).` : title,
+    color: "success",
+  });
+}
 
 const onSearchSubmit = async () => {
   if (!searchQuery.value) return;
 
-  // If it looks like a URL, add directly
+  // A pasted link is added directly; anything else is searched.
   if (/^https?:\/\//i.test(searchQuery.value)) {
     try {
-      if (isBotActive.value) {
-        await playFn(searchQuery.value);
-        toast.add({
-          title: "Added to queue",
-          color: "success",
-        });
-      } else {
-        const result = await addToPreQueueFn(searchQuery.value);
-        const added = result?.addedCount ?? 1;
-        const total = result?.totalFound ?? added;
-        const capped = added < total;
-        toast.add({
-          title:
-            added > 1
-              ? `Added ${added} song${added !== 1 ? "s" : ""} to playlist`
-              : "Added to playlist",
-          description: capped
-            ? `Playlist had ${total} tracks but only ${added} fit (queue limit).`
-            : undefined,
-          color: "success",
-        });
-      }
+      await addUrl(searchQuery.value);
       searchQuery.value = "";
       clearSearchFn();
     } catch {
-      toast.add({
-        title: "Error",
-        description: isBotActive.value
-          ? "Could not add that song. Is the bot in a voice channel?"
-          : "Could not add that song to the playlist.",
-        color: "error",
-      });
+      toast.add({ title: "Error", description: addFailureText(), color: "error" });
     }
     return;
   }
-
-  // Otherwise search
   await searchFn(searchQuery.value);
 };
 
 const addToQueue = async (searchResult: { url: string; title: string }) => {
   try {
-    if (isBotActive.value) {
-      await playFn(searchResult.url);
-      toast.add({
-        title: "Added to queue",
-        description: searchResult.title,
-        color: "success",
-      });
-    } else {
-      const result = await addToPreQueueFn(searchResult.url);
-      const added = result?.addedCount ?? 1;
-      const total = result?.totalFound ?? added;
-      const capped = added < total;
-      toast.add({
-        title:
-          added > 1
-            ? `Added ${added} song${added !== 1 ? "s" : ""} to playlist`
-            : "Added to playlist",
-        description: capped
-          ? `Playlist had ${total} tracks but only ${added} fit (queue limit).`
-          : searchResult.title,
-        color: "success",
-      });
-    }
+    await addUrl(searchResult.url, searchResult.title);
     searchQuery.value = "";
     clearSearchFn();
   } catch {
-    toast.add({
-      title: "Error",
-      description: isBotActive.value
-        ? "Could not add that song. Is the bot in a voice channel?"
-        : "Could not add that song to the playlist.",
-      color: "error",
-    });
+    toast.add({ title: "Error", description: addFailureText(), color: "error" });
   }
 };
 
-// ── Add all playlist tracks at once ──
-// Sends the original playlist URL in a single request to the bot,
-// which handles playlist expansion server-side. This avoids N sequential
-// HTTP requests (one per track) which was ~1s/track.
+// Sends the original playlist URL in one request so the bot expands it
+// server-side, instead of one request per track (~1s each).
 const addAllPlaylistTracks = async () => {
   const tracks = [...searchResultsList.value];
   if (tracks.length === 0) return;
 
   const name = playlistTitle.value || "Playlist";
-  // Capture the original playlist URL before clearing search state
   const originalQuery = searchQuery.value;
   searchQuery.value = "";
   clearSearchFn();
 
-  // If we have the original playlist URL, send it as a single request
-  // The bot's prequeue-add and play endpoints already expand playlists
-  const playlistUrl =
-    originalQuery && /^https?:\/\//i.test(originalQuery) ? originalQuery : null;
+  const playlistUrl = originalQuery && /^https?:\/\//i.test(originalQuery) ? originalQuery : null;
 
   try {
     if (playlistUrl) {
-      // Single request — bot resolves all tracks server-side
       if (isBotActive.value) {
         await playFn(playlistUrl);
-        toast.add({
-          title: `Added playlist to queue`,
-          description: name,
-          color: "success",
-        });
+        toast.add({ title: "Added playlist to queue", description: name, color: "success" });
       } else {
         const result = await addToPreQueueFn(playlistUrl);
         const added = result?.addedCount ?? tracks.length;
         const total = result?.totalFound ?? added;
-        const capped = added < total;
         toast.add({
           title: `Added ${added} track${added !== 1 ? "s" : ""} from ${name}`,
-          description: capped
-            ? `Playlist had ${total} tracks but only ${added} fit (queue limit).`
-            : undefined,
+          description:
+            added < total ? `Playlist had ${total} tracks but only ${added} fit (queue limit).` : undefined,
           color: "success",
         });
       }
-    } else {
-      // Fallback: no URL available, add tracks individually
-      let addedTotal = 0;
-      for (const track of tracks) {
-        try {
-          if (isBotActive.value) {
-            await playFn(track.url);
-          } else {
-            await addToPreQueueFn(track.url);
-          }
-          addedTotal++;
-        } catch {
-          // Skip individual failures
-        }
-      }
-      toast.add({
-        title: `Added ${addedTotal} track${addedTotal !== 1 ? "s" : ""} from ${name}`,
-        description:
-          addedTotal < tracks.length
-            ? `${tracks.length - addedTotal} track(s) could not be added.`
-            : undefined,
-        color: "success",
-      });
+      return;
     }
-  } catch {
+
+    // No URL to hand over: add the results one by one.
+    let addedTotal = 0;
+    for (const track of tracks) {
+      try {
+        if (isBotActive.value) await playFn(track.url);
+        else await addToPreQueueFn(track.url);
+        addedTotal++;
+      } catch {
+        // Skip individual failures.
+      }
+    }
     toast.add({
-      title: "Error",
-      description: `Could not add tracks from ${name}.`,
-      color: "error",
+      title: `Added ${addedTotal} track${addedTotal !== 1 ? "s" : ""} from ${name}`,
+      description:
+        addedTotal < tracks.length ? `${tracks.length - addedTotal} track(s) could not be added.` : undefined,
+      color: "success",
     });
+  } catch {
+    toast.add({ title: "Error", description: `Could not add tracks from ${name}.`, color: "error" });
   }
 };
 
-// ── Audio filters ──
-const availableFilters: Record<
-  string,
-  { label: string; emoji: string; description: string }
-> = {
-  bassboost: {
-    label: "Bass Boost",
-    emoji: "🔊",
-    description: "Enhances low frequencies",
+// ── Settings ──
+interface MusicForm {
+  defaultVolume: number;
+  djRoleId: string;
+  updateNickname: boolean;
+  maxQueueSize: number;
+  activeFilters: string[];
+}
+
+const musicSettings = ref<MusicForm>({
+  defaultVolume: 50,
+  djRoleId: "",
+  updateNickname: true,
+  maxQueueSize: 200,
+  activeFilters: [],
+});
+const saving = ref(false);
+const baseline = ref(JSON.stringify(musicSettings.value));
+const dirty = computed(() => JSON.stringify(musicSettings.value) !== baseline.value);
+
+// "none" stands in for "no DJ role" so the menu can offer a way to clear it.
+const djRoleOptions = computed(() => [
+  { label: "Everyone (no restriction)", value: "none" },
+  ...roleOptions.value,
+]);
+const djRoleSelection = computed({
+  get: () => musicSettings.value.djRoleId || "none",
+  set: (value: string | null) => {
+    musicSettings.value.djRoleId = !value || value === "none" ? "" : value;
   },
-  bassboost_high: {
-    label: "Bass Boost (Heavy)",
-    emoji: "💥",
-    description: "Extreme bass enhancement",
-  },
-  nightcore: {
-    label: "Nightcore",
-    emoji: "🌙",
-    description: "Higher pitch + faster tempo",
-  },
-  vaporwave: {
-    label: "Vaporwave",
-    emoji: "🌊",
-    description: "Slowed down + lower pitch",
-  },
-  "8D": {
-    label: "8D Audio",
-    emoji: "🎧",
-    description: "Rotating spatial audio",
-  },
-  karaoke: {
-    label: "Karaoke",
-    emoji: "🎤",
-    description: "Reduces vocal frequencies",
-  },
-  tremolo: {
-    label: "Tremolo",
-    emoji: "〰️",
-    description: "Wavering volume effect",
-  },
-  vibrato: {
-    label: "Vibrato",
-    emoji: "🎻",
-    description: "Wavering pitch effect",
-  },
-  lofi: {
-    label: "Lo-Fi",
-    emoji: "📻",
-    description: "Warm, low-fidelity sound",
-  },
-  phaser: {
-    label: "Phaser",
-    emoji: "🔮",
-    description: "Sweeping phase effect",
-  },
-  chorus: {
-    label: "Chorus",
-    emoji: "👥",
-    description: "Rich, layered vocal effect",
-  },
-  flanger: {
-    label: "Flanger",
-    emoji: "✨",
-    description: "Jet-like sweeping effect",
-  },
-  treble: {
-    label: "Treble Boost",
-    emoji: "🔔",
-    description: "Enhances high frequencies",
-  },
-  normalizer: {
-    label: "Normalizer",
-    emoji: "📊",
-    description: "Levels out volume",
-  },
-  fadein: {
-    label: "Fade In",
-    emoji: "🌅",
-    description: "Gradually increases volume",
-  },
-  surrounding: {
-    label: "Surround",
-    emoji: "🔈",
-    description: "Spatial surround sound",
-  },
+});
+
+// ── Audio effects (keys match the bot's filter list) ──
+const availableFilters: Record<string, { label: string; description: string }> = {
+  bassboost: { label: "Bass boost", description: "Enhances low frequencies" },
+  bassboost_high: { label: "Bass boost (heavy)", description: "Extreme bass enhancement" },
+  treble: { label: "Treble boost", description: "Enhances high frequencies" },
+  nightcore: { label: "Nightcore", description: "Higher pitch and faster tempo" },
+  vaporwave: { label: "Vaporwave", description: "Slowed down with a lower pitch" },
+  "8D": { label: "8D audio", description: "Rotating spatial audio" },
+  surrounding: { label: "Surround", description: "Spatial surround sound" },
+  karaoke: { label: "Karaoke", description: "Reduces vocal frequencies" },
+  tremolo: { label: "Tremolo", description: "Wavering volume" },
+  vibrato: { label: "Vibrato", description: "Wavering pitch" },
+  phaser: { label: "Phaser", description: "Sweeping phase effect" },
+  chorus: { label: "Chorus", description: "Rich, layered sound" },
+  flanger: { label: "Flanger", description: "Jet-like sweeping effect" },
+  lofi: { label: "Lo-fi", description: "Warm, low-fidelity sound" },
+  normalizer: { label: "Normalizer", description: "Levels out volume" },
+  fadein: { label: "Fade in", description: "Gradually increases volume" },
 };
+
+const filterGroups = [
+  { label: "Bass and treble", keys: ["bassboost", "bassboost_high", "treble"] },
+  { label: "Pitch and speed", keys: ["nightcore", "vaporwave"] },
+  { label: "Space and vocals", keys: ["8D", "surrounding", "karaoke"] },
+  { label: "Modulation", keys: ["tremolo", "vibrato", "phaser", "chorus", "flanger"] },
+  { label: "Tone and levels", keys: ["lofi", "normalizer", "fadein"] },
+];
 
 const toggleFilter = (key: string) => {
-  const idx = musicSettings.value.activeFilters.indexOf(key);
-  if (idx >= 0) {
-    musicSettings.value.activeFilters.splice(idx, 1);
-  } else {
-    musicSettings.value.activeFilters.push(key);
-  }
+  const filters = musicSettings.value.activeFilters;
+  const idx = filters.indexOf(key);
+  if (idx >= 0) filters.splice(idx, 1);
+  else filters.push(key);
 };
 
 const save = async () => {
   saving.value = true;
-  await saveModuleSettings("music", musicSettings.value);
+  // The settings row also holds the dashboard playlist, and the bot rewrites
+  // the volume and effects from commands, while saving replaces the whole row.
+  // So re-read it and take only the fields changed on this page over it.
+  await fetchGuildConfigs();
+  const fresh = getModuleConfig("music");
+  const base = JSON.parse(baseline.value) as Record<string, unknown>;
+  const form = musicSettings.value as unknown as Record<string, unknown>;
+  const merged: Record<string, unknown> = { ...fresh };
+  for (const key of Object.keys(form)) {
+    if (!(key in fresh) || JSON.stringify(form[key]) !== JSON.stringify(base[key])) {
+      merged[key] = form[key];
+    }
+  }
+  const ok = await saveModuleSettings("music", merged);
+  // A failed save keeps the form dirty so the bar stays and Save can retry.
+  if (ok) {
+    musicSettings.value = {
+      defaultVolume: merged.defaultVolume as number,
+      djRoleId: merged.djRoleId as string,
+      updateNickname: merged.updateNickname as boolean,
+      maxQueueSize: merged.maxQueueSize as number,
+      activeFilters: merged.activeFilters as string[],
+    };
+    baseline.value = JSON.stringify(musicSettings.value);
+  }
   saving.value = false;
 };
 
-// Load existing settings
+const discard = () => {
+  musicSettings.value = JSON.parse(baseline.value);
+};
+
 onMounted(() => {
+  document.addEventListener("click", onClickOutsideSearch);
+  loadRoles();
+
   const saved = getModuleConfig("music");
   if (saved && Object.keys(saved).length > 0) {
     musicSettings.value = {
@@ -1270,54 +913,79 @@ onMounted(() => {
       activeFilters: saved.activeFilters ?? [],
     };
   }
+  baseline.value = JSON.stringify(musicSettings.value);
 });
 </script>
 
 <style scoped>
-/* Now Playing container */
-.now-playing-container {
-  background: rgba(10, 10, 15, 0.9);
-  backdrop-filter: blur(20px);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-/* Player controls */
 .player-btn {
-  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.65);
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.2s ease;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 }
 .player-btn:hover:not(:disabled) {
   color: white;
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: scale(1.08);
 }
-.player-btn:disabled {
+.player-btn:focus-visible,
+.player-btn-primary:focus-visible,
+.row-btn:focus-visible {
+  outline: 2px solid rgb(94, 234, 212);
+  outline-offset: 2px;
+}
+.player-btn:disabled,
+.player-btn-primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+.player-btn-on {
+  color: rgb(94, 234, 212);
+  background: rgba(94, 234, 212, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.4);
+}
 
 .player-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  width: 3rem;
+  border-radius: 9999px;
   color: #0a0a0f;
   background: white;
-  border: none;
-  transition: all 0.2s ease;
   box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+  transition: transform 0.2s ease;
 }
 .player-btn-primary:hover:not(:disabled) {
-  transform: scale(1.1);
-  box-shadow: 0 6px 30px rgba(255, 255, 255, 0.25);
-}
-.player-btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  transform: scale(1.06);
 }
 
-/* Playing animation bars */
+.row-btn {
+  display: flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  color: rgb(156, 163, 175);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+.row-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .playing-bars {
   display: flex;
   align-items: flex-end;
@@ -1328,19 +996,14 @@ onMounted(() => {
   display: block;
   width: 2.5px;
   border-radius: 1px;
-  background: #a78bfa;
-}
-.playing-bars span:nth-child(1) {
+  background: rgb(94, 234, 212);
   animation: bar-bounce 0.8s ease-in-out infinite;
-  height: 6px;
 }
 .playing-bars span:nth-child(2) {
-  animation: bar-bounce 0.8s ease-in-out 0.15s infinite;
-  height: 10px;
+  animation-delay: 0.15s;
 }
 .playing-bars span:nth-child(3) {
-  animation: bar-bounce 0.8s ease-in-out 0.3s infinite;
-  height: 4px;
+  animation-delay: 0.3s;
 }
 
 @keyframes bar-bounce {
@@ -1353,7 +1016,13 @@ onMounted(() => {
   }
 }
 
-/* Queue scrollbar */
+@media (prefers-reduced-motion: reduce) {
+  .playing-bars span {
+    animation: none;
+    height: 10px;
+  }
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -1366,10 +1035,5 @@ onMounted(() => {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.15);
-}
-
-/* Queue row hover */
-.queue-row {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
 }
 </style>
