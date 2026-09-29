@@ -1,358 +1,304 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
-      >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"
+  <div class="mx-auto max-w-3xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-webhook"
+      title="Webhooks"
+      description="Receive events from other services and post them as embeds."
+      :enabled="isModuleEnabled('triggers')"
+    />
+
+    <!-- ── Webhooks list ── -->
+    <DashboardModuleSection
+      title="Webhooks"
+      :description="`${triggerList.length} of 25 webhooks.`"
+    >
+      <template #actions>
+        <UButton
+          color="primary"
+          size="sm"
+          icon="i-lucide-plus"
+          :disabled="triggerList.length >= 25"
+          @click="openCreate"
         >
-          <UIcon name="i-heroicons-bolt" class="w-5 h-5 text-emerald-400" />
-        </div>
+          New webhook
+        </UButton>
+      </template>
+
+      <div v-if="loading && triggerList.length === 0" class="space-y-2" aria-busy="true">
+        <div v-for="i in 3" :key="i" class="h-14 animate-pulse rounded-lg bg-white/[0.04]" />
+      </div>
+
+      <div
+        v-else-if="triggerList.length === 0"
+        class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 px-6 py-10 text-center"
+      >
+        <span
+          class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
+        >
+          <UIcon name="i-lucide-webhook" class="h-5 w-5 text-sky-200" />
+        </span>
         <div>
-          <h2 class="text-xl font-bold text-white">Triggers</h2>
-          <p class="text-xs text-gray-500">
-            Receive webhook events and post custom embeds
+          <h4 class="text-sm font-semibold text-white">No webhooks yet</h4>
+          <p class="mx-auto mt-1 max-w-sm text-[13px] text-gray-400">
+            Create a webhook, paste its URL into another service, and every event it sends shows up
+            as an embed in your channel.
           </p>
         </div>
+        <UButton color="primary" icon="i-lucide-plus" @click="openCreate">
+          Create your first webhook
+        </UButton>
       </div>
-      <UBadge
-        :color="isModuleEnabled('triggers') ? 'success' : 'neutral'"
-        variant="soft"
-        class="ml-auto"
-      >
-        {{ isModuleEnabled("triggers") ? "Module Active" : "Module Disabled" }}
-      </UBadge>
-    </div>
 
-    <!-- Create Trigger Card -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative space-y-4">
-        <div class="flex items-center gap-2 mb-1">
-          <div
-            class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0"
+      <ul v-else class="-mx-2 divide-y divide-white/[0.06]">
+        <li
+          v-for="trigger in triggerList"
+          :key="trigger.$id"
+          class="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 py-3 transition-opacity"
+          :class="trigger.enabled ? '' : 'opacity-60'"
+        >
+          <span
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+            :class="webhookProvider(trigger.provider).tileClass"
           >
-            <UIcon name="i-heroicons-plus" class="text-emerald-400" />
-          </div>
-          <h3 class="font-semibold text-white">New Trigger</h3>
-        </div>
+            <UIcon :name="webhookProvider(trigger.provider).icon" class="h-4 w-4" />
+          </span>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <UFormField label="Name">
+          <div class="min-w-0 flex-1 basis-40">
+            <button
+              type="button"
+              class="block max-w-full truncate text-left text-sm font-medium text-white hover:text-teal-300 focus-visible:outline-2 focus-visible:outline-teal-300"
+              @click="openEdit(trigger)"
+            >
+              {{ trigger.name }}
+            </button>
+            <p class="mt-0.5 truncate text-[13px] text-gray-400">
+              {{ webhookProvider(trigger.provider).label }} → {{ getChannelName(trigger.channel_id) }}
+              <span v-if="trigger.created_at">
+                · created {{ new Date(trigger.created_at).toLocaleDateString() }}
+              </span>
+            </p>
+          </div>
+
+          <div class="ml-auto flex items-center gap-1">
+            <USwitch
+              :model-value="trigger.enabled"
+              size="sm"
+              :aria-label="`${trigger.enabled ? 'Disable' : 'Enable'} ${trigger.name}`"
+              @update:model-value="(val: boolean) => onToggle(trigger.$id, val)"
+            />
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              icon="i-lucide-copy"
+              :aria-label="`Copy webhook URL for ${trigger.name}`"
+              @click="copyTriggerUrl(trigger.secret)"
+            />
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              icon="i-lucide-pencil"
+              :aria-label="`Edit ${trigger.name}`"
+              @click="openEdit(trigger)"
+            />
+            <UButton
+              color="error"
+              variant="ghost"
+              size="sm"
+              icon="i-lucide-trash-2"
+              :aria-label="`Delete ${trigger.name}`"
+              @click="deleteTarget = trigger"
+            />
+          </div>
+        </li>
+      </ul>
+
+      <p class="mt-4 text-[13px] text-gray-400">
+        Just want new YouTube videos, RSS posts or GitHub releases?
+        <NuxtLink
+          :to="`/dashboard/server/${guildId}/modules/alerts`"
+          class="text-sky-200 underline underline-offset-2 hover:text-teal-300"
+        >
+          Social Alerts
+        </NuxtLink>
+        needs no setup.
+      </p>
+    </DashboardModuleSection>
+
+    <DashboardModuleAccessSection :guild-id="guildId" module-name="triggers" />
+
+    <!-- ── Create webhook (two steps: details, then URL) ── -->
+    <UModal
+      v-model:open="showCreate"
+      :title="createdUrl ? 'Webhook created' : 'New webhook'"
+      :description="
+        createdUrl
+          ? 'Paste this URL into the other service\'s webhook settings.'
+          : 'Pick what will send events and where they should be posted.'
+      "
+    >
+      <template #body>
+        <div v-if="!createdUrl" class="space-y-5">
+          <UFormField label="Name" class="w-full">
             <UInput
               v-model="newTrigger.name"
               placeholder="e.g. github-prs"
+              icon="i-lucide-tag"
+              class="w-full"
+              autofocus
+              @keydown.enter="onCreate"
             />
           </UFormField>
-          <UFormField label="Provider">
-            <USelect
-              v-model="newTrigger.provider"
-              :items="providerOptions"
-            />
-          </UFormField>
-          <UFormField label="Channel">
-            <USelect
-              v-if="channels.length > 0"
+
+          <div>
+            <span class="mb-2 block text-sm font-medium text-white">Provider</span>
+            <div class="grid grid-cols-1 gap-3" role="radiogroup" aria-label="Provider">
+              <label v-for="p in webhookProviders" :key="p.value" class="block cursor-pointer">
+                <input
+                  v-model="newTrigger.provider"
+                  type="radio"
+                  name="webhook-provider"
+                  :value="p.value"
+                  class="peer sr-only"
+                />
+                <div
+                  class="flex items-start gap-3 rounded-xl p-3.5 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
+                >
+                  <span
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                    :class="p.tileClass"
+                  >
+                    <UIcon :name="p.icon" class="h-4 w-4" />
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold text-white">{{ p.label }}</span>
+                    <span class="block text-[13px] leading-relaxed text-gray-400">
+                      {{ p.description }}
+                    </span>
+                  </span>
+                  <UIcon
+                    v-if="newTrigger.provider === p.value"
+                    name="i-lucide-circle-check"
+                    class="h-5 w-5 shrink-0 text-teal-300"
+                  />
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <UFormField label="Post in channel" class="w-full">
+            <USelectMenu
+              v-if="channelOptions.length > 0"
               v-model="newTrigger.channel_id"
               :items="channelOptions"
-              placeholder="Select channel"
+              value-key="value"
+              placeholder="Select a channel"
+              searchable
+              icon="i-lucide-hash"
+              class="w-full"
             />
-            <div v-else class="text-xs text-gray-500 italic py-2">
-              No channels available
-            </div>
+            <p v-else class="py-2 text-sm italic text-gray-500">No channels available.</p>
           </UFormField>
         </div>
 
-        <div class="flex justify-end">
+        <div v-else class="space-y-4">
+          <div
+            class="select-all break-all rounded-lg bg-black/30 p-3 font-mono text-xs text-teal-300 ring-1 ring-inset ring-white/10"
+          >
+            {{ createdUrl }}
+          </div>
+          <p
+            class="flex items-start gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+          >
+            <UIcon name="i-lucide-triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Keep this secret. Anyone with the URL can post messages to your channel.</span>
+          </p>
+        </div>
+      </template>
+
+      <template #footer>
+        <div v-if="!createdUrl" class="flex w-full justify-end gap-2">
+          <UButton color="neutral" variant="ghost" @click="showCreate = false">Cancel</UButton>
           <UButton
             color="primary"
-            size="sm"
-            icon="i-heroicons-plus"
+            icon="i-lucide-plus"
             :loading="actionLoading"
-            :disabled="!newTrigger.name || !newTrigger.channel_id"
-            @click="onCreateTrigger"
+            :disabled="!newTrigger.name.trim() || !newTrigger.channel_id"
+            @click="onCreate"
           >
-            Create Trigger
+            Create webhook
           </UButton>
         </div>
-      </div>
-    </div>
+        <div v-else class="flex w-full flex-wrap justify-end gap-2">
+          <UButton color="neutral" variant="ghost" @click="showCreate = false">Done</UButton>
+          <UButton color="neutral" variant="soft" icon="i-lucide-copy" @click="copyUrl">
+            Copy URL
+          </UButton>
+          <UButton color="primary" icon="i-lucide-pencil" @click="customizeCreated">
+            Customize embed
+          </UButton>
+        </div>
+      </template>
+    </UModal>
 
-    <!-- Webhook URL modal -->
-    <UModal v-model:open="showUrlModal">
+    <!-- ── Delete confirmation ── -->
+    <UModal :open="!!deleteTarget" @update:open="(v: boolean) => !v && (deleteTarget = null)">
       <template #content>
-        <div class="p-6 space-y-4">
-          <div class="flex items-center gap-2">
-            <UIcon name="i-heroicons-link" class="text-emerald-400" />
-            <h3 class="font-semibold text-white">Webhook URL</h3>
+        <div class="space-y-4 p-6">
+          <div class="flex items-center gap-3">
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 ring-1 ring-inset ring-red-400/30"
+            >
+              <UIcon name="i-lucide-triangle-alert" class="h-5 w-5 text-red-300" />
+            </span>
+            <div>
+              <h3 class="text-base font-semibold text-white">Delete webhook</h3>
+              <p class="text-[13px] text-gray-400">This can't be undone.</p>
+            </div>
           </div>
-          <p class="text-xs text-gray-400">
-            Paste this URL into your service's webhook settings. Keep it secret
-            — anyone with this URL can trigger messages.
+          <p class="text-sm text-gray-300">
+            Delete <strong class="text-white">{{ deleteTarget?.name }}</strong>? Its URL stops
+            working right away.
           </p>
-          <div
-            class="bg-gray-900 border border-white/10 rounded-lg p-3 font-mono text-xs text-emerald-400 break-all select-all"
-          >
-            {{ createdWebhookUrl }}
-          </div>
-          <div class="flex justify-end gap-2">
+          <div class="flex justify-end gap-2 pt-1">
+            <UButton color="neutral" variant="ghost" @click="deleteTarget = null">Cancel</UButton>
             <UButton
-              color="neutral"
-              variant="soft"
-              size="sm"
-              @click="showUrlModal = false"
+              color="error"
+              icon="i-lucide-trash-2"
+              :loading="actionLoading"
+              @click="confirmDelete"
             >
-              Close
-            </UButton>
-            <UButton
-              color="primary"
-              size="sm"
-              icon="i-heroicons-clipboard-document"
-              @click="copyUrl"
-            >
-              Copy URL
+              Delete webhook
             </UButton>
           </div>
         </div>
       </template>
     </UModal>
 
-    <!-- Triggers List -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative space-y-4">
-        <div class="flex items-center gap-2 mb-1">
-          <div
-            class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
-          >
-            <UIcon name="i-heroicons-list-bullet" class="text-secondary-400" />
-          </div>
-          <h3 class="font-semibold text-white">Active Triggers</h3>
-          <UBadge color="neutral" variant="soft" size="xs" class="ml-auto">
-            {{ triggerList.length }}/25
-          </UBadge>
-        </div>
-
-        <!-- Loading State -->
-        <div
-          v-if="loading"
-          class="flex items-center justify-center py-12 text-gray-500"
-        >
-          <UIcon
-            name="i-heroicons-arrow-path"
-            class="w-5 h-5 animate-spin mr-2"
-          />
-          Loading triggers...
-        </div>
-
-        <!-- Empty State -->
-        <div
-          v-else-if="triggerList.length === 0"
-          class="flex flex-col items-center justify-center py-12 text-center"
-        >
-          <div
-            class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-3"
-          >
-            <UIcon name="i-heroicons-bolt" class="w-8 h-8 text-gray-600" />
-          </div>
-          <p class="text-gray-400 font-medium">No triggers yet</p>
-          <p class="text-xs text-gray-600 mt-1">
-            Create one above to get started
-          </p>
-        </div>
-
-        <!-- Trigger Rows -->
-        <div v-else class="space-y-2">
-          <div
-            v-for="trigger in triggerList"
-            :key="trigger.$id"
-            class="flex items-center gap-4 px-4 py-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors group"
-          >
-            <!-- Provider badge -->
-            <div
-              class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              :class="providerBadgeClass(trigger.provider)"
-            >
-              <span class="text-base">{{
-                providerEmoji(trigger.provider)
-              }}</span>
-            </div>
-
-            <!-- Info -->
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2">
-                <p class="text-sm font-medium text-white truncate">
-                  {{ trigger.name }}
-                </p>
-                <UBadge
-                  :color="trigger.enabled ? 'success' : 'neutral'"
-                  variant="soft"
-                  size="xs"
-                >
-                  {{ trigger.enabled ? "Active" : "Disabled" }}
-                </UBadge>
-              </div>
-              <p class="text-[10px] text-gray-500 mt-0.5">
-                {{ trigger.provider }} →
-                {{ getChannelName(trigger.channel_id) }}
-                <span v-if="trigger.created_at">
-                  · Created
-                  {{ new Date(trigger.created_at).toLocaleDateString() }}</span
-                >
-              </p>
-            </div>
-
-            <!-- Actions -->
-            <div
-              class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <UButton
-                color="primary"
-                variant="ghost"
-                size="xs"
-                icon="i-heroicons-pencil-square"
-                title="Edit Trigger"
-                @click="openBuilder(trigger)"
-              />
-              <UButton
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                icon="i-heroicons-clipboard-document"
-                title="Copy webhook URL"
-                @click="copyTriggerUrl(trigger.secret)"
-              />
-              <UButton
-                :color="trigger.enabled ? 'warning' : 'success'"
-                variant="ghost"
-                size="xs"
-                :icon="
-                  trigger.enabled ? 'i-heroicons-pause' : 'i-heroicons-play'
-                "
-                :title="trigger.enabled ? 'Disable' : 'Enable'"
-                @click="toggleTriggerFn(trigger.$id, !trigger.enabled)"
-              />
-              <UButton
-                color="error"
-                variant="ghost"
-                size="xs"
-                icon="i-heroicons-trash"
-                title="Delete"
-                @click="onDeleteTrigger(trigger.$id, trigger.name)"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- How It Works -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative space-y-4">
-        <div class="flex items-center gap-2 mb-1">
-          <div
-            class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
-          >
-            <UIcon
-              name="i-heroicons-information-circle"
-              class="text-primary-400"
-            />
-          </div>
-          <h3 class="font-semibold text-white">How It Works</h3>
-        </div>
-
-        <div class="space-y-3 text-xs text-gray-400 leading-relaxed">
-          <p>
-            Triggers listen for incoming webhook events from external services
-            and post custom-formatted embeds to your Discord channels.
-          </p>
-          <ul class="space-y-1.5 list-none">
-            <li class="flex items-start gap-2">
-              <span class="text-base leading-none mt-0.5">🐙</span>
-              <span
-                ><strong class="text-gray-300">GitHub</strong> — PR merges,
-                issues, pushes. Auto-parses PR title, author, and repo.</span
-              >
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-base leading-none mt-0.5">📺</span>
-              <span
-                ><strong class="text-gray-300">Twitch</strong> — Stream
-                online/offline events with streamer name, game, and title.</span
-              >
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-base leading-none mt-0.5">🔔</span>
-              <span
-                ><strong class="text-gray-300">Generic Webhook</strong> — Any
-                service that can POST JSON. Raw body displayed in the
-                embed.</span
-              >
-            </li>
-          </ul>
-          <p class="text-gray-500">
-            Use <code class="text-emerald-400">/triggers template</code> and
-            <code class="text-emerald-400">/triggers filter</code> in Discord to
-            customize embed appearance and filter conditions.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <DashboardModuleAccessSection :guild-id="guildId" module-name="triggers" />
+    <TriggerBuilderModal
+      v-model:open="isBuilderOpen"
+      :trigger="activeTriggerForBuild"
+      :channel-options="channelOptions"
+      @save="onSaveBuilder"
+    />
   </div>
-
-  <TriggerBuilderModal
-    v-model:open="isBuilderOpen"
-    :trigger="activeTriggerForBuild"
-    :channel-options="channelOptions"
-    @save="onSaveBuilder"
-  />
 </template>
 
 <script setup lang="ts">
 import TriggerBuilderModal from "~/components/dashboard/TriggerBuilderModal.vue";
 import type { TriggerDocument } from "~/composables/useTriggers";
+import { webhookProviders, webhookProvider } from "~/utils/webhook-providers";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
-const { isModuleEnabled } = useServerSettings(guildId);
+const { state, isModuleEnabled, loadChannels, channelOptions } = useServerSettings(guildId);
 const toast = useToast();
 
 // ── Channels ──
-const { data: channelsData } = await useFetch("/api/discord/channels", {
-  params: { guild_id: guildId },
-});
-const channels = computed(
-  () => ((channelsData.value as any)?.channels as any[]) || [],
-);
-const channelOptions = computed(() =>
-  channels.value.map((c: any) => ({
-    label: `#${c.name}`,
-    value: c.id,
-  })),
-);
 const getChannelName = (id: string) => {
-  const ch = channels.value.find((c: any) => c.id === id);
+  const ch = state.value.channels.find((c: any) => c.id === id);
   return ch ? `#${ch.name}` : `#${id}`;
 };
 
@@ -363,66 +309,49 @@ const {
   actionLoading,
   createTrigger,
   deleteTrigger,
-  toggleTrigger: toggleTriggerFn,
+  toggleTrigger,
   updateTrigger,
   getWebhookUrl,
 } = useTriggers(guildId);
 
-// ── New trigger form ──
-const providerOptions = [
-  { label: "Generic Webhook", value: "webhook" },
-  { label: "GitHub", value: "github" },
-  { label: "Twitch", value: "twitch" },
-];
+// ── Create ──
+const showCreate = ref(false);
+const createdUrl = ref("");
+const createdSecret = ref("");
 
 const newTrigger = reactive({
   name: "",
-  provider: "webhook",
+  provider: "webhook" as "webhook" | "github" | "twitch",
   channel_id: "",
 });
 
-const showUrlModal = ref(false);
-const createdWebhookUrl = ref("");
-
-const onCreateTrigger = async () => {
-  try {
-    const secret = await createTrigger({
-      name: newTrigger.name,
-      provider: newTrigger.provider as "webhook" | "github" | "twitch",
-      channel_id: newTrigger.channel_id,
-    });
-    createdWebhookUrl.value = getWebhookUrl(secret!);
-    showUrlModal.value = true;
-    // Reset form
-    newTrigger.name = "";
-    newTrigger.provider = "webhook";
-    newTrigger.channel_id = "";
-
-    toast.add({
-      title: "Trigger created",
-      color: "success",
-    });
-  } catch {
-    toast.add({
-      title: "Failed to create trigger",
-      color: "error",
-    });
-  }
+const openCreate = () => {
+  createdUrl.value = "";
+  createdSecret.value = "";
+  newTrigger.name = "";
+  newTrigger.provider = "webhook";
+  newTrigger.channel_id = "";
+  showCreate.value = true;
 };
 
-const onDeleteTrigger = async (id: string, name: string) => {
-  if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+const onCreate = async () => {
+  if (!newTrigger.name.trim() || !newTrigger.channel_id) return;
   try {
-    await deleteTrigger(id);
-    toast.add({ title: "Trigger deleted", color: "success" });
+    const secret = await createTrigger({
+      name: newTrigger.name.trim(),
+      provider: newTrigger.provider,
+      channel_id: newTrigger.channel_id,
+    });
+    createdSecret.value = secret!;
+    createdUrl.value = getWebhookUrl(secret!);
   } catch {
-    toast.add({ title: "Failed to delete trigger", color: "error" });
+    toast.add({ title: "Failed to create webhook", color: "error" });
   }
 };
 
 const copyUrl = async () => {
   try {
-    await navigator.clipboard.writeText(createdWebhookUrl.value);
+    await navigator.clipboard.writeText(createdUrl.value);
     toast.add({ title: "Copied to clipboard", color: "success" });
   } catch {
     toast.add({ title: "Failed to copy", color: "error" });
@@ -431,53 +360,63 @@ const copyUrl = async () => {
 
 const copyTriggerUrl = async (secret: string) => {
   try {
-    const url = getWebhookUrl(secret);
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(getWebhookUrl(secret));
     toast.add({ title: "URL copied", color: "success" });
   } catch {
     toast.add({ title: "Failed to copy", color: "error" });
   }
 };
 
-// ── Provider helpers ──
-const providerEmoji = (p: string) => {
-  switch (p) {
-    case "github":
-      return "🐙";
-    case "twitch":
-      return "📺";
-    default:
-      return "🔔";
+// ── Toggle / delete ──
+const onToggle = async (id: string, enabled: boolean) => {
+  try {
+    await toggleTrigger(id, enabled);
+  } catch {
+    toast.add({ title: "Failed to update webhook", color: "error" });
   }
 };
 
-const providerBadgeClass = (p: string) => {
-  switch (p) {
-    case "github":
-      return "bg-green-500/10 border border-green-500/20";
-    case "twitch":
-      return "bg-primary-500/10 border border-primary-500/20";
-    default:
-      return "bg-blue-500/10 border border-blue-500/20";
+const deleteTarget = ref<TriggerDocument | null>(null);
+
+const confirmDelete = async () => {
+  const target = deleteTarget.value;
+  if (!target) return;
+  try {
+    await deleteTrigger(target.$id);
+    toast.add({ title: "Webhook deleted", color: "success" });
+    deleteTarget.value = null;
+  } catch {
+    toast.add({ title: "Failed to delete webhook", color: "error" });
   }
 };
 
-// ── Builder Modal ──
+// ── Editor ──
 const isBuilderOpen = ref(false);
 const activeTriggerForBuild = ref<TriggerDocument | null>(null);
 
-const openBuilder = (trigger: TriggerDocument) => {
+const openEdit = (trigger: TriggerDocument) => {
   activeTriggerForBuild.value = trigger;
   isBuilderOpen.value = true;
+};
+
+// After creating, jump straight into the embed editor for the new webhook.
+const customizeCreated = () => {
+  const created = triggerList.value.find((t) => t.secret === createdSecret.value);
+  showCreate.value = false;
+  if (created) openEdit(created);
 };
 
 const onSaveBuilder = async (data: Record<string, any>) => {
   if (!activeTriggerForBuild.value) return;
   try {
     await updateTrigger(activeTriggerForBuild.value.$id, data);
-    toast.add({ title: "Trigger saved", color: "success" });
+    toast.add({ title: "Webhook saved", color: "success" });
   } catch {
-    toast.add({ title: "Failed to save trigger", color: "error" });
+    toast.add({ title: "Failed to save webhook", color: "error" });
   }
 };
+
+onMounted(() => {
+  loadChannels();
+});
 </script>

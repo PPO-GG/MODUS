@@ -1,175 +1,235 @@
 <template>
-  <USlideover v-model:open="isOpen" :ui="{ content: 'sm:max-w-3xl' }">
-    <template #content>
-    <div class="flex flex-col h-full bg-gray-950 border-l border-white/10">
-      <!-- Header -->
-      <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-            <UIcon name="i-heroicons-bolt" class="text-emerald-400 text-xl" />
-          </div>
-          <div>
-            <h2 class="text-lg font-semibold text-white">Trigger Builder</h2>
-            <p class="text-xs text-gray-500">{{ trigger?.name || 'Loading...' }}</p>
-          </div>
-        </div>
-        <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark" @click="isOpen = false" />
-      </div>
+  <USlideover
+    v-model:open="isOpen"
+    title="Edit webhook"
+    :description="trigger?.name || ''"
+    :ui="{ content: 'sm:max-w-3xl' }"
+  >
+    <template #body>
+      <div class="space-y-6">
+        <!-- ── Basics ── -->
+        <DashboardModuleSection title="Basics">
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <UFormField label="Name" class="w-full">
+                <UInput
+                  v-model="triggerName"
+                  placeholder="Webhook name"
+                  icon="i-lucide-tag"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField label="Provider" class="w-full">
+                <USelectMenu
+                  v-model="triggerProvider"
+                  :items="webhookProviders"
+                  value-key="value"
+                  class="w-full"
+                />
+              </UFormField>
+            </div>
 
-      <!-- Scrollable Content -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-8">
-        
-        <!-- 0. General Settings -->
-        <div class="space-y-3 p-4 rounded-xl bg-white/[0.02] border border-white/10">
-          <h3 class="font-medium text-white text-sm">General Settings</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <UFormField label="Name">
-              <UInput v-model="triggerName" placeholder="Trigger name" />
-            </UFormField>
-
-            <UFormField label="Target Channel">
-              <USelect
+            <UFormField label="Post in channel" class="w-full">
+              <USelectMenu
                 v-if="channelOptions && channelOptions.length > 0"
                 v-model="triggerChannelId"
                 :items="channelOptions"
-                placeholder="Select channel"
+                value-key="value"
+                placeholder="Select a channel"
+                searchable
+                icon="i-lucide-hash"
+                class="w-full"
               />
-              <UInput v-else v-model="triggerChannelId" placeholder="Channel ID" />
+              <UInput v-else v-model="triggerChannelId" placeholder="Channel ID" class="w-full" />
             </UFormField>
 
-            <UFormField label="Provider">
-              <USelect v-model="triggerProvider" :items="providerOptions" />
-            </UFormField>
-
-            <UFormField label="Status">
-              <div class="flex items-center justify-between h-9 px-3 rounded-lg bg-white/5 border border-white/10">
-                <span class="text-xs text-gray-300 font-medium">{{ triggerEnabled ? 'Active' : 'Disabled' }}</span>
-                <USwitch v-model="triggerEnabled" />
-              </div>
-            </UFormField>
+            <label
+              class="-mx-2 flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-white/[0.04]"
+            >
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-medium text-white">Active</span>
+                <span class="block text-[13px] text-gray-400">
+                  Turn off to stop posting without deleting the webhook.
+                </span>
+              </span>
+              <USwitch v-model="triggerEnabled" aria-label="Active" />
+            </label>
           </div>
-        </div>
+        </DashboardModuleSection>
 
-        <!-- 1. Sample Payload -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="font-medium text-white text-sm">1. Sample Payload</h3>
-            <span class="text-xs text-gray-500">Paste JSON here to test filters and preview embeds</span>
-          </div>
+        <!-- ── Sample payload ── -->
+        <DashboardModuleSection
+          title="Sample payload"
+          description="Paste a real payload to test filters and preview the embed. It isn't saved."
+        >
           <UTextarea
             v-model="sampleJson"
-            placeholder="{&#10;  &#34;content&#34;: &#34;n8n fucked up&#34;&#10;}"
-            :rows="8"
+            placeholder='{ "content": "Something happened" }'
+            :rows="7"
             class="w-full font-mono text-xs"
-            :ui="{ base: 'w-full' }"
+            :ui="{ base: 'w-full font-mono text-xs' }"
           />
-          <div v-if="jsonError" class="text-xs text-red-400 flex items-center gap-1 mt-1">
-            <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
-            Invalid JSON
-          </div>
-        </div>
+          <p v-if="jsonError" class="mt-2 flex items-center gap-1.5 text-[13px] text-red-300">
+            <UIcon name="i-lucide-triangle-alert" class="h-4 w-4" />
+            That isn't valid JSON.
+          </p>
+        </DashboardModuleSection>
 
-        <!-- 1.5 Detected Fields -->
-        <div v-if="detectedFields.length > 0" class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="font-medium text-white text-sm">Detected Fields</h3>
-            <span class="text-xs text-gray-500">
-              Click to insert into <span class="text-emerald-400">{{ lastFocusedField === 'description' ? 'Description' : 'Title' }}</span>
-            </span>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="field in detectedFields"
-              :key="field.path"
-              type="button"
-              class="group inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/5 border border-white/10 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-colors text-left max-w-full"
-              @click="insertField(field.path)"
-            >
-              <code class="font-mono text-[11px] text-emerald-300 group-hover:text-emerald-200 shrink-0">{{ '{' + field.path + '}' }}</code>
-              <span class="text-[10px] text-gray-500 truncate">{{ field.preview }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 2. Filters -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="font-medium text-white text-sm">2. Filter Rules</h3>
-            <div class="flex items-center gap-2">
-              <UBadge v-if="parsedSample" :color="filterPasses ? 'success' : 'error'" variant="soft" size="xs">
-                {{ filterPasses ? 'Passes' : 'Fails' }}
-              </UBadge>
-              <UButton color="neutral" variant="soft" size="xs" icon="i-heroicons-plus" @click="addFilter">
-                Add Rule
-              </UButton>
-            </div>
-          </div>
-          
-          <div v-if="filters.length === 0" class="text-xs text-gray-500 italic p-3 border border-dashed border-white/10 rounded-lg text-center">
-            No filters configured. All payloads will pass.
-          </div>
-          
-          <div v-else class="space-y-2">
-            <div v-for="(f, i) in filters" :key="i" class="flex items-center gap-2">
-              <UInput v-model="f.key" placeholder="Key (e.g. content)" class="flex-1 font-mono text-xs" :ui="{ base: 'w-full' }" />
-              <div class="text-gray-500 text-sm">==</div>
-              <UInput v-model="f.value" placeholder="Value (e.g. *error*)" class="flex-1 font-mono text-xs" :ui="{ base: 'w-full' }" />
-              <UButton color="error" variant="ghost" icon="i-heroicons-trash" size="xs" @click="removeFilter(i)" />
-            </div>
-            <p class="text-[10px] text-gray-500">Use asterisks (*) for wildcards, e.g. <code class="text-gray-400">*text*</code> to match any string containing "text". Deep paths like <code class="text-gray-400">data.error</code> are supported.</p>
-          </div>
-        </div>
-
-        <!-- 3. Embed Template -->
-        <div class="space-y-3">
-          <h3 class="font-medium text-white text-sm">3. Embed Template</h3>
-          <p class="text-[10px] text-gray-500">Use <code class="text-gray-400">{key.name}</code> to inject values from the sample payload.</p>
-          
+        <!-- ── Embed template ── -->
+        <DashboardModuleSection
+          title="Embed"
+          description="What gets posted. Use {key.name} to insert values from the payload."
+        >
           <div class="space-y-4">
-            <UFormField label="Color (Hex)" class="w-full">
-              <div class="flex items-center gap-2 w-full">
-                <input type="color" v-model="templateColor" class="w-10 h-10 rounded cursor-pointer bg-transparent border-0 p-0 shrink-0" />
-                <UInput v-model="templateColor" placeholder="#5865f2" class="flex-1 font-mono text-xs" :ui="{ base: 'w-full' }" />
-              </div>
-            </UFormField>
-            <UFormField label="Title" class="w-full">
-              <UInput
-                v-model="templateTitle"
-                placeholder="e.g. Alert: {content}"
-                class="w-full"
-                :ui="{ base: 'w-full' }"
-                @focus="lastFocusedField = 'title'"
-              />
-            </UFormField>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_14rem]">
+              <UFormField label="Title" class="w-full">
+                <UInput
+                  v-model="templateTitle"
+                  placeholder="e.g. Alert: {content}"
+                  class="w-full"
+                  @focus="lastFocusedField = 'title'"
+                />
+              </UFormField>
+              <UFormField label="Accent color" class="w-full">
+                <div class="flex items-center gap-2">
+                  <input
+                    v-model="templateColor"
+                    type="color"
+                    aria-label="Pick accent color"
+                    class="h-8 w-11 shrink-0 cursor-pointer rounded-lg border border-white/10 bg-transparent p-0.5"
+                  />
+                  <UInput
+                    v-model="templateColor"
+                    placeholder="#5865f2"
+                    icon="i-lucide-palette"
+                    class="w-full font-mono"
+                  />
+                </div>
+              </UFormField>
+            </div>
+
             <UFormField label="Description" class="w-full">
               <UTextarea
                 v-model="templateDesc"
-                placeholder="Markdown supported..."
+                placeholder="Markdown supported…"
                 :rows="4"
+                autoresize
                 class="w-full"
-                :ui="{ base: 'w-full' }"
                 @focus="lastFocusedField = 'description'"
               />
             </UFormField>
+
+            <div v-if="detectedFields.length > 0">
+              <div class="mb-2 flex items-baseline justify-between gap-3">
+                <span class="text-sm font-medium text-white">Fields in your payload</span>
+                <span class="text-[13px] text-gray-400">
+                  Click to insert into
+                  <span class="text-sky-200">{{
+                    lastFocusedField === "description" ? "Description" : "Title"
+                  }}</span>
+                </span>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="field in detectedFields"
+                  :key="field.path"
+                  type="button"
+                  class="group inline-flex max-w-full items-center gap-2 rounded-md bg-white/5 px-2.5 py-1 text-left ring-1 ring-inset ring-white/10 transition-colors hover:bg-sky-200/10 hover:ring-sky-200/30 focus-visible:outline-2 focus-visible:outline-teal-300"
+                  @click="insertField(field.path)"
+                >
+                  <code class="shrink-0 font-mono text-[11px] text-sky-200">{{
+                    "{" + field.path + "}"
+                  }}</code>
+                  <span class="truncate text-[11px] text-gray-500">{{ field.preview }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <span class="mb-2 block text-sm font-medium text-white">Preview</span>
+              <div class="rounded-xl bg-[#313338] p-4">
+                <EmbedPreview :form="previewForm" />
+              </div>
+            </div>
           </div>
-        </div>
+        </DashboardModuleSection>
 
-        <!-- 4. Preview -->
-        <div class="space-y-3">
-          <h3 class="font-medium text-white text-sm">Preview</h3>
-          <div class="p-4 bg-gray-900 border border-white/5 rounded-xl">
-            <EmbedPreview :form="previewForm" />
+        <!-- ── Filters ── -->
+        <DashboardModuleSection
+          title="Filters"
+          description="Only post when the payload matches every rule. With no rules, everything is posted."
+        >
+          <template #actions>
+            <div class="flex items-center gap-2">
+              <span
+                v-if="parsedSample && filters.length > 0"
+                class="rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
+                :class="
+                  filterPasses
+                    ? 'bg-emerald-400/10 text-emerald-300 ring-emerald-400/25'
+                    : 'bg-red-400/10 text-red-300 ring-red-400/25'
+                "
+              >
+                Sample {{ filterPasses ? "passes" : "fails" }}
+              </span>
+              <UButton
+                color="neutral"
+                variant="soft"
+                size="sm"
+                icon="i-lucide-plus"
+                @click="addFilter"
+              >
+                Add rule
+              </UButton>
+            </div>
+          </template>
+
+          <div
+            v-if="filters.length === 0"
+            class="rounded-lg border border-dashed border-white/10 p-4 text-center text-[13px] text-gray-400"
+          >
+            No filters. All payloads will be posted.
           </div>
-        </div>
 
+          <div v-else class="space-y-2">
+            <div v-for="(f, i) in filters" :key="i" class="flex flex-wrap items-center gap-2">
+              <UInput
+                v-model="f.key"
+                placeholder="Key (e.g. content)"
+                class="min-w-40 flex-1 font-mono"
+              />
+              <span class="text-xs text-gray-500">equals</span>
+              <UInput
+                v-model="f.value"
+                placeholder="Value (e.g. *error*)"
+                class="min-w-40 flex-1 font-mono"
+              />
+              <UButton
+                color="error"
+                variant="ghost"
+                icon="i-lucide-trash-2"
+                size="sm"
+                :aria-label="`Remove rule ${i + 1}`"
+                @click="removeFilter(i)"
+              />
+            </div>
+            <p class="pt-1 text-[13px] text-gray-400">
+              Use <code class="text-gray-300">*</code> as a wildcard, for example
+              <code class="text-gray-300">*text*</code> matches any string containing "text". Deep
+              paths like <code class="text-gray-300">data.error</code> work too.
+            </p>
+          </div>
+        </DashboardModuleSection>
       </div>
+    </template>
 
-      <!-- Footer -->
-      <div class="p-4 border-t border-white/10 flex justify-end gap-3 shrink-0 bg-gray-950">
-        <UButton color="neutral" variant="soft" @click="isOpen = false">Cancel</UButton>
-        <UButton color="primary" icon="i-heroicons-check" :loading="saving" @click="save">Save Changes</UButton>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2">
+        <UButton color="neutral" variant="ghost" @click="isOpen = false">Cancel</UButton>
+        <UButton color="primary" icon="i-lucide-check" :loading="saving" @click="save">
+          Save changes
+        </UButton>
       </div>
-    </div>
     </template>
   </USlideover>
 </template>
@@ -178,6 +238,7 @@
 import { ref, computed, watch } from 'vue';
 import type { TriggerDocument } from '~/composables/useTriggers';
 import EmbedPreview from '~/components/EmbedPreview.vue';
+import { webhookProviders } from '~/utils/webhook-providers';
 
 const props = defineProps<{
   trigger: TriggerDocument | null;
@@ -193,13 +254,8 @@ const triggerProvider = ref("webhook");
 const triggerChannelId = ref("");
 const triggerEnabled = ref(true);
 
-const providerOptions = [
-  { label: "Generic Webhook", value: "webhook" },
-  { label: "GitHub", value: "github" },
-  { label: "Twitch", value: "twitch" },
-];
-
-const sampleJson = ref("{\n  \"content\": \"Example Payload\"\n}");
+const DEFAULT_SAMPLE = "{\n  \"content\": \"Example payload\"\n}";
+const sampleJson = ref(DEFAULT_SAMPLE);
 const jsonError = ref(false);
 
 const parsedSample = computed(() => {
@@ -280,6 +336,8 @@ watch(() => isOpen.value, (val) => {
     triggerProvider.value = props.trigger.provider || "webhook";
     triggerChannelId.value = props.trigger.channel_id || "";
     triggerEnabled.value = props.trigger.enabled ?? true;
+    // Don't carry one webhook's sample payload over to the next.
+    sampleJson.value = DEFAULT_SAMPLE;
 
     // Load filters
     try {
@@ -337,12 +395,12 @@ function resolvePlaceholders(template: string, data: any): string {
 const filterPasses = computed(() => {
   if (!parsedSample.value) return false;
   if (filters.value.length === 0) return true;
-  
+
   for (const f of filters.value) {
     if (!f.key) continue;
     const actual = resolveNestedPath(parsedSample.value, f.key);
     const expected = f.value;
-    
+
     let match = false;
     if (actual === expected) {
       match = true;
@@ -398,16 +456,16 @@ const previewForm = computed(() => {
 
 const save = async () => {
   saving.value = true;
-  
+
   const finalFilters = {} as Record<string, string>;
   for (const f of filters.value) {
     if (f.key) finalFilters[f.key] = f.value;
   }
-  
+
   const finalTemplate = {} as any;
   if (templateTitle.value) finalTemplate.title = templateTitle.value;
   if (templateDesc.value) finalTemplate.description = templateDesc.value;
-  
+
   // Parse color hex back to integer
   if (templateColor.value) {
     const hexStr = templateColor.value.replace('#', '');
@@ -424,7 +482,7 @@ const save = async () => {
     filters: Object.keys(finalFilters).length > 0 ? JSON.stringify(finalFilters) : null,
     embed_template: Object.keys(finalTemplate).length > 0 ? JSON.stringify(finalTemplate) : null
   });
-  
+
   saving.value = false;
   isOpen.value = false;
 };
