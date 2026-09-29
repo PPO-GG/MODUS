@@ -612,4 +612,11 @@ onMounted(() => {
 onUnmounted(() => {
   resetPageChrome();
 });
+
+// Leaving with unsaved settings or rank card edits would throw them away.
+onBeforeRouteLeave(() => {
+  if (dirty.value && !window.confirm("You have unsaved XP changes. Leave anyway?")) {
+    return false;
+  }
+});
 </script>
