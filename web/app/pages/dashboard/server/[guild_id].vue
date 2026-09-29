@@ -178,6 +178,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  unregisterSidebar();
+  unregisterSidebar(guildId);
 });
 </script>

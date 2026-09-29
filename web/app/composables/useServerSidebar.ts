@@ -26,7 +26,14 @@ export function useServerSidebar() {
     state.value = data;
   }
 
-  function unregister() {
+  /**
+   * Clear the sidebar — but only if it still belongs to `ownerId`. When
+   * switching servers, the incoming page can register (from cached
+   * settings) before the outgoing page unmounts; an unconditional clear
+   * here would wipe the new server's sidebar.
+   */
+  function unregister(ownerId?: string) {
+    if (ownerId && state.value?.guild?.id !== ownerId) return;
     state.value = null;
   }
 
