@@ -1,287 +1,236 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
-      >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
+  <div class="mx-auto max-w-3xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-mic-vocal"
+      title="Temporary Voice Channels"
+      description="Join-to-Create lobbies that give each member a personal voice channel."
+      :enabled="isModuleEnabled('tempvoice')"
+    />
+
+    <!-- ── Lobbies ── -->
+    <DashboardModuleSection
+      title="Lobby channels"
+      description="Members who join a lobby are moved into a new channel of their own. It's deleted when everyone leaves."
+    >
+      <div class="space-y-4">
         <div
-          class="w-9 h-9 rounded-xl bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
+          v-if="settings.lobbyChannelIds.length === 0"
+          class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 px-6 py-8 text-center"
         >
-          <UIcon
-            name="i-heroicons-speaker-wave"
-            class="w-5 h-5 text-secondary-400"
-          />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-white">Temporary Voice Channels</h2>
-          <p class="text-xs text-gray-500">
-            Join-to-Create lobbies for personal voice channels
-          </p>
-        </div>
-      </div>
-      <UBadge
-        :color="isModuleEnabled('tempvoice') ? 'success' : 'neutral'"
-        variant="soft"
-        class="ml-auto"
-      >
-        {{ isModuleEnabled("tempvoice") ? "Module Active" : "Module Disabled" }}
-      </UBadge>
-    </div>
-
-    <!-- Settings Grid -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      <!-- Naming & Limits -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-5">
-          <div class="flex items-center gap-2 mb-1">
-            <div
-              class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon
-                name="i-heroicons-adjustments-horizontal"
-                class="text-secondary-400"
-              />
-            </div>
-            <div>
-              <h3 class="font-semibold text-white">Channel Defaults</h3>
-              <p class="text-[10px] text-gray-500">
-                Configure how temp channels are named and limited
-              </p>
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <UFormField
-              label="Naming Template"
-              description="Use {username}, {displayname}, or {tag} as placeholders."
-            >
-              <UInput
-                v-model="settings.namingTemplate"
-                placeholder="{username}'s Channel"
-                icon="i-heroicons-pencil"
-                class="w-full"
-              />
-            </UFormField>
-
-            <UFormField
-              label="Default User Limit"
-              description="0 = unlimited. Users can override with /tempvoice limit."
-            >
-              <UInput
-                v-model.number="settings.defaultUserLimit"
-                type="number"
-                :min="0"
-                :max="99"
-                placeholder="0"
-                icon="i-heroicons-users"
-                class="w-full"
-              />
-            </UFormField>
-
-            <UFormField
-              label="Category Override"
-              description="Leave blank to create channels in the same category as the lobby."
-            >
-              <UInput
-                v-model="settings.categoryId"
-                placeholder="Category ID (optional)"
-                icon="i-heroicons-folder"
-                class="w-full"
-              />
-            </UFormField>
-          </div>
-        </div>
-      </div>
-
-      <!-- Lobby Channels -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-4">
-          <div class="flex items-center gap-2 mb-1">
-            <div
-              class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-heroicons-speaker-wave" class="text-primary-400" />
-            </div>
-            <div>
-              <h3 class="font-semibold text-white">Lobby Channels</h3>
-              <p class="text-[10px] text-gray-500">
-                Voice channels that act as Join-to-Create triggers
-              </p>
-            </div>
-          </div>
-
-          <!-- Current Lobbies -->
-          <div
-            v-if="settings.lobbyChannelIds.length === 0"
-            class="flex flex-col items-center justify-center py-8 text-center"
+          <span
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
           >
-            <div
-              class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-2"
-            >
-              <UIcon
-                name="i-heroicons-speaker-wave"
-                class="w-6 h-6 text-gray-600"
-              />
-            </div>
-            <p class="text-xs text-gray-500">No lobby channels configured</p>
-            <p class="text-[10px] text-gray-600 mt-0.5">
-              Use <code class="text-secondary-400">/tempvoice lobby</code> in
-              Discord or add IDs below
+            <UIcon name="i-lucide-volume-2" class="h-5 w-5 text-sky-200" />
+          </span>
+          <div>
+            <h4 class="text-sm font-semibold text-white">No lobbies yet</h4>
+            <p class="mt-1 text-[13px] text-gray-400">
+              Pick a voice channel below, or run <code class="font-mono">/tempvoice lobby</code> in
+              Discord.
             </p>
           </div>
+        </div>
 
-          <div v-else class="space-y-2">
-            <div
-              v-for="(channelId, index) in settings.lobbyChannelIds"
-              :key="channelId"
-              class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.02] border border-white/5 group"
+        <ul v-else class="-mx-2 divide-y divide-white/[0.06]">
+          <li
+            v-for="(channelId, index) in settings.lobbyChannelIds"
+            :key="channelId"
+            class="flex items-center gap-3 px-2 py-2.5"
+          >
+            <span
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
             >
-              <UIcon
-                name="i-heroicons-speaker-wave"
-                class="text-primary-400 text-sm shrink-0"
-              />
-              <span class="text-sm text-gray-300 flex-1 font-mono truncate">{{
-                channelId
-              }}</span>
-              <UButton
-                color="error"
-                variant="ghost"
-                size="xs"
-                icon="i-heroicons-x-mark"
-                class="opacity-0 group-hover:opacity-100 transition-opacity"
-                @click="removeLobby(index)"
-              />
+              <UIcon name="i-lucide-volume-2" class="h-4 w-4" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-white">
+                {{ channelName(channelId) ?? channelId }}
+              </p>
+              <p
+                v-if="channelName(channelId) === undefined && channelsLoaded"
+                class="mt-0.5 inline-flex items-center gap-1 text-[13px] text-amber-300"
+              >
+                <UIcon name="i-lucide-triangle-alert" class="h-3.5 w-3.5" />
+                Channel not found. It may have been deleted.
+              </p>
             </div>
-          </div>
-
-          <!-- Add Lobby -->
-          <div class="flex gap-2">
-            <UInput
-              v-model="newLobbyId"
-              placeholder="Voice channel ID"
+            <UButton
+              color="error"
+              variant="ghost"
               size="sm"
-              class="flex-1"
-              icon="i-heroicons-hashtag"
+              icon="i-lucide-x"
+              :aria-label="`Remove lobby ${channelName(channelId) ?? channelId}`"
+              @click="removeLobby(index)"
             />
+          </li>
+        </ul>
+
+        <div class="flex items-center gap-2">
+          <div v-if="state.channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
+            <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+            <span class="text-sm">Loading channels…</span>
+          </div>
+          <template v-else>
+            <USelectMenu
+              v-if="availableLobbyOptions.length > 0"
+              v-model="newLobbyId"
+              :items="availableLobbyOptions"
+              value-key="value"
+              placeholder="Choose a voice channel…"
+              searchable
+              icon="i-lucide-volume-2"
+              class="min-w-0 flex-1"
+            />
+            <p v-else class="flex-1 py-2 text-sm italic text-gray-500">
+              {{
+                voiceChannels.length === 0
+                  ? "No voice channels found. Make sure the bot is in this server."
+                  : "Every voice channel is already a lobby."
+              }}
+            </p>
             <UButton
               color="primary"
-              size="sm"
-              icon="i-heroicons-plus"
+              icon="i-lucide-plus"
               :disabled="!newLobbyId"
               @click="addLobby"
             >
-              Add
+              Add lobby
             </UButton>
-          </div>
+          </template>
         </div>
-      </div>
-    </div>
 
-    <!-- How It Works -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
+        <p class="border-t border-white/[0.06] pt-4 text-[13px] text-gray-400">
+          Channel owners can rename, lock, unlock, set a limit on and claim their channel with the
+          <code class="font-mono">/tempvoice</code> commands.
+        </p>
+      </div>
+    </DashboardModuleSection>
+
+    <!-- ── Defaults ── -->
+    <DashboardModuleSection
+      title="Channel defaults"
+      description="How new temporary channels are named and limited."
     >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative space-y-4">
-        <div class="flex items-center gap-2 mb-1">
-          <div
-            class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
+      <div class="space-y-5">
+        <div>
+          <UFormField label="Naming template" class="w-full">
+            <UInput
+              v-model="settings.namingTemplate"
+              placeholder="{username}'s Channel"
+              icon="i-lucide-pencil"
+              class="w-full"
+            />
+          </UFormField>
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            <span class="text-[13px] text-gray-400">Insert:</span>
+            <button
+              v-for="token in namingTokens"
+              :key="token"
+              type="button"
+              class="rounded-md bg-white/5 px-2 py-0.5 font-mono text-[12px] text-sky-200 ring-1 ring-inset ring-white/10 transition-colors hover:bg-sky-200/10 hover:ring-sky-200/30 focus-visible:outline-2 focus-visible:outline-teal-300"
+              @click="insertToken(token)"
+            >
+              {{ token }}
+            </button>
+          </div>
+          <p
+            class="mt-3 flex items-center gap-2 rounded-lg bg-sky-200/[0.06] px-3 py-2 text-[13px] text-sky-200"
           >
-            <UIcon
-              name="i-heroicons-information-circle"
-              class="text-secondary-400"
+            <UIcon name="i-lucide-volume-2" class="h-4 w-4 shrink-0" />
+            <span>
+              Preview:
+              <strong class="font-semibold">{{ namePreview || "(empty name)" }}</strong>
+            </span>
+          </p>
+        </div>
+
+        <div>
+          <div class="mb-2 flex items-baseline justify-between gap-3">
+            <label class="text-sm font-medium text-white" for="tempvoice-limit">User limit</label>
+            <span class="text-sm text-sky-200">
+              {{
+                settings.defaultUserLimit === 0
+                  ? "Unlimited"
+                  : `${settings.defaultUserLimit} user${settings.defaultUserLimit !== 1 ? "s" : ""}`
+              }}
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <USlider
+              id="tempvoice-limit"
+              v-model="settings.defaultUserLimit"
+              :min="0"
+              :max="99"
+              :step="1"
+              class="flex-1"
+            />
+            <UInput
+              v-model.number="settings.defaultUserLimit"
+              type="number"
+              :min="0"
+              :max="99"
+              size="sm"
+              class="w-20"
+              aria-label="User limit"
             />
           </div>
-          <h3 class="font-semibold text-white">How It Works</h3>
+          <p class="mt-2 text-[13px] text-gray-400">
+            0 means unlimited. Owners can change it for their own channel with
+            <code class="font-mono">/tempvoice limit</code>.
+          </p>
         </div>
 
-        <div class="space-y-3 text-xs text-gray-400 leading-relaxed">
-          <p>
-            Members join a designated lobby voice channel, and the bot instantly
-            creates a personal voice channel for them.
-          </p>
-          <ul class="space-y-1.5 list-none">
-            <li class="flex items-start gap-2">
-              <UIcon
-                name="i-heroicons-plus-circle"
-                class="text-secondary-400 mt-0.5 shrink-0"
-              />
-              <span
-                ><strong class="text-gray-300">Auto-Create</strong> — Joining a
-                lobby automatically creates and moves the user to their own
-                VC.</span
-              >
-            </li>
-            <li class="flex items-start gap-2">
-              <UIcon
-                name="i-heroicons-trash"
-                class="text-rose-400 mt-0.5 shrink-0"
-              />
-              <span
-                ><strong class="text-gray-300">Auto-Delete</strong> — When
-                everyone leaves, the channel is removed automatically.</span
-              >
-            </li>
-            <li class="flex items-start gap-2">
-              <UIcon
-                name="i-heroicons-wrench-screwdriver"
-                class="text-amber-400 mt-0.5 shrink-0"
-              />
-              <span
-                ><strong class="text-gray-300">Owner Controls</strong> — Rename,
-                lock, unlock, set limits, and claim channels.</span
-              >
-            </li>
-          </ul>
-        </div>
+        <UFormField
+          label="Category"
+          description="Where new channels are created."
+          class="w-full"
+        >
+          <div v-if="state.channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
+            <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+            <span class="text-sm">Loading channels…</span>
+          </div>
+          <USelectMenu
+            v-else
+            v-model="settings.categoryId"
+            :items="categoryOptions"
+            value-key="value"
+            searchable
+            icon="i-lucide-folder"
+            class="w-full"
+          />
+        </UFormField>
+        <p
+          v-if="categoryMissing"
+          class="flex items-center gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+        >
+          <UIcon name="i-lucide-triangle-alert" class="h-4 w-4 shrink-0" />
+          The saved category (ID {{ settings.categoryId }}) wasn't found. It may have been deleted.
+        </p>
       </div>
-    </div>
+    </DashboardModuleSection>
 
     <DashboardModuleAccessSection :guild-id="guildId" module-name="tempvoice" />
 
-    <!-- Save Button -->
-    <div class="flex justify-end">
-      <UButton
-        color="primary"
-        size="lg"
-        icon="i-heroicons-check"
-        :loading="saving"
-        @click="save"
-        class="min-w-[200px]"
-      >
-        Save TempVoice Settings
-      </UButton>
-    </div>
+    <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
-const { state, isModuleEnabled, saveModuleSettings, getModuleConfig } =
+const { state, isModuleEnabled, saveModuleSettings, getModuleConfig, loadChannels } =
   useServerSettings(guildId);
 
 const saving = ref(false);
 const newLobbyId = ref("");
+
+// Discord channel types
+const GUILD_VOICE = 2;
+const GUILD_CATEGORY = 4;
+const NO_CATEGORY = "none";
 
 // ── Settings ──
 
@@ -289,41 +238,108 @@ interface TempVoiceSettingsForm {
   lobbyChannelIds: string[];
   defaultUserLimit: number;
   namingTemplate: string;
+  // "none" = same category as the lobby (saved as no categoryId)
   categoryId: string;
 }
 
-const settings = ref<TempVoiceSettingsForm>({
+const defaults = (): TempVoiceSettingsForm => ({
   lobbyChannelIds: [],
   defaultUserLimit: 0,
   namingTemplate: "{username}'s Channel",
-  categoryId: "",
+  categoryId: NO_CATEGORY,
 });
+
+const settings = ref<TempVoiceSettingsForm>(defaults());
+// Last loaded/saved values; drives the unsaved-changes bar and Discard.
+const baseline = ref<TempVoiceSettingsForm>(defaults());
+const dirty = computed(
+  () => JSON.stringify(settings.value) !== JSON.stringify(baseline.value),
+);
+
+// ── Channels ──
+
+const channelsLoaded = computed(
+  () => !state.value.channelsLoading && state.value.channels.length > 0,
+);
+
+const voiceChannels = computed(() =>
+  state.value.channels.filter((c: any) => c.type === GUILD_VOICE),
+);
+
+const channelName = (id: string): string | undefined => {
+  const ch = state.value.channels.find((c: any) => c.id === id);
+  return ch ? ch.name : undefined;
+};
+
+const availableLobbyOptions = computed(() =>
+  voiceChannels.value
+    .filter((c: any) => !settings.value.lobbyChannelIds.includes(c.id))
+    .map((c: any) => ({ label: c.name, value: c.id })),
+);
+
+const categoryOptions = computed(() => [
+  { label: "Same category as the lobby", value: NO_CATEGORY },
+  ...state.value.channels
+    .filter((c: any) => c.type === GUILD_CATEGORY)
+    .map((c: any) => ({ label: c.name, value: c.id })),
+]);
+
+const categoryMissing = computed(
+  () =>
+    channelsLoaded.value &&
+    settings.value.categoryId !== NO_CATEGORY &&
+    !categoryOptions.value.some((o) => o.value === settings.value.categoryId),
+);
 
 // ── Lobby management ──
 
 const addLobby = () => {
-  const id = newLobbyId.value.trim();
+  const id = newLobbyId.value;
   if (id && !settings.value.lobbyChannelIds.includes(id)) {
     settings.value.lobbyChannelIds.push(id);
-    newLobbyId.value = "";
   }
+  newLobbyId.value = "";
 };
 
 const removeLobby = (index: number) => {
   settings.value.lobbyChannelIds.splice(index, 1);
 };
 
+// ── Naming template ──
+
+const namingTokens = ["{username}", "{displayname}", "{tag}"];
+
+const insertToken = (token: string) => {
+  settings.value.namingTemplate = `${settings.value.namingTemplate}${token}`;
+};
+
+// Same replacements the bot applies, with a sample member.
+const namePreview = computed(() =>
+  settings.value.namingTemplate
+    .replace(/\{username\}/g, "alex")
+    .replace(/\{displayname\}/g, "Alex")
+    .replace(/\{tag\}/g, "alex")
+    .trim(),
+);
+
 // ── Save ──
 
 const save = async () => {
   saving.value = true;
-  await saveModuleSettings("tempvoice", {
+  const ok = await saveModuleSettings("tempvoice", {
     lobbyChannelIds: settings.value.lobbyChannelIds,
     defaultUserLimit: settings.value.defaultUserLimit,
     namingTemplate: settings.value.namingTemplate,
-    categoryId: settings.value.categoryId || undefined,
+    categoryId:
+      settings.value.categoryId === NO_CATEGORY ? undefined : settings.value.categoryId,
   });
+  // A failed save keeps the form dirty so the bar stays and Save can retry.
+  if (ok) baseline.value = JSON.parse(JSON.stringify(settings.value));
   saving.value = false;
+};
+
+const discard = () => {
+  settings.value = JSON.parse(JSON.stringify(baseline.value));
 };
 
 // ── Init ──
@@ -333,12 +349,14 @@ onMounted(async () => {
   if (saved && Object.keys(saved).length > 0) {
     settings.value = {
       lobbyChannelIds: Array.isArray(saved.lobbyChannelIds)
-        ? saved.lobbyChannelIds
+        ? [...saved.lobbyChannelIds]
         : [],
       defaultUserLimit: saved.defaultUserLimit ?? 0,
       namingTemplate: saved.namingTemplate ?? "{username}'s Channel",
-      categoryId: saved.categoryId ?? "",
+      categoryId: saved.categoryId || NO_CATEGORY,
     };
   }
+  baseline.value = JSON.parse(JSON.stringify(settings.value));
+  await loadChannels();
 });
 </script>
