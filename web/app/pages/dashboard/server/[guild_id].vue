@@ -55,6 +55,7 @@ const basePath = `/dashboard/server/${guildId}`;
 
 const activeTab = computed(() => {
   const path = route.path;
+  if (path.endsWith("/overview")) return "overview";
   if (path.includes("/identity")) return "identity";
   if (path.includes("/logs")) return "logs";
   const moduleMatch = path.match(/\/modules\/([^/]+)/);
@@ -64,6 +65,7 @@ const activeTab = computed(() => {
 
 const canAccessActiveTab = computed(() => {
   if (state.value.accessibleModules === null) return true;
+  if (activeTab.value === "overview") return true;
   if (["logs", "modules", "identity"].includes(activeTab.value)) return false;
   return state.value.accessibleModules.includes(activeTab.value);
 });
@@ -141,7 +143,13 @@ const sidebarTabs = computed(() => {
     });
   }
 
-  return [...staticTabs, ...moduleTabs];
+  const overviewTab = {
+    id: "overview",
+    label: "Overview",
+    icon: "i-lucide-layout-dashboard",
+    to: `${basePath}/overview`,
+  };
+  return [overviewTab, ...staticTabs, ...moduleTabs];
 });
 
 // Register sidebar once guild + module data have both loaded — registering

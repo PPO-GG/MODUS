@@ -59,7 +59,7 @@
         <NuxtLink
           v-for="server in servers"
           :key="server.$id"
-          :to="`/dashboard/server/${server.$id}/modules`"
+          :to="`/dashboard/server/${server.$id}`"
           class="server-card glide-glass group"
         >
           <div class="flex items-center gap-3 min-w-0">
