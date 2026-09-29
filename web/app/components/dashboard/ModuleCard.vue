@@ -67,7 +67,7 @@ const emit = defineEmits<{ toggle: [value: boolean]; tag: [tag: string] }>();
 </script>
 
 <style scoped>
-/* Glass bento ring on every card; enabled → teal ring + glow; off → dimmed. */
+/* Glass bento ring on every card; enabled → teal hairline; off → dimmed. */
 .module-card {
   position: relative;
   isolation: isolate;
@@ -96,12 +96,10 @@ const emit = defineEmits<{ toggle: [value: boolean]; tag: [tag: string] }>();
     box-shadow 0.2s ease,
     background 0.2s ease;
 }
+/* Enabled reads as a quiet teal hairline; the dimmed state below carries the contrast. */
 .module-card.is-enabled::before {
-  border-color: var(--glide-ring-on);
-  background: rgba(45, 212, 191, 0.05);
-  box-shadow:
-    0 0 0 1px rgba(45, 212, 191, 0.12),
-    0 12px 44px -14px rgba(45, 212, 191, 0.45);
+  border-color: rgba(45, 212, 191, 0.3);
+  background: rgba(45, 212, 191, 0.025);
 }
 .module-card:not(.is-enabled) {
   opacity: 0.62;
