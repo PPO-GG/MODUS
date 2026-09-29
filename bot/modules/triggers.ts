@@ -66,13 +66,15 @@ function buildWebhookUrl(secret: string): string {
 
 const triggersModule: BotModule = {
   name: "triggers",
-  description: "Custom webhook triggers — post embeds on external events",
+  description: "Receive webhooks from other services and post them as custom embeds",
   meta: {
-    displayName: "Triggers",
+    // Display name only: the module id and /triggers command are unchanged so
+    // saved configs, module access grants and slash-command habits keep working.
+    displayName: "Webhooks",
     category: "engagement",
-    icon: "i-lucide-zap",
+    icon: "i-lucide-webhook",
     color: "emerald",
-    tags: ["auto-response", "custom-commands", "keywords", "automation"],
+    tags: ["webhook", "github", "twitch", "embeds", "integrations", "automation"],
   },
   data: new SlashCommandBuilder()
     .setName("triggers")
@@ -457,7 +459,7 @@ const triggersModule: BotModule = {
 
         const embed = new EmbedBuilder()
           .setColor(0x5865f2)
-          .setTitle(`🔔 Triggers (${triggers.length}/25)`)
+          .setTitle(`🔔 Webhooks (${triggers.length}/25)`)
           .setDescription(lines.join("\n"));
 
         await interaction.editReply({ embeds: [embed] });

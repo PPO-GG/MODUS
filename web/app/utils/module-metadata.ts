@@ -20,7 +20,7 @@ export const MODULE_CATEGORIES: ModuleCategoryInfo[] = [
     key: "engagement",
     label: "Engagement & Rewards",
     icon: "i-lucide-sparkles",
-    description: "Engage your community with XP progression, dynamic greetings, and automated triggers.",
+    description: "Engage your community with XP progression, dynamic greetings, and webhook-powered embeds.",
   },
   {
     key: "community",

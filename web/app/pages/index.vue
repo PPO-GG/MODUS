@@ -458,7 +458,7 @@ const moduleList = [
   { name: "Tickets", icon: "i-lucide-ticket", tagline: "Support ticket system" },
   { name: "Reaction Roles", icon: "i-lucide-smile-plus", tagline: "Self-assign roles via reactions" },
   { name: "Temp Voice", icon: "i-lucide-mic-vocal", tagline: "Auto-create voice rooms" },
-  { name: "Triggers", icon: "i-lucide-zap", tagline: "Custom auto-responses" },
+  { name: "Webhooks", icon: "i-lucide-webhook", tagline: "Webhooks to custom embeds" },
   { name: "Social Alerts", icon: "i-lucide-bell-ring", tagline: "YouTube & Twitch notifications" },
   { name: "Custom Embeds", icon: "i-lucide-layout-template", tagline: "Visual embed builder" },
   { name: "Tags", icon: "i-lucide-tag", tagline: "Reusable message snippets" },
