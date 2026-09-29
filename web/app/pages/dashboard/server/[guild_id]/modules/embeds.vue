@@ -1,380 +1,290 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h2
-          class="text-2xl font-bold bg-gradient-to-r from-secondary-400 to-primary-500 bg-clip-text text-transparent"
-        >
-          Embed Builder
-        </h2>
-        <p class="text-sm text-gray-400 mt-1">
-          Build and send rich embed messages, or save them as reusable presets
-          and tags
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <UButton
-          variant="outline"
-          color="neutral"
-          icon="i-heroicons-bookmark"
-          @click="openSaveDialog('preset')"
-          :disabled="!hasAnyContent"
-        >
-          Save as Preset
-        </UButton>
-        <UButton
-          variant="outline"
-          color="neutral"
-          icon="i-heroicons-tag"
-          @click="openSaveDialog('tag')"
-          :disabled="!hasAnyContent"
-        >
-          Save as Tag
-        </UButton>
-      </div>
-    </div>
+  <div class="mx-auto max-w-6xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-layout-template"
+      title="Embed Builder"
+      description="Build and send rich embed messages, or save them as presets and tags."
+      :enabled="isModuleEnabled('embeds')"
+    />
 
-    <!-- Split Layout: Form + Preview -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      <!-- Left Column: Form -->
-      <div class="space-y-4">
-        <!-- Channel Selector -->
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4"
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+      <!-- ── Left: destination, editor, actions ── -->
+      <div class="min-w-0 space-y-6">
+        <DashboardModuleSection
+          title="Destination"
+          description="The channel the embed is sent to."
         >
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
-          />
-          <div class="relative">
-            <div class="flex items-center gap-2 mb-3">
-              <div
-                class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
-              >
-                <UIcon
-                  name="i-heroicons-hashtag"
-                  class="text-primary-400 text-sm"
-                />
-              </div>
-              <h3 class="text-sm font-semibold text-white">Target Channel</h3>
-              <span
-                v-if="loadedFromPreset"
-                class="ml-auto text-xs text-primary-400 flex items-center gap-1"
-              >
-                <UIcon name="i-heroicons-bookmark" class="text-xs" />
-                Editing preset: {{ loadedFromPreset }}
-              </span>
-            </div>
-            <div
-              v-if="channelsLoading"
-              class="flex items-center gap-2 py-2 text-gray-400"
+          <template v-if="loadedFromPreset" #actions>
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full bg-sky-200/10 px-2.5 py-1 text-xs text-sky-200 ring-1 ring-inset ring-sky-100/20"
             >
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="animate-spin text-primary-400 text-sm"
-              />
-              <span class="text-sm">Loading channels...</span>
-            </div>
-            <div v-else-if="channels.length === 0" class="py-2">
-              <p class="text-sm text-gray-400">
-                No text channels found. Make sure the bot is in this server.
-              </p>
-            </div>
-            <USelectMenu
-              v-else
-              v-model="targetChannelId"
-              :items="channelOptions"
-              value-key="value"
-              placeholder="Select a channel..."
-              icon="i-heroicons-hashtag"
-              size="lg"
-              class="w-full"
-            />
+              <UIcon name="i-lucide-bookmark" class="h-3.5 w-3.5" />
+              Editing preset: {{ loadedFromPreset }}
+            </span>
+          </template>
+
+          <div v-if="channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
+            <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+            <span class="text-sm">Loading channels…</span>
           </div>
-        </div>
+          <p v-else-if="channels.length === 0" class="text-sm text-gray-400">
+            No text channels found. Make sure the bot is in this server.
+          </p>
+          <USelectMenu
+            v-else
+            v-model="targetChannelId"
+            :items="channelOptions"
+            value-key="value"
+            placeholder="Select a channel…"
+            searchable
+            icon="i-lucide-hash"
+            class="w-full"
+          />
+        </DashboardModuleSection>
 
         <EmbedEditor v-model="embedForm" />
 
-        <!-- Action Buttons -->
-        <div class="flex items-center justify-between gap-3 pt-2">
-          <UButton
-            variant="ghost"
-            color="neutral"
-            @click="resetEmbedForm"
-            icon="i-heroicons-arrow-path"
-          >
-            {{ loadedFromPreset ? "Discard Changes" : "Reset" }}
-          </UButton>
-          <div class="flex items-center gap-2 flex-1 justify-end">
+        <DashboardModuleSection
+          title="Send or save"
+          description="Post it now, or keep it to reuse later."
+        >
+          <div class="flex flex-wrap items-center gap-2">
             <UButton
-              v-if="loadedFromPreset && editingPresetId"
-              variant="outline"
-              color="primary"
-              icon="i-heroicons-check"
-              :loading="savingPreset"
-              @click="updateLoadedPreset"
+              variant="ghost"
+              color="neutral"
+              icon="i-lucide-rotate-cw"
+              @click="resetEmbedForm"
             >
-              Save Changes
+              {{ loadedFromPreset ? "Discard changes" : "Reset" }}
             </UButton>
-            <UButton
-              color="primary"
-              size="lg"
-              icon="i-heroicons-paper-airplane"
-              :loading="sendingEmbed"
-              :disabled="!targetChannelId || !hasAnyContent"
-              @click="sendEmbed"
-            >
-              Send Embed
-            </UButton>
+
+            <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+              <UButton
+                v-if="loadedFromPreset && editingPresetId"
+                color="neutral"
+                variant="soft"
+                icon="i-lucide-check"
+                :loading="savingPreset"
+                @click="updateLoadedPreset"
+              >
+                Save changes
+              </UButton>
+              <UButton
+                color="neutral"
+                variant="soft"
+                icon="i-lucide-bookmark"
+                :disabled="!hasAnyContent"
+                @click="openSaveDialog('preset')"
+              >
+                Save as preset
+              </UButton>
+              <UButton
+                color="neutral"
+                variant="soft"
+                icon="i-lucide-tag"
+                :disabled="!hasAnyContent"
+                @click="openSaveDialog('tag')"
+              >
+                Save as tag
+              </UButton>
+              <UButton
+                color="primary"
+                icon="i-lucide-send"
+                :loading="sendingEmbed"
+                :disabled="!targetChannelId || !hasAnyContent"
+                @click="sendEmbed"
+              >
+                Send embed
+              </UButton>
+            </div>
           </div>
-        </div>
+        </DashboardModuleSection>
       </div>
 
-      <!-- Right Column: Live Preview (Sticky) -->
-      <div class="xl:sticky xl:top-6 xl:h-fit">
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4"
-        >
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-          />
-          <div class="relative">
-            <div class="flex items-center gap-2 mb-3">
-              <div
-                class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
-              >
-                <UIcon name="i-heroicons-eye" class="text-secondary-400 text-sm" />
-              </div>
-              <h3 class="text-sm font-semibold text-white">Live Preview</h3>
-              <UBadge variant="soft" color="success" class="ml-auto" size="xs">
-                <span class="flex items-center gap-1">
-                  <span
-                    class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"
-                  />
-                  Live
-                </span>
-              </UBadge>
-            </div>
-
-            <EmbedPreview :form="embedForm" :context="mdContext" />
-          </div>
+      <!-- ── Right: live preview ── -->
+      <div class="min-w-0 xl:sticky xl:top-0 xl:h-fit">
+        <div class="mb-2 flex items-center justify-between gap-3">
+          <span class="text-sm font-medium text-white">Preview</span>
+          <span
+            class="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[11px] text-emerald-300 ring-1 ring-inset ring-emerald-400/25"
+          >
+            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" aria-hidden="true" />
+            Live
+          </span>
         </div>
+        <EmbedPreview :form="embedForm" :context="mdContext" />
       </div>
     </div>
 
-    <!-- Saved Embeds (Presets) -->
-    <div class="pt-4">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <UIcon
-            name="i-heroicons-bookmark"
-            class="text-primary-400 text-lg"
-          />
-          <h3 class="text-lg font-semibold text-white">Saved Embeds</h3>
-          <UBadge v-if="presets.length > 0" color="neutral" variant="soft" size="xs">
-            {{ presets.length }}
-          </UBadge>
-        </div>
+    <!-- ── Saved embeds (presets) ── -->
+    <DashboardModuleSection
+      title="Saved embeds"
+      :description="
+        presetsLoading
+          ? 'Loading presets…'
+          : `${presets.length} preset${presets.length !== 1 ? 's' : ''}. Presets are private to the dashboard.`
+      "
+    >
+      <template v-if="!presetsLoading && presets.length > 0" #actions>
         <UButton
-          v-if="!presetsLoading && presets.length > 0"
-          icon="i-heroicons-arrow-path"
+          icon="i-lucide-rotate-cw"
           variant="ghost"
           color="neutral"
-          size="xs"
+          size="sm"
           @click="fetchPresets"
         >
           Refresh
         </UButton>
-      </div>
+      </template>
 
-      <div v-if="presetsLoading" class="flex items-center justify-center py-8">
-        <UIcon
-          name="i-heroicons-arrow-path"
-          class="w-6 h-6 animate-spin text-primary-400"
-        />
+      <div v-if="presetsLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+        <div v-for="i in 3" :key="i" class="h-28 animate-pulse rounded-xl bg-white/[0.04]" />
       </div>
 
       <div
         v-else-if="presets.length === 0"
-        class="rounded-xl border border-white/10 bg-gray-900/50 p-6 text-center"
+        class="flex flex-col items-center gap-2 rounded-lg border border-dashed border-white/10 px-6 py-8 text-center"
       >
-        <UIcon
-          name="i-heroicons-bookmark"
-          class="text-3xl text-gray-600 mb-2"
-        />
-        <p class="text-sm text-gray-400">
-          No saved embeds yet. Build one above and click
-          <span class="text-primary-400">Save as Preset</span> to keep it here
-          for reuse.
+        <UIcon name="i-lucide-bookmark" class="h-5 w-5 text-sky-200" />
+        <p class="max-w-md text-[13px] text-gray-400">
+          Nothing saved yet. Build an embed above and choose
+          <span class="text-sky-200">Save as preset</span> to reload and tweak it later.
         </p>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="preset in presets"
           :key="preset.$id"
-          class="group relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 transition-all hover:border-white/20"
+          class="relative flex flex-col overflow-hidden rounded-xl bg-white/[0.03] p-4 ring-1 ring-inset ring-white/10 transition-colors hover:ring-white/20"
         >
           <div
-            class="absolute top-0 left-0 right-0 h-1"
+            class="absolute inset-x-0 top-0 h-1"
             :style="{ backgroundColor: presetColor(preset) }"
           />
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              <code
-                class="text-sm font-semibold text-white bg-gray-800/60 px-2 py-0.5 rounded truncate"
-                :title="preset.name"
-                >{{ preset.name }}</code
-              >
-            </div>
-            <p
-              class="text-xs text-gray-400 truncate mb-2"
-              :title="presetSubtitle(preset)"
-            >
-              {{ presetSubtitle(preset) }}
-            </p>
-            <p
-              v-if="preset.description"
-              class="text-xs text-gray-500 italic line-clamp-2 mb-2"
-            >
-              {{ preset.description }}
-            </p>
-          </div>
-          <div class="flex items-center gap-1 mt-2">
+          <p class="truncate font-mono text-sm font-medium text-white" :title="preset.name">
+            {{ preset.name }}
+          </p>
+          <p class="mt-1 truncate text-[13px] text-gray-400" :title="presetSubtitle(preset)">
+            {{ presetSubtitle(preset) }}
+          </p>
+          <p v-if="preset.description" class="mt-1 line-clamp-2 text-[13px] italic text-gray-500">
+            {{ preset.description }}
+          </p>
+          <div class="mt-auto flex items-center gap-1 pt-3">
             <UButton
-              icon="i-heroicons-arrow-down-tray"
-              size="xs"
+              icon="i-lucide-download"
+              size="sm"
               variant="soft"
               color="primary"
-              title="Load into editor"
               @click="loadPreset(preset)"
             >
               Load
             </UButton>
             <UButton
-              icon="i-heroicons-trash"
-              size="xs"
+              icon="i-lucide-trash-2"
+              size="sm"
               variant="ghost"
               color="error"
-              title="Delete preset"
+              :aria-label="`Delete preset ${preset.name}`"
               @click="confirmDeletePreset(preset)"
             />
           </div>
         </div>
       </div>
-    </div>
+
+      <p class="mt-4 text-[13px] text-gray-400">
+        Embeds saved as tags are managed under
+        <NuxtLink
+          :to="`/dashboard/server/${guildId}/modules/tags`"
+          class="text-sky-200 underline underline-offset-2 hover:text-teal-300"
+        >
+          Tags
+        </NuxtLink>.
+      </p>
+    </DashboardModuleSection>
 
     <DashboardModuleAccessSection :guild-id="guildId" module-name="embeds" />
 
-    <!-- ═══ Save Dialog (Preset or Tag) ═══ -->
-    <UModal v-model:open="saveOpen">
-      <template #content>
-        <div class="p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-white">
-              {{ saveMode === "preset" ? "Save as Preset" : "Save as Tag" }}
-            </h3>
-            <UButton
-              icon="i-heroicons-x-mark"
-              variant="ghost"
-              color="neutral"
-              size="sm"
-              @click="saveOpen = false"
-            />
-          </div>
-          <p class="text-sm text-gray-400">
-            <template v-if="saveMode === 'preset'">
-              Presets are private to the dashboard — they let you reload and
-              tweak this embed later without committing to a
-              <code class="text-primary-400">/tag</code> name.
-            </template>
-            <template v-else>
-              Tags are posted in Discord with
-              <code class="text-primary-400">/tag name</code>.
-            </template>
-          </p>
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1.5">
-              {{ saveMode === "preset" ? "Preset Name" : "Tag Name" }}
-            </label>
+    <!-- ── Save dialog (preset or tag) ── -->
+    <UModal
+      v-model:open="saveOpen"
+      :title="saveMode === 'preset' ? 'Save as preset' : 'Save as tag'"
+      :description="
+        saveMode === 'preset'
+          ? 'Presets are private to the dashboard. Reload and tweak them later without committing to a /tag name.'
+          : 'Staff post tags in Discord with /tag name.'
+      "
+    >
+      <template #body>
+        <div class="space-y-4">
+          <UFormField
+            :label="saveMode === 'preset' ? 'Preset name' : 'Tag name'"
+            hint="Lowercase, hyphens only"
+            class="w-full"
+          >
             <UInput
               v-model="saveName"
-              :placeholder="
-                saveMode === 'preset' ? 'e.g. monthly-announcement' : 'e.g. welcome-rules'
-              "
-              size="lg"
+              :placeholder="saveMode === 'preset' ? 'e.g. monthly-announcement' : 'e.g. welcome-rules'"
+              :icon="saveMode === 'preset' ? 'i-lucide-bookmark' : 'i-lucide-tag'"
               class="w-full"
+              autofocus
+              @keydown.enter="saveName.trim() && confirmSave()"
             />
-            <p class="text-xs text-gray-500 mt-1">
-              Lowercase, hyphens only.
-            </p>
-          </div>
-          <div v-if="saveMode === 'preset'">
-            <label class="block text-sm font-medium text-gray-300 mb-1.5">
-              Description
-              <span class="text-gray-500 text-xs font-normal">(optional)</span>
-            </label>
+          </UFormField>
+          <UFormField v-if="saveMode === 'preset'" label="Description" hint="Optional" class="w-full">
             <UInput
               v-model="saveDescription"
               placeholder="e.g. used for monthly product updates"
-              size="lg"
               class="w-full"
             />
-          </div>
-          <div class="flex justify-end gap-3 pt-2">
-            <UButton variant="ghost" color="neutral" @click="saveOpen = false">
-              Cancel
-            </UButton>
-            <UButton
-              color="primary"
-              :icon="
-                saveMode === 'preset' ? 'i-heroicons-bookmark' : 'i-heroicons-tag'
-              "
-              :loading="saveBusy"
-              :disabled="!saveName.trim()"
-              @click="confirmSave"
-            >
-              {{ saveMode === "preset" ? "Save Preset" : "Save Tag" }}
-            </UButton>
-          </div>
+          </UFormField>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton variant="ghost" color="neutral" @click="saveOpen = false">Cancel</UButton>
+          <UButton
+            color="primary"
+            :icon="saveMode === 'preset' ? 'i-lucide-bookmark' : 'i-lucide-tag'"
+            :loading="saveBusy"
+            :disabled="!saveName.trim()"
+            @click="confirmSave"
+          >
+            {{ saveMode === "preset" ? "Save preset" : "Save tag" }}
+          </UButton>
         </div>
       </template>
     </UModal>
 
-    <!-- ═══ Delete Preset Confirmation ═══ -->
+    <!-- ── Delete preset confirmation ── -->
     <UModal v-model:open="deletePresetOpen">
       <template #content>
-        <div class="p-6 space-y-4">
+        <div class="space-y-4 p-6">
           <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0"
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 ring-1 ring-inset ring-red-400/30"
             >
-              <UIcon name="i-heroicons-trash" class="w-6 h-6 text-red-400" />
-            </div>
+              <UIcon name="i-lucide-triangle-alert" class="h-5 w-5 text-red-300" />
+            </span>
             <div>
-              <h3 class="text-lg font-bold text-white">Delete Preset</h3>
-              <p class="text-sm text-gray-400">
-                Delete
-                <code class="text-red-400">{{ deletingPreset?.name }}</code
-                >? This can't be undone.
-              </p>
+              <h3 class="text-base font-semibold text-white">Delete preset</h3>
+              <p class="text-[13px] text-gray-400">This can't be undone.</p>
             </div>
           </div>
-          <div class="flex justify-end gap-3 pt-2">
-            <UButton
-              variant="ghost"
-              color="neutral"
-              @click="deletePresetOpen = false"
-            >
-              Cancel
-            </UButton>
+          <p class="text-sm text-gray-300">
+            Delete <strong class="font-mono text-white">{{ deletingPreset?.name }}</strong>?
+          </p>
+          <div class="flex justify-end gap-2 pt-1">
+            <UButton variant="ghost" color="neutral" @click="deletePresetOpen = false">Cancel</UButton>
             <UButton
               color="error"
-              icon="i-heroicons-trash"
+              icon="i-lucide-trash-2"
               :loading="deletingPresetBusy"
               @click="deletePreset"
             >
-              Delete
+              Delete preset
             </UButton>
           </div>
         </div>
@@ -395,7 +305,7 @@ import {
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
-const { state, loadChannels, loadRoles, channelOptions } =
+const { state, isModuleEnabled, loadChannels, loadRoles, channelOptions } =
   useServerSettings(guildId);
 const toast = useToast();
 

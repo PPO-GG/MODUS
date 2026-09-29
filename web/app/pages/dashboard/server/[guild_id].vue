@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-0 h-full overflow-y-auto">
+  <div class="min-h-0 h-full" :class="{ 'overflow-y-auto': chrome.fullBleed }">
     <!-- Loading -->
     <div v-if="state.loading" class="flex justify-center py-20">
       <UIcon
@@ -50,6 +50,10 @@ const guildId = route.params.guild_id as string;
 const { register: registerSidebar, unregister: unregisterSidebar } =
   useServerSidebar();
 const { state, initialize, hasModuleSettings } = useServerSettings(guildId);
+// Only full-bleed pages need the root box to scroll. Otherwise it sizes to its
+// content, and an overflow box that never scrolls still captures
+// `position: sticky`, so the save bar never stuck to the viewport.
+const { state: chrome } = usePageChrome();
 
 const basePath = `/dashboard/server/${guildId}`;
 

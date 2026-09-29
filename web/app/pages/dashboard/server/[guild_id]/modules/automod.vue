@@ -1,522 +1,335 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- ── Header ── -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
+  <div class="mx-auto max-w-4xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-funnel"
+      title="AutoMod Rules"
+      description="IF/THEN rules that moderate your server automatically."
+      :enabled="isModuleEnabled('automod')"
+    />
+
+    <!-- ── Rules ── -->
+    <DashboardModuleSection
+      title="Rules"
+      :description="rulesSummary"
+    >
+      <template #actions>
+        <UButton color="primary" size="sm" icon="i-lucide-plus" @click="openCreateModal()">
+          New rule
+        </UButton>
+      </template>
+
+      <div v-if="loading" class="space-y-2" aria-busy="true">
+        <div v-for="i in 3" :key="i" class="h-16 animate-pulse rounded-lg bg-white/[0.04]" />
+      </div>
+
+      <div
+        v-else-if="rules.length === 0"
+        class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 px-6 py-10 text-center"
       >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0"
+        <span
+          class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
         >
-          <UIcon name="i-heroicons-funnel" class="w-5 h-5 text-orange-400" />
-        </div>
+          <UIcon name="i-lucide-funnel" class="h-5 w-5 text-sky-200" />
+        </span>
         <div>
-          <h2 class="text-xl font-bold text-white">AutoMod Rules</h2>
-          <p class="text-xs text-gray-500">
-            Programmable IF/THEN rules to automate moderation
+          <h4 class="text-sm font-semibold text-white">No rules yet</h4>
+          <p class="mx-auto mt-1 max-w-sm text-[13px] text-gray-400">
+            Create your first rule. For example: if a message contains profanity, delete it and
+            warn the user.
           </p>
         </div>
-      </div>
-      <UBadge
-        :color="isModuleEnabled('automod') ? 'success' : 'neutral'"
-        variant="soft"
-        class="ml-auto"
-      >
-        {{ isModuleEnabled("automod") ? "Module Active" : "Module Disabled" }}
-      </UBadge>
-    </div>
-
-    <!-- ── Rules List ── -->
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-white">
-          Rules
-          <span class="text-gray-500 font-normal text-base ml-1"
-            >({{ rules.length }})</span
-          >
-        </h3>
-        <UButton
-          color="primary"
-          icon="i-heroicons-plus"
-          size="sm"
-          @click="openCreateModal()"
-        >
-          New Rule
+        <UButton color="primary" icon="i-lucide-plus" @click="openCreateModal()">
+          Create your first rule
         </UButton>
       </div>
 
-      <!-- Loading -->
-      <div
-        v-if="loading"
-        class="flex items-center justify-center py-12 text-gray-400 gap-2"
-      >
-        <UIcon name="i-heroicons-arrow-path" class="animate-spin" />
-        Loading rules...
-      </div>
-
-      <!-- Empty State -->
-      <div
-        v-else-if="rules.length === 0"
-        class="relative overflow-hidden rounded-xl border border-dashed border-white/10 bg-gradient-to-br from-gray-900/50 to-gray-950/50 p-12 text-center"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-orange-500/3 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-3">
-          <div
-            class="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto"
-          >
-            <UIcon name="i-heroicons-funnel" class="w-8 h-8 text-orange-400" />
-          </div>
-          <h4 class="text-lg font-semibold text-white">No rules yet</h4>
-          <p class="text-sm text-gray-500 max-w-md mx-auto">
-            Create your first auto-moderation rule. For example: if a message
-            contains profanity, delete it and warn the user.
-          </p>
-          <UButton
-            color="primary"
-            icon="i-heroicons-plus"
-            @click="openCreateModal()"
-            class="mt-2"
-          >
-            Create Your First Rule
-          </UButton>
-        </div>
-      </div>
-
-      <!-- ── Rule Cards ── -->
-      <div v-else class="space-y-3">
-        <div
+      <ul v-else class="-mx-2 divide-y divide-white/[0.06]">
+        <li
           v-for="rule in rules"
           :key="rule.$id"
-          class="relative overflow-hidden rounded-xl border bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl transition-all duration-200 hover:border-white/20"
-          :class="
-            rule.enabled
-              ? 'border-white/12 hover:border-orange-500/30'
-              : 'border-white/8 opacity-60 hover:opacity-80'
-          "
+          class="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 py-3 transition-opacity"
+          :class="rule.enabled ? '' : 'opacity-60'"
         >
-          <!-- Gradient glow -->
-          <div
-            class="absolute inset-0 bg-gradient-to-br pointer-events-none"
-            :class="
-              rule.enabled
-                ? 'from-orange-500/5 to-transparent'
-                : 'from-gray-500/3 to-transparent'
-            "
-          />
+          <span
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+            :class="rule.enabled ? 'bg-sky-200/10 text-sky-200' : 'bg-white/[0.04] text-gray-500'"
+          >
+            <UIcon :name="triggerIcon(rule.trigger)" class="h-4 w-4" />
+          </span>
 
-          <div class="relative p-5">
-            <!-- Top row: name + controls -->
-            <div class="flex items-start gap-3 mb-4">
-              <div
-                class="w-9 h-9 rounded-lg mt-0.5 flex items-center justify-center shrink-0"
-                :class="
-                  rule.enabled
-                    ? 'bg-orange-500/10 border border-orange-500/20'
-                    : 'bg-gray-500/10 border border-gray-500/20'
-                "
-              >
-                <UIcon
-                  :name="triggerIcon(rule.trigger)"
-                  class="w-5 h-5"
-                  :class="rule.enabled ? 'text-orange-400' : 'text-gray-500'"
-                />
-              </div>
-              <div class="flex-1 min-w-0">
-                <h4 class="text-sm font-semibold text-white">
-                  {{ rule.name }}
-                </h4>
-                <p class="text-[11px] text-gray-500 mt-0.5">
-                  {{ triggerLabel(rule.trigger) }}
-                  <span v-if="rule.cooldown" class="ml-1"
-                    >· {{ rule.cooldown }}s cooldown</span
-                  >
-                  <span v-if="rule.priority > 0" class="ml-1"
-                    >· Priority {{ rule.priority }}</span
-                  >
-                </p>
-              </div>
-              <div class="flex items-center gap-2 flex-shrink-0">
-                <USwitch
-                  :model-value="rule.enabled"
-                  @update:model-value="(val: boolean) => toggleRule(rule, val)"
-                  size="sm"
-                />
-                <UButton
-                  variant="ghost"
-                  color="neutral"
-                  size="xs"
-                  icon="i-heroicons-pencil-square"
-                  @click="openEditModal(rule)"
-                />
-                <UButton
-                  variant="ghost"
-                  color="error"
-                  size="xs"
-                  icon="i-heroicons-trash"
-                  @click="confirmDelete(rule)"
-                />
-              </div>
-            </div>
-
-            <!-- Rule Flow Preview: IF → THEN -->
-            <div class="flex items-center gap-2 flex-wrap">
-              <!-- IF block -->
-              <div
-                class="flex items-center gap-1.5 bg-blue-500/8 border border-blue-500/20 rounded-lg px-3 py-1.5"
-              >
-                <span
-                  class="text-[10px] font-bold text-blue-400 uppercase tracking-wider"
-                  >IF</span
-                >
-                <div class="w-px h-3 bg-blue-500/30" />
-                <UIcon
-                  name="i-heroicons-funnel"
-                  class="text-blue-400/70 text-xs"
-                />
-                <span class="text-xs text-blue-300">
-                  {{ countConditions(rule) }} condition{{
-                    countConditions(rule) !== 1 ? "s" : ""
-                  }}
-                </span>
-              </div>
-
-              <!-- Arrow -->
-              <div class="flex items-center gap-1 text-gray-600">
-                <div class="w-4 h-px bg-gray-700" />
-                <UIcon
-                  name="i-heroicons-arrow-right"
-                  class="text-gray-600 text-xs"
-                />
-              </div>
-
-              <!-- THEN actions -->
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span
-                  class="text-[10px] font-bold text-orange-400 uppercase tracking-wider bg-orange-500/8 border border-orange-500/20 rounded-lg px-2 py-1.5"
-                  >THEN</span
-                >
-                <template v-if="parseActions(rule).length > 0">
-                  <div
-                    v-for="action in parseActions(rule)"
-                    :key="action.type"
-                    class="flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-medium"
-                    :class="actionChipClass(action.type)"
-                  >
-                    <UIcon
-                      :name="actionIcon(action.type)"
-                      class="text-[11px]"
-                    />
-                    {{ actionLabel(action.type) }}
-                  </div>
-                </template>
-                <span v-else class="text-xs text-gray-600 italic"
-                  >No actions</span
-                >
-              </div>
-            </div>
+          <div class="min-w-0 flex-1 basis-48">
+            <button
+              type="button"
+              class="block max-w-full truncate text-left text-sm font-medium text-white hover:text-teal-300 focus-visible:outline-2 focus-visible:outline-teal-300"
+              @click="openEditModal(rule)"
+            >
+              {{ rule.name }}
+            </button>
+            <p class="mt-0.5 text-[13px] text-gray-400">
+              When {{ triggerLabel(rule.trigger).toLowerCase() }}
+              <span v-if="rule.cooldown"> · {{ rule.cooldown }}s cooldown</span>
+              <span v-if="rule.priority > 0"> · priority {{ rule.priority }}</span>
+            </p>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span
+              class="inline-flex items-center gap-1 rounded-full bg-white/[0.04] px-2.5 py-1 text-xs text-gray-300"
+            >
+              If {{ countConditions(rule) }} condition{{ countConditions(rule) !== 1 ? "s" : "" }}
+            </span>
+            <UIcon name="i-lucide-arrow-right" class="h-3.5 w-3.5 text-gray-600" />
+            <template v-if="parseActions(rule).length > 0">
+              <span
+                v-for="(action, i) in parseActions(rule)"
+                :key="`${action.type}-${i}`"
+                class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset"
+                :class="actionChipClass(action.type)"
+              >
+                <UIcon :name="actionIcon(action.type)" class="h-3 w-3" />
+                {{ actionLabel(action.type) }}
+              </span>
+            </template>
+            <span v-else class="text-xs italic text-gray-500">No actions</span>
+          </div>
+
+          <div class="ml-auto flex items-center gap-1">
+            <USwitch
+              :model-value="rule.enabled"
+              size="sm"
+              :aria-label="`${rule.enabled ? 'Disable' : 'Enable'} ${rule.name}`"
+              @update:model-value="(val: boolean) => toggleRule(rule, val)"
+            />
+            <UButton
+              variant="ghost"
+              color="neutral"
+              size="sm"
+              icon="i-lucide-pencil"
+              :aria-label="`Edit ${rule.name}`"
+              @click="openEditModal(rule)"
+            />
+            <UButton
+              variant="ghost"
+              color="error"
+              size="sm"
+              icon="i-lucide-trash-2"
+              :aria-label="`Delete ${rule.name}`"
+              @click="confirmDelete(rule)"
+            />
+          </div>
+        </li>
+      </ul>
+    </DashboardModuleSection>
 
     <DashboardModuleAccessSection :guild-id="guildId" module-name="automod" />
 
-    <!-- ── Create / Edit Modal ── -->
-    <UModal v-model:open="showModal" :ui="{ content: 'sm:max-w-4xl' }">
-      <template #content>
-        <div class="flex flex-col max-h-[88vh]">
-          <!-- Modal header -->
-          <div
-            class="flex items-center gap-3 px-6 py-4 border-b border-white/8 flex-shrink-0"
-          >
-            <div
-              class="w-9 h-9 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-heroicons-funnel" class="w-5 h-5 text-orange-400" />
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-white">
-                {{ editingRule ? "Edit Rule" : "Create Rule" }}
-              </h3>
-              <p class="text-xs text-gray-500">
-                Configure trigger, conditions, and actions
-              </p>
-            </div>
-          </div>
+    <!-- ── Create / Edit slide-over ── -->
+    <USlideover
+      v-model:open="showModal"
+      :title="editingRule ? 'Edit rule' : 'Create rule'"
+      description="Choose when the rule runs, what it checks and what it does."
+      :ui="{ content: 'sm:max-w-3xl' }"
+    >
+      <template #body>
+        <div class="space-y-6">
+          <UFormField label="Rule name" class="w-full">
+            <UInput
+              v-model="form.name"
+              placeholder="e.g. Profanity filter, Anti-spam"
+              icon="i-lucide-tag"
+              class="w-full"
+            />
+          </UFormField>
 
-          <!-- Modal body -->
-          <div class="overflow-y-auto flex-1 p-6 space-y-5">
-            <!-- ── Section: Basic Info ── -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Rule Name -->
-              <div
-                class="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3"
-              >
-                <div class="flex items-center gap-2 mb-1">
-                  <div class="p-1 rounded-md bg-white/5 border border-white/10">
-                    <UIcon
-                      name="i-heroicons-tag"
-                      class="text-gray-400 text-sm"
+          <QuickCreateForm
+            v-if="quickCreateMode"
+            ref="quickCreateRef"
+            :trigger-groups="triggerGroups"
+            :action-options="quickCreateActionOptions"
+            @promote="
+              (payload) => {
+                promoteToFullEditor(payload);
+              }
+            "
+          />
+          <RuleTimeline
+            v-else
+            v-model:trigger="form.trigger"
+            v-model:conditions="form.conditions"
+            v-model:actions="form.actions"
+            :trigger-groups="triggerGroups"
+            :action-options="actionOptions"
+            :channel-options="channelOptions"
+            :role-options="roleOptions"
+            :trigger-label="triggerLabel"
+          />
+
+          <!-- Limits & exceptions -->
+          <UAccordion :items="advancedItems">
+            <template #body>
+              <div class="grid grid-cols-1 gap-x-6 gap-y-5 pb-2 pt-1 md:grid-cols-2">
+                <div class="space-y-2">
+                  <label class="block text-sm font-medium text-white">
+                    Cooldown
+                    <span class="ml-1 text-sky-200">{{
+                      form.cooldown === 0 ? "None" : `${form.cooldown}s`
+                    }}</span>
+                  </label>
+                  <div class="flex items-center gap-3">
+                    <USlider v-model="form.cooldown" :min="0" :max="3600" :step="5" class="flex-1" />
+                    <UInput
+                      v-model.number="form.cooldown"
+                      type="number"
+                      :min="0"
+                      :max="3600"
+                      size="sm"
+                      class="w-20"
                     />
                   </div>
-                  <span
-                    class="text-xs font-semibold text-gray-300 uppercase tracking-wider"
-                    >Rule Name</span
+                  <p class="text-[13px] text-gray-400">
+                    Seconds between re-triggers per user (max 1 hour). Prevents rule spam.
+                  </p>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-medium text-white">
+                    Priority
+                    <span class="ml-1 text-sky-200">{{ form.priority }}</span>
+                  </label>
+                  <div class="flex items-center gap-3">
+                    <USlider v-model="form.priority" :min="0" :max="10" :step="1" class="flex-1" />
+                    <UInput
+                      v-model.number="form.priority"
+                      type="number"
+                      :min="0"
+                      :max="10"
+                      size="sm"
+                      class="w-20"
+                    />
+                  </div>
+                  <p class="text-[13px] text-gray-400">0 (highest) – 10 (lowest). Lower runs first.</p>
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-medium text-white">Exempt roles</label>
+                  <USelectMenu
+                    v-if="roleOptions.length > 0"
+                    v-model="form.exemptRoles"
+                    :items="roleOptions"
+                    value-key="value"
+                    multiple
+                    placeholder="Roles immune to this rule…"
+                    class="w-full"
+                  />
+                  <UInput
+                    v-else
+                    v-model="form.exemptRolesInput"
+                    placeholder="Role IDs, comma separated"
+                    class="w-full"
+                  />
+                  <div
+                    v-if="roleOptions.length > 0 && form.exemptRoles.length > 0"
+                    class="flex flex-wrap gap-1.5"
                   >
+                    <span
+                      v-for="id in form.exemptRoles"
+                      :key="id"
+                      class="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-gray-300 ring-1 ring-inset ring-white/10"
+                    >
+                      {{ roleLabel(id) }}
+                      <button
+                        type="button"
+                        class="text-gray-500 hover:text-red-400"
+                        :aria-label="`Remove ${roleLabel(id)}`"
+                        @click="removeExemptRole(id)"
+                      >
+                        <UIcon name="i-lucide-x" class="h-3 w-3" />
+                      </button>
+                    </span>
+                  </div>
+                  <p class="text-[13px] text-gray-400">These roles bypass this rule entirely.</p>
                 </div>
-                <UInput
-                  v-model="form.name"
-                  placeholder="e.g. Profanity Filter, Anti-Spam"
-                  size="md"
-                />
+
+                <div class="space-y-2">
+                  <label class="block text-sm font-medium text-white">Exempt channels</label>
+                  <USelectMenu
+                    v-if="channelOptions.length > 0"
+                    v-model="form.exemptChannels"
+                    :items="channelOptions"
+                    value-key="value"
+                    multiple
+                    placeholder="Channels where this rule won't apply…"
+                    class="w-full"
+                  />
+                  <UInput
+                    v-else
+                    v-model="form.exemptChannelsInput"
+                    placeholder="Channel IDs, comma separated"
+                    class="w-full"
+                  />
+                  <div
+                    v-if="channelOptions.length > 0 && form.exemptChannels.length > 0"
+                    class="flex flex-wrap gap-1.5"
+                  >
+                    <span
+                      v-for="id in form.exemptChannels"
+                      :key="id"
+                      class="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-gray-300 ring-1 ring-inset ring-white/10"
+                    >
+                      #{{ channelLabel(id) }}
+                      <button
+                        type="button"
+                        class="text-gray-500 hover:text-red-400"
+                        :aria-label="`Remove ${channelLabel(id)}`"
+                        @click="removeExemptChannel(id)"
+                      >
+                        <UIcon name="i-lucide-x" class="h-3 w-3" />
+                      </button>
+                    </span>
+                  </div>
+                  <p class="text-[13px] text-gray-400">This rule won't fire in these channels.</p>
+                </div>
               </div>
-
-            </div>
-
-            <QuickCreateForm
-              v-if="quickCreateMode"
-              ref="quickCreateRef"
-              :trigger-groups="triggerGroups"
-              :action-options="quickCreateActionOptions"
-              @promote="
-                (payload) => {
-                  promoteToFullEditor(payload);
-                }
-              "
-            />
-            <RuleTimeline
-              v-else
-              v-model:trigger="form.trigger"
-              v-model:conditions="form.conditions"
-              v-model:actions="form.actions"
-              :trigger-groups="triggerGroups"
-              :action-options="actionOptions"
-              :channel-options="channelOptions"
-              :role-options="roleOptions"
-              :trigger-label="triggerLabel"
-            />
-
-            <!-- ── Section: Advanced (collapsible) ── -->
-            <UAccordion :items="advancedItems">
-              <template #body>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 pb-2">
-                  <!-- Cooldown -->
-                  <div class="space-y-2">
-                    <label class="block text-sm font-medium">
-                      Cooldown:
-                      <span class="text-orange-300 ml-1">{{
-                        form.cooldown === 0 ? "None" : `${form.cooldown}s`
-                      }}</span>
-                    </label>
-                    <div class="flex items-center gap-3">
-                      <USlider
-                        v-model="form.cooldown"
-                        :min="0"
-                        :max="3600"
-                        :step="5"
-                        class="flex-1"
-                      />
-                      <UInput
-                        v-model.number="form.cooldown"
-                        type="number"
-                        :min="0"
-                        :max="3600"
-                        size="sm"
-                        class="w-20"
-                      />
-                    </div>
-                    <p class="text-[11px] text-gray-500">
-                      Seconds between re-triggers per user (max 1 hour).
-                      Prevents rule spam.
-                    </p>
-                  </div>
-
-                  <!-- Priority -->
-                  <div class="space-y-2">
-                    <label class="block text-sm font-medium">
-                      Priority:
-                      <span class="text-orange-300 ml-1">{{
-                        form.priority
-                      }}</span>
-                    </label>
-                    <div class="flex items-center gap-3">
-                      <USlider
-                        v-model="form.priority"
-                        :min="0"
-                        :max="10"
-                        :step="1"
-                        class="flex-1"
-                      />
-                      <UInput
-                        v-model.number="form.priority"
-                        type="number"
-                        :min="0"
-                        :max="10"
-                        size="sm"
-                        class="w-20"
-                      />
-                    </div>
-                    <p class="text-[11px] text-gray-500">
-                      0 (highest) – 10 (lowest). Lower runs first.
-                    </p>
-                  </div>
-
-                  <!-- Exempt Roles -->
-                  <div class="space-y-2">
-                    <label class="block text-sm font-medium"
-                      >Exempt Roles</label
-                    >
-                    <USelectMenu
-                      v-if="roleOptions.length > 0"
-                      v-model="form.exemptRoles"
-                      :items="roleOptions"
-                      value-key="value"
-                      multiple
-                      placeholder="Roles immune to this rule..."
-                      size="md"
-                    />
-                    <UInput
-                      v-else
-                      v-model="form.exemptRolesInput"
-                      placeholder="Role IDs, comma separated"
-                      size="md"
-                    />
-                    <div
-                      v-if="roleOptions.length > 0 && form.exemptRoles.length > 0"
-                      class="flex flex-wrap gap-1.5"
-                    >
-                      <span
-                        v-for="id in form.exemptRoles"
-                        :key="id"
-                        class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-300"
-                      >
-                        {{ roleLabel(id) }}
-                        <button
-                          type="button"
-                          class="text-gray-500 hover:text-red-400"
-                          @click="removeExemptRole(id)"
-                        >
-                          ✕
-                        </button>
-                      </span>
-                    </div>
-                    <p class="text-[11px] text-gray-500">
-                      These roles bypass this rule entirely.
-                    </p>
-                  </div>
-
-                  <!-- Exempt Channels -->
-                  <div class="space-y-2">
-                    <label class="block text-sm font-medium"
-                      >Exempt Channels</label
-                    >
-                    <USelectMenu
-                      v-if="channelOptions.length > 0"
-                      v-model="form.exemptChannels"
-                      :items="channelOptions"
-                      value-key="value"
-                      multiple
-                      placeholder="Channels where this rule won't apply..."
-                      size="md"
-                    />
-                    <UInput
-                      v-else
-                      v-model="form.exemptChannelsInput"
-                      placeholder="Channel IDs, comma separated"
-                      size="md"
-                    />
-                    <div
-                      v-if="channelOptions.length > 0 && form.exemptChannels.length > 0"
-                      class="flex flex-wrap gap-1.5"
-                    >
-                      <span
-                        v-for="id in form.exemptChannels"
-                        :key="id"
-                        class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-300"
-                      >
-                        #{{ channelLabel(id) }}
-                        <button
-                          type="button"
-                          class="text-gray-500 hover:text-red-400"
-                          @click="removeExemptChannel(id)"
-                        >
-                          ✕
-                        </button>
-                      </span>
-                    </div>
-                    <p class="text-[11px] text-gray-500">
-                      This rule won't fire in these channels.
-                    </p>
-                  </div>
-                </div>
-              </template>
-            </UAccordion>
-          </div>
-
-          <!-- Modal footer -->
-          <div
-            class="flex justify-end gap-3 px-6 py-4 border-t border-white/8 flex-shrink-0"
-          >
-            <UButton color="neutral" variant="ghost" @click="showModal = false">
-              Cancel
-            </UButton>
-            <UButton
-              color="primary"
-              :loading="saving"
-              icon="i-heroicons-check"
-              @click="saveRule"
-            >
-              {{ editingRule ? "Save Changes" : "Create Rule" }}
-            </UButton>
-          </div>
+            </template>
+          </UAccordion>
         </div>
       </template>
-    </UModal>
 
-    <!-- ── Delete Confirmation Modal ── -->
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton color="neutral" variant="ghost" @click="showModal = false">Cancel</UButton>
+          <UButton color="primary" :loading="saving" icon="i-lucide-check" @click="saveRule">
+            {{ editingRule ? "Save changes" : "Create rule" }}
+          </UButton>
+        </div>
+      </template>
+    </USlideover>
+
+    <!-- ── Delete confirmation ── -->
     <UModal v-model:open="showDeleteModal">
       <template #content>
-        <div class="p-6 space-y-4">
+        <div class="space-y-4 p-6">
           <div class="flex items-center gap-3">
-            <div
-              class="w-12 h-12 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0"
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 ring-1 ring-inset ring-red-400/30"
             >
-              <UIcon
-                name="i-heroicons-exclamation-triangle"
-                class="w-6 h-6 text-red-400"
-              />
-            </div>
+              <UIcon name="i-lucide-triangle-alert" class="h-5 w-5 text-red-300" />
+            </span>
             <div>
-              <h3 class="text-lg font-bold text-white">Delete Rule</h3>
-              <p class="text-sm text-gray-400">This action cannot be undone</p>
+              <h3 class="text-base font-semibold text-white">Delete rule</h3>
+              <p class="text-[13px] text-gray-400">This can't be undone.</p>
             </div>
           </div>
-          <p class="text-gray-300">
-            Are you sure you want to delete
-            <strong>{{ deletingRule?.name }}</strong
-            >?
+          <p class="text-sm text-gray-300">
+            Delete <strong class="text-white">{{ deletingRule?.name }}</strong>?
           </p>
-          <div class="flex justify-end gap-3 pt-2">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              @click="showDeleteModal = false"
-            >
+          <div class="flex justify-end gap-2 pt-1">
+            <UButton color="neutral" variant="ghost" @click="showDeleteModal = false">
               Cancel
             </UButton>
-            <UButton
-              color="error"
-              :loading="deleting"
-              icon="i-heroicons-trash"
-              @click="deleteRule()"
-            >
-              Delete Rule
+            <UButton color="error" :loading="deleting" icon="i-lucide-trash-2" @click="deleteRule()">
+              Delete rule
             </UButton>
           </div>
         </div>
@@ -526,9 +339,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import RuleTimeline from "~/components/automod/RuleTimeline.vue";
 import QuickCreateForm from "~/components/automod/QuickCreateForm.vue";
+import {
+  triggerGroups,
+  actionOptions,
+  triggerIcon,
+  triggerLabel,
+  actionIcon,
+  actionLabel,
+  actionChipClass,
+} from "~/utils/automod-meta";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
@@ -553,6 +375,12 @@ const editingRule = ref<any>(null);
 const deletingRule = ref<any>(null);
 const quickCreateMode = ref(true);
 const quickCreateRef = ref<InstanceType<typeof QuickCreateForm> | null>(null);
+
+const rulesSummary = computed(() => {
+  if (loading.value) return "Loading rules…";
+  const active = rules.value.filter((r) => r.enabled).length;
+  return `${rules.value.length} rule${rules.value.length !== 1 ? "s" : ""}, ${active} active.`;
+});
 
 // ── Form ──
 interface ActionForm {
@@ -613,47 +441,6 @@ const form = ref<RuleForm>({
   exemptChannelsInput: "",
 });
 
-// ── Options ──
-const triggerGroups = [
-  {
-    label: "Message events",
-    items: [
-      { label: "💬 Message Created", value: "message_create" },
-      { label: "✏️ Message Edited", value: "message_edit" },
-      { label: "🗑️ Message Deleted", value: "message_delete" },
-    ],
-  },
-  {
-    label: "Member events",
-    items: [
-      { label: "🚪 Member Joined", value: "member_join" },
-      { label: "📝 Member Updated", value: "member_update" },
-    ],
-  },
-  {
-    label: "Reaction events",
-    items: [{ label: "😀 Reaction Added", value: "reaction_add" }],
-  },
-];
-
-// Flat list retained for label/icon lookups elsewhere (triggerIcon, triggerLabel, rule list).
-const triggerOptions = triggerGroups.flatMap((g) => g.items);
-
-const actionOptions = [
-  { label: "🗑️ Delete Message", value: "delete_message" },
-  { label: "⚠️ Warn User", value: "warn_user" },
-  { label: "🔇 Timeout User", value: "timeout_user" },
-  { label: "👢 Kick User", value: "kick_user" },
-  { label: "🔨 Ban User", value: "ban_user" },
-  { label: "💬 DM User", value: "dm_user" },
-  { label: "📢 Send Channel Message", value: "send_channel_message" },
-  { label: "↩️ Reply to Message", value: "reply_to_message" },
-  { label: "😀 Add Reaction", value: "add_reaction" },
-  { label: "➕ Add Role", value: "add_role" },
-  { label: "➖ Remove Role", value: "remove_role" },
-  { label: "📋 Log to Mod Log", value: "log_to_modlog" },
-];
-
 // Quick-Create has no UI for filling in action-specific params, so only
 // offer actions that are fully functional with empty params.
 const quickCreateActionOptions = actionOptions.filter((a) =>
@@ -662,106 +449,13 @@ const quickCreateActionOptions = actionOptions.filter((a) =>
 
 const advancedItems = [
   {
-    label: "Advanced Options",
-    icon: "i-heroicons-cog-6-tooth",
+    label: "Limits & exceptions",
+    icon: "i-lucide-sliders-horizontal",
     defaultOpen: false,
   },
 ];
 
 // ── Helpers ──
-const triggerIcon = (trigger: string) => {
-  switch (trigger) {
-    case "message_create":
-      return "i-heroicons-chat-bubble-left";
-    case "message_edit":
-      return "i-heroicons-pencil";
-    case "message_delete":
-      return "i-heroicons-trash";
-    case "member_join":
-      return "i-heroicons-arrow-right-on-rectangle";
-    case "member_update":
-      return "i-heroicons-identification";
-    case "reaction_add":
-      return "i-heroicons-face-smile";
-    default:
-      return "i-heroicons-bolt";
-  }
-};
-
-const triggerLabel = (trigger: string) => {
-  switch (trigger) {
-    case "message_create":
-      return "Fires on: Message Created";
-    case "message_edit":
-      return "Fires on: Message Edited";
-    case "message_delete":
-      return "Fires on: Message Deleted";
-    case "member_join":
-      return "Fires on: Member Joined";
-    case "member_update":
-      return "Fires on: Nickname/Avatar Changed";
-    case "reaction_add":
-      return "Fires on: Reaction Added";
-    default:
-      return `Fires on: ${trigger}`;
-  }
-};
-
-const actionChipClass = (type: string) => {
-  const map: Record<string, string> = {
-    delete_message: "bg-red-500/10 border-red-500/25 text-red-300",
-    warn_user: "bg-amber-500/10 border-amber-500/25 text-amber-300",
-    timeout_user: "bg-blue-500/10 border-blue-500/25 text-blue-300",
-    kick_user: "bg-orange-500/10 border-orange-500/25 text-orange-300",
-    ban_user: "bg-red-500/15 border-red-500/30 text-red-200",
-    dm_user: "bg-sky-500/10 border-sky-500/25 text-sky-300",
-    send_channel_message:
-      "bg-indigo-500/10 border-indigo-500/25 text-indigo-300",
-    reply_to_message: "bg-teal-500/10 border-teal-500/25 text-teal-300",
-    add_reaction: "bg-yellow-500/10 border-yellow-500/25 text-yellow-300",
-    add_role: "bg-emerald-500/10 border-emerald-500/25 text-emerald-300",
-    remove_role: "bg-gray-500/10 border-gray-500/25 text-gray-400",
-    log_to_modlog: "bg-purple-500/10 border-purple-500/25 text-purple-300",
-  };
-  return map[type] ?? "bg-white/5 border-white/10 text-gray-300";
-};
-
-const actionIcon = (type: string) => {
-  const map: Record<string, string> = {
-    delete_message: "i-heroicons-trash",
-    warn_user: "i-heroicons-exclamation-triangle",
-    timeout_user: "i-heroicons-clock",
-    kick_user: "i-heroicons-arrow-right-on-rectangle",
-    ban_user: "i-heroicons-no-symbol",
-    dm_user: "i-heroicons-envelope",
-    send_channel_message: "i-heroicons-chat-bubble-left-right",
-    reply_to_message: "i-heroicons-arrow-uturn-left",
-    add_reaction: "i-heroicons-face-smile",
-    add_role: "i-heroicons-plus-circle",
-    remove_role: "i-heroicons-minus-circle",
-    log_to_modlog: "i-heroicons-clipboard-document-list",
-  };
-  return map[type] ?? "i-heroicons-bolt";
-};
-
-const actionLabel = (type: string) => {
-  const labels: Record<string, string> = {
-    delete_message: "Delete",
-    warn_user: "Warn",
-    timeout_user: "Timeout",
-    kick_user: "Kick",
-    ban_user: "Ban",
-    dm_user: "DM",
-    send_channel_message: "Post Message",
-    reply_to_message: "Reply",
-    add_reaction: "Add Reaction",
-    add_role: "Add Role",
-    remove_role: "Remove Role",
-    log_to_modlog: "Log",
-  };
-  return labels[type] ?? type;
-};
-
 const roleLabel = (id: string) =>
   roleOptions.value.find((r) => r.value === id)?.label ?? id;
 

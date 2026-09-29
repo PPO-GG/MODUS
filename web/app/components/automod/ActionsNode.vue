@@ -1,28 +1,15 @@
 <template>
-  <div
-    class="relative overflow-hidden rounded-xl border border-orange-500/20 bg-orange-500/[0.03] p-4 space-y-3"
-  >
-    <div class="flex items-center justify-between mb-1">
-      <div class="flex items-center gap-2">
-        <div
-          class="p-1 rounded-md bg-orange-500/10 border border-orange-500/20"
-        >
-          <UIcon name="i-heroicons-play" class="text-orange-400 text-sm" />
-        </div>
-        <span
-          class="text-xs font-semibold text-orange-300 uppercase tracking-wider"
-          >Actions</span
-        >
-        <span class="text-xs text-gray-600 ml-1">— …THEN do this</span>
-      </div>
+  <div class="space-y-3">
+    <div class="flex items-center justify-between gap-3">
+      <span class="text-[13px] text-gray-400">Actions run in order, top to bottom.</span>
       <UButton
         variant="soft"
         color="primary"
         size="xs"
-        icon="i-heroicons-plus"
+        icon="i-lucide-plus"
         @click="addAction()"
       >
-        Add Action
+        Add action
       </UButton>
     </div>
 
@@ -33,7 +20,7 @@
         class="relative overflow-hidden rounded-lg border p-3 space-y-3 transition-colors"
         :class="
           dragOverIdx === idx
-            ? 'border-orange-400/60 bg-orange-500/[0.06]'
+            ? 'border-teal-300/60 bg-teal-300/[0.06]'
             : 'border-white/10 bg-white/[0.03]'
         "
         @dragover.prevent="dragOverIdx = idx"
@@ -53,10 +40,10 @@
             @dragstart="onDragStart($event, idx)"
             @dragend="onDragEnd"
           >
-            ⠿
+            <UIcon name="i-lucide-grip-vertical" class="h-4 w-4" />
           </span>
           <span
-            class="w-5 h-5 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-300 text-[10px] font-bold flex items-center justify-center flex-shrink-0"
+            class="w-5 h-5 rounded-full bg-sky-200/10 ring-1 ring-inset ring-sky-100/25 text-sky-200 text-[10px] font-bold flex items-center justify-center flex-shrink-0"
           >
             {{ idx + 1 }}
           </span>
@@ -65,7 +52,7 @@
               :model-value="action.type"
               :items="actionOptions"
               value-key="value"
-              size="md"
+              class="w-full"
               @update:model-value="updateActionField(idx, 'type', $event)"
             />
           </div>
@@ -73,7 +60,8 @@
             variant="ghost"
             color="error"
             size="sm"
-            icon="i-heroicons-x-mark"
+            icon="i-lucide-x"
+            :aria-label="`Remove action ${idx + 1}`"
             @click="removeAction(idx)"
           />
         </div>
@@ -90,7 +78,7 @@
                 placeholder="You have been warned for violating server rules..."
                 :rows="3"
                 autoresize
-                size="md"
+                class="w-full"
               />
               <p class="text-[10px] text-gray-600">
                 Use
@@ -107,7 +95,7 @@
               <UInput
                 v-model="action.params.image_url"
                 placeholder="https://example.com/image.png"
-                size="md"
+                class="w-full"
               />
               <img
                 v-if="action.params.image_url"
@@ -130,7 +118,7 @@
                     action.params._durationAmt &&
                     action.params._durationUnit
                   "
-                  class="text-orange-300 ml-1"
+                  class="text-sky-200 ml-1"
                 >
                   → {{ action.params._durationAmt
                   }}{{ action.params._durationUnit }}
@@ -183,7 +171,7 @@
                 placeholder="Violated server automod rule..."
                 :rows="2"
                 autoresize
-                size="md"
+                class="w-full"
               />
             </div>
           </template>
@@ -202,13 +190,13 @@
                 placeholder="Violated server automod rule..."
                 :rows="2"
                 autoresize
-                size="md"
+                class="w-full"
               />
             </div>
             <div class="space-y-1">
               <label class="text-[11px] font-medium text-gray-400">
                 Delete message history
-                <span class="text-orange-300 ml-1"
+                <span class="text-sky-200 ml-1"
                   >{{ action.params.delete_days ?? 0 }} day{{
                     (action.params.delete_days ?? 0) !== 1 ? "s" : ""
                   }}</span
@@ -239,8 +227,8 @@
                 value-key="value"
                 placeholder="Select a channel..."
                 searchable
-                icon="i-heroicons-hashtag"
-                size="md"
+                icon="i-lucide-hash"
+                class="w-full"
               />
             </div>
             <div class="space-y-1">
@@ -252,7 +240,7 @@
                 placeholder="⚠️ A message was flagged by AutoMod in this channel..."
                 :rows="4"
                 autoresize
-                size="md"
+                class="w-full"
               />
               <p class="text-[10px] text-gray-600">
                 Supports basic Discord markdown. Use
@@ -269,7 +257,7 @@
               <UInput
                 v-model="action.params.image_url"
                 placeholder="https://example.com/image.png"
-                size="md"
+                class="w-full"
               />
               <img
                 v-if="action.params.image_url"
@@ -293,7 +281,7 @@
                 placeholder="⚠️ This message was flagged by AutoMod."
                 :rows="3"
                 autoresize
-                size="md"
+                class="w-full"
               />
               <p class="text-[10px] text-gray-600">
                 Use
@@ -310,7 +298,7 @@
               <UInput
                 v-model="action.params.image_url"
                 placeholder="https://example.com/image.png"
-                size="md"
+                class="w-full"
               />
               <img
                 v-if="action.params.image_url"
@@ -332,7 +320,7 @@
               <UInput
                 v-model="action.params.emoji"
                 placeholder="⚠️ or a custom emoji ID like :name:1234567890"
-                size="md"
+                class="w-full"
               />
               <p class="text-[10px] text-gray-600">
                 A unicode emoji, or a custom emoji in
@@ -369,7 +357,7 @@
                     : 'Search and select a role to remove...'
                 "
                 searchable
-                size="md"
+                class="w-full"
               />
               <p class="text-[10px] text-gray-600">
                 Bot role must be <em>above</em> the target role in the
@@ -389,7 +377,7 @@
               type="number"
               :min="0"
               placeholder="0"
-              size="md"
+              class="w-32"
               @update:model-value="
                 updateActionField(idx, 'delaySeconds', Number($event))
               "
@@ -402,9 +390,9 @@
         v-if="modelValue.length === 0"
         class="flex items-center justify-center gap-2 py-6 text-gray-600 border border-dashed border-white/8 rounded-lg"
       >
-        <UIcon name="i-heroicons-play-circle" class="text-lg" />
+        <UIcon name="i-lucide-circle-play" class="text-lg" />
         <span class="text-xs"
-          >No actions yet — click <strong>+ Add Action</strong> above</span
+          >No actions yet. Click <strong>Add action</strong> above.</span
         >
       </div>
     </div>
@@ -412,6 +400,8 @@
 </template>
 
 <script setup lang="ts">
+import { actionAccentBar } from "~/utils/automod-meta";
+
 interface ActionForm {
   type: string;
   params: Record<string, any>;
@@ -420,7 +410,7 @@ interface ActionForm {
 
 const props = defineProps<{
   modelValue: ActionForm[];
-  actionOptions: { label: string; value: string }[];
+  actionOptions: { label: string; value: string; icon?: string }[];
   channelOptions: { label: string; value: string }[];
   roleOptions: { label: string; value: string }[];
 }>();
@@ -488,23 +478,5 @@ const syncDuration = (action: ActionForm) => {
   } else {
     action.params.duration = "";
   }
-};
-
-const actionAccentBar = (type: string) => {
-  const map: Record<string, string> = {
-    delete_message: "bg-red-500",
-    warn_user: "bg-amber-500",
-    timeout_user: "bg-blue-500",
-    kick_user: "bg-orange-500",
-    ban_user: "bg-red-600",
-    dm_user: "bg-sky-500",
-    send_channel_message: "bg-indigo-500",
-    reply_to_message: "bg-teal-500",
-    add_reaction: "bg-yellow-500",
-    add_role: "bg-emerald-500",
-    remove_role: "bg-gray-500",
-    log_to_modlog: "bg-purple-500",
-  };
-  return map[type] ?? "bg-white/20";
 };
 </script>

@@ -1,470 +1,341 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-2">
-      <div>
-        <h2
-          class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent"
-        >
-          Tags & Snippets
-        </h2>
-        <p class="text-sm text-gray-400 mt-1">
-          Create reusable text or embed tags that staff can post with
-          <code
-            class="px-1.5 py-0.5 rounded bg-gray-800 text-primary-400 text-xs"
-            >/tag name</code
-          >
-        </p>
-      </div>
-      <UButton
-        icon="i-heroicons-plus"
-        size="lg"
-        color="primary"
-        @click="openEditor(null)"
-      >
-        New Tag
-      </UButton>
-    </div>
+  <div class="mx-auto max-w-3xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-tag"
+      title="Tags & Snippets"
+      description="Reusable text or embed messages that staff post with /tag."
+      :enabled="isModuleEnabled('tags')"
+    />
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
-      <UIcon
-        name="i-heroicons-arrow-path"
-        class="w-8 h-8 animate-spin text-primary-400"
-      />
-    </div>
-
-    <!-- Empty State -->
-    <div
-      v-else-if="tags.length === 0"
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-12 text-center"
+    <!-- ── Tags list ── -->
+    <DashboardModuleSection
+      title="Tags"
+      :description="
+        loading ? 'Loading tags…' : `${tags.length} tag${tags.length !== 1 ? 's' : ''}.`
+      "
     >
+      <template #actions>
+        <UButton color="primary" size="sm" icon="i-lucide-plus" @click="openEditor(null)">
+          New tag
+        </UButton>
+      </template>
+
+      <div v-if="loading" class="space-y-2" aria-busy="true">
+        <div v-for="i in 3" :key="i" class="h-14 animate-pulse rounded-lg bg-white/[0.04]" />
+      </div>
+
       <div
-        class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative">
-        <UIcon name="i-heroicons-tag" class="text-5xl text-gray-600 mb-4" />
-        <h3 class="text-lg font-semibold text-white mb-2">No tags yet</h3>
-        <p class="text-sm text-gray-400 mb-6 max-w-md mx-auto">
-          Create your first tag to give staff quick access to pre-set messages
-          and embeds.
-        </p>
-        <UButton
-          icon="i-heroicons-plus"
-          color="primary"
-          @click="openEditor(null)"
+        v-else-if="tags.length === 0"
+        class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 px-6 py-10 text-center"
+      >
+        <span
+          class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
         >
-          Create First Tag
+          <UIcon name="i-lucide-tag" class="h-5 w-5 text-sky-200" />
+        </span>
+        <div>
+          <h4 class="text-sm font-semibold text-white">No tags yet</h4>
+          <p class="mx-auto mt-1 max-w-sm text-[13px] text-gray-400">
+            Create a tag to give staff quick access to a pre-written message or embed.
+          </p>
+        </div>
+        <UButton color="primary" icon="i-lucide-plus" @click="openEditor(null)">
+          Create your first tag
         </UButton>
       </div>
-    </div>
 
-    <!-- Tags List -->
-    <div v-else class="space-y-3">
-      <div
-        v-for="tag in tags"
-        :key="tag.$id"
-        class="relative group overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl transition-all hover:border-white/20"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-amber-500/3 to-transparent pointer-events-none"
-        />
-        <div class="relative p-5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3 min-w-0 flex-1">
-              <!-- Type Badge -->
-              <div
-                class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                :class="
-                  tag.embed_data
-                    ? 'bg-secondary-500/10 border border-secondary-500/20'
-                    : 'bg-emerald-500/10 border border-emerald-500/20'
-                "
-              >
-                <UIcon
-                  :name="
-                    tag.embed_data
-                      ? 'i-heroicons-rectangle-stack'
-                      : 'i-heroicons-document-text'
-                  "
-                  :class="
-                    tag.embed_data ? 'text-secondary-400' : 'text-emerald-400'
-                  "
-                  class="w-5 h-5"
-                />
-              </div>
+      <ul v-else class="-mx-2 divide-y divide-white/[0.06]">
+        <li
+          v-for="tag in tags"
+          :key="tag.$id"
+          class="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 py-3"
+        >
+          <span
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
+          >
+            <UIcon :name="tag.embed_data ? 'i-lucide-layout-template' : 'i-lucide-file-text'" class="h-4 w-4" />
+          </span>
 
-              <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <code
-                    class="text-base font-semibold text-white bg-gray-800/60 px-2 py-0.5 rounded"
-                    >{{ tag.name }}</code
-                  >
-                  <UBadge
-                    :color="tag.embed_data ? 'info' : 'success'"
-                    variant="subtle"
-                    size="xs"
-                  >
-                    {{ tag.embed_data ? "Embed" : "Text" }}
-                  </UBadge>
-                  <UBadge
-                    v-if="getTagRoles(tag).length > 0"
-                    color="warning"
-                    variant="subtle"
-                    size="xs"
-                  >
-                    <UIcon
-                      name="i-heroicons-lock-closed"
-                      class="text-xs mr-1"
-                    />
-                    {{ getTagRoles(tag).length }} role{{
-                      getTagRoles(tag).length !== 1 ? "s" : ""
-                    }}
-                  </UBadge>
-                </div>
-                <p class="text-xs text-gray-500 mt-1 truncate max-w-md">
-                  {{ getTagPreview(tag) }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div
-              class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <UButton
-                icon="i-heroicons-eye"
-                size="sm"
-                variant="ghost"
-                color="neutral"
-                title="Preview"
-                @click="previewTag(tag)"
-              />
-              <UButton
-                icon="i-heroicons-paper-airplane"
-                size="sm"
-                variant="ghost"
-                color="primary"
-                title="Send to channel"
-                @click="openSendDialog(tag)"
-              />
-              <UButton
-                icon="i-heroicons-pencil-square"
-                size="sm"
-                variant="ghost"
-                color="neutral"
-                title="Edit"
+          <div class="min-w-0 flex-1 basis-48">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <button
+                type="button"
+                class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-sm font-medium text-white hover:text-teal-300 focus-visible:outline-2 focus-visible:outline-teal-300"
                 @click="openEditor(tag)"
-              />
-              <UButton
-                icon="i-heroicons-trash"
-                size="sm"
-                variant="ghost"
-                color="error"
-                title="Delete"
-                @click="confirmDelete(tag)"
-              />
+              >
+                {{ tag.name }}
+              </button>
+              <span class="rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-gray-300">
+                {{ tag.embed_data ? (tag.content ? "Text + embed" : "Embed") : "Text" }}
+              </span>
+              <span
+                v-if="getTagRoles(tag).length > 0"
+                class="inline-flex items-center gap-1 rounded-full bg-amber-400/10 px-2 py-0.5 text-[11px] text-amber-300"
+              >
+                <UIcon name="i-lucide-lock" class="h-3 w-3" />
+                {{ getTagRoles(tag).length }} role{{ getTagRoles(tag).length !== 1 ? "s" : "" }}
+              </span>
             </div>
+            <p class="mt-1 truncate text-[13px] text-gray-400">{{ getTagPreview(tag) }}</p>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <div class="ml-auto flex items-center gap-1">
+            <UButton
+              icon="i-lucide-eye"
+              size="sm"
+              variant="ghost"
+              color="neutral"
+              :aria-label="`Preview ${tag.name}`"
+              @click="previewTag(tag)"
+            />
+            <UButton
+              icon="i-lucide-send"
+              size="sm"
+              variant="ghost"
+              color="neutral"
+              :aria-label="`Send ${tag.name} to a channel`"
+              @click="openSendDialog(tag)"
+            />
+            <UButton
+              icon="i-lucide-pencil"
+              size="sm"
+              variant="ghost"
+              color="neutral"
+              :aria-label="`Edit ${tag.name}`"
+              @click="openEditor(tag)"
+            />
+            <UButton
+              icon="i-lucide-trash-2"
+              size="sm"
+              variant="ghost"
+              color="error"
+              :aria-label="`Delete ${tag.name}`"
+              @click="confirmDelete(tag)"
+            />
+          </div>
+        </li>
+      </ul>
+
+      <p class="mt-4 text-[13px] text-gray-400">
+        Presets saved from the
+        <NuxtLink
+          :to="`/dashboard/server/${guildId}/modules/embeds`"
+          class="text-sky-200 underline underline-offset-2 hover:text-teal-300"
+        >
+          Embed Builder
+        </NuxtLink>
+        are kept separately and aren't listed here.
+      </p>
+    </DashboardModuleSection>
 
     <DashboardModuleAccessSection :guild-id="guildId" module-name="tags" />
 
-    <!-- ═══ Tag Editor Modal ═══ -->
-    <UModal
+    <!-- ── Tag editor slide-over ── -->
+    <USlideover
       v-model:open="editorOpen"
-      :ui="{ content: 'sm:max-w-6xl max-h-[90vh] flex flex-col' }"
+      :title="editingTag ? 'Edit tag' : 'New tag'"
+      :description="editingTag ? editingTag.name : 'Staff post it with /tag name.'"
+      :ui="{ content: 'sm:max-w-5xl' }"
     >
-      <template #content>
-        <div class="flex flex-col max-h-[90vh]">
-          <!-- Header stays pinned while the body scrolls underneath. -->
-          <div
-            class="flex items-center justify-between p-6 pb-4 border-b border-white/10 flex-shrink-0"
-          >
-            <h3 class="text-xl font-bold text-white">
-              {{ editingTag ? "Edit Tag" : "Create Tag" }}
-            </h3>
-            <UButton
-              icon="i-heroicons-x-mark"
-              variant="ghost"
-              color="neutral"
-              size="sm"
-              @click="editorOpen = false"
-            />
-          </div>
-
-          <div class="flex-1 overflow-y-auto p-6 pt-4">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Left: Form -->
-            <div class="space-y-4">
-              <!-- Tag Name -->
-              <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1.5"
-                  >Tag Name</label
-                >
-                <UInput
-                  v-model="form.name"
-                  placeholder="e.g. shipping-policy"
-                  size="lg"
+      <template #body>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+          <div class="min-w-0 space-y-6">
+            <DashboardModuleSection title="Basics">
+              <div class="space-y-5">
+                <UFormField
+                  label="Tag name"
+                  :hint="editingTag ? 'Can\'t be changed' : undefined"
                   class="w-full"
-                  :disabled="!!editingTag"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                  Lowercase, hyphens only. Used as
-                  <code class="text-primary-400"
-                    >/tag {{ form.name || "name" }}</code
-                  >
-                </p>
-              </div>
-
-              <!-- Type Toggle -->
-              <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1.5"
-                  >Type</label
                 >
-                <div class="flex gap-2">
-                  <UButton
-                    :variant="form.type === 'text' ? 'solid' : 'outline'"
-                    :color="form.type === 'text' ? 'primary' : 'neutral'"
-                    size="sm"
-                    icon="i-heroicons-document-text"
-                    @click="form.type = 'text'"
-                  >
-                    Plain Text
-                  </UButton>
-                  <UButton
-                    :variant="form.type === 'embed' ? 'solid' : 'outline'"
-                    :color="form.type === 'embed' ? 'primary' : 'neutral'"
-                    size="sm"
-                    icon="i-heroicons-rectangle-stack"
-                    @click="form.type = 'embed'"
-                  >
-                    Embed
-                  </UButton>
-                  <UButton
-                    :variant="form.type === 'both' ? 'solid' : 'outline'"
-                    :color="form.type === 'both' ? 'primary' : 'neutral'"
-                    size="sm"
-                    icon="i-heroicons-squares-plus"
-                    @click="form.type = 'both'"
-                  >
-                    Both
-                  </UButton>
+                  <UInput
+                    v-model="form.name"
+                    placeholder="e.g. shipping-policy"
+                    icon="i-lucide-tag"
+                    class="w-full"
+                    :disabled="!!editingTag"
+                  />
+                </UFormField>
+                <p class="-mt-3 text-[13px] text-gray-400">
+                  Lowercase with hyphens. Used as
+                  <code class="font-mono text-sky-200">/tag {{ form.name || "name" }}</code>.
+                </p>
+
+                <div>
+                  <span class="mb-2 block text-sm font-medium text-white">Type</span>
+                  <div class="grid grid-cols-1 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Tag type">
+                    <label v-for="t in tagTypes" :key="t.value" class="block cursor-pointer">
+                      <input
+                        v-model="form.type"
+                        type="radio"
+                        name="tag-type"
+                        :value="t.value"
+                        class="peer sr-only"
+                      />
+                      <span
+                        class="flex h-full flex-col gap-1 rounded-xl p-3 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
+                      >
+                        <span class="flex items-center gap-2 text-sm font-semibold text-white">
+                          <UIcon :name="t.icon" class="h-4 w-4 text-sky-200" />
+                          {{ t.label }}
+                        </span>
+                        <span class="text-[13px] text-gray-400">{{ t.description }}</span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
+            </DashboardModuleSection>
 
-              <!-- Text Content -->
-              <div v-if="form.type === 'text' || form.type === 'both'">
-                <label class="block text-sm font-medium text-gray-300 mb-1.5"
-                  >Text Content</label
+            <DashboardModuleSection title="Message">
+              <div class="space-y-5">
+                <UFormField
+                  v-if="form.type === 'text' || form.type === 'both'"
+                  label="Text"
+                  class="w-full"
                 >
-                <UTextarea
-                  v-model="form.content"
-                  placeholder="Type your message here..."
-                  :rows="4"
-                  :maxlength="4096"
-                  size="lg"
-                  autoresize
-                  class="w-full"
+                  <template #hint>
+                    <span class="text-xs text-gray-400">{{ form.content.length }}/4096</span>
+                  </template>
+                  <UTextarea
+                    v-model="form.content"
+                    placeholder="Type your message here…"
+                    :rows="4"
+                    :maxlength="4096"
+                    autoresize
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <EmbedEditor
+                  v-if="form.type === 'embed' || form.type === 'both'"
+                  v-model="form.embed"
                 />
               </div>
+            </DashboardModuleSection>
 
-              <!-- Shared embed editor (only when type includes embed) -->
-              <EmbedEditor
-                v-if="form.type === 'embed' || form.type === 'both'"
-                v-model="form.embed"
+            <DashboardModuleSection
+              title="Permissions"
+              description="Limit who can post this tag. Leave empty to allow everyone."
+            >
+              <USelectMenu
+                v-model="form.allowedRoles"
+                :items="roleOptions"
+                value-key="value"
+                multiple
+                placeholder="All roles can use this tag"
+                icon="i-lucide-shield-check"
+                class="w-full"
               />
-
-              <!-- Role Restrictions -->
-              <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1.5">
-                  Allowed Roles
-                  <span class="text-gray-500 text-xs font-normal"
-                    >(leave empty for everyone)</span
-                  >
-                </label>
-                <USelectMenu
-                  v-model="form.allowedRoles"
-                  :items="roleOptions"
-                  value-key="value"
-                  multiple
-                  placeholder="All roles can use this tag"
-                  icon="i-heroicons-shield-check"
-                  class="w-full"
-                />
-              </div>
-            </div>
-
-            <!-- Right: Preview (sticky so it tracks the scrollable form) -->
-            <div class="lg:sticky lg:top-0 lg:self-start">
-              <label class="block text-sm font-medium text-gray-300 mb-1.5"
-                >Preview</label
-              >
-              <div class="rounded-lg border border-white/10 p-2">
-                <EmbedPreview
-                  :form="
-                    form.type === 'text' ? blankEmbedForm : form.embed
-                  "
-                  :content="
-                    form.type === 'text' || form.type === 'both'
-                      ? form.content
-                      : undefined
-                  "
-                  :context="mdContext"
-                />
-              </div>
-            </div>
+            </DashboardModuleSection>
           </div>
 
+          <div class="min-w-0 lg:sticky lg:top-0 lg:self-start">
+            <span class="mb-2 block text-sm font-medium text-white">Preview</span>
+            <EmbedPreview
+              :form="form.type === 'text' ? blankEmbedForm : form.embed"
+              :content="form.type === 'text' || form.type === 'both' ? form.content : undefined"
+              :context="mdContext"
+            />
           </div>
-          <!-- Footer Actions (pinned) -->
-          <div
-            class="flex justify-end gap-3 p-4 border-t border-white/10 flex-shrink-0 bg-gray-900/80 backdrop-blur-xl"
+        </div>
+      </template>
+
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton color="neutral" variant="ghost" @click="editorOpen = false">Cancel</UButton>
+          <UButton
+            color="primary"
+            icon="i-lucide-check"
+            :loading="saving"
+            :disabled="!isFormValid"
+            @click="saveTag"
           >
-            <UButton
-              variant="ghost"
-              color="neutral"
-              @click="editorOpen = false"
-            >
-              Cancel
-            </UButton>
-            <UButton
-              color="primary"
-              icon="i-heroicons-check"
-              :loading="saving"
-              :disabled="!isFormValid"
-              @click="saveTag"
-            >
-              {{ editingTag ? "Update Tag" : "Create Tag" }}
-            </UButton>
-          </div>
+            {{ editingTag ? "Save changes" : "Create tag" }}
+          </UButton>
         </div>
+      </template>
+    </USlideover>
+
+    <!-- ── Preview modal ── -->
+    <UModal
+      v-model:open="previewOpen"
+      :title="`Preview: ${previewingTag?.name ?? ''}`"
+      description="How the tag looks when posted."
+    >
+      <template #body>
+        <EmbedPreview
+          v-if="previewingTag"
+          :form="previewForm"
+          :content="previewingTag.content || undefined"
+          :context="mdContext"
+        />
       </template>
     </UModal>
 
-    <!-- ═══ Preview Modal ═══ -->
-    <UModal v-model:open="previewOpen">
-      <template #content>
-        <div class="p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold text-white">
-              Tag Preview:
-              <code class="text-primary-400">{{ previewingTag?.name }}</code>
-            </h3>
-            <UButton
-              icon="i-heroicons-x-mark"
-              variant="ghost"
-              color="neutral"
-              size="sm"
-              @click="previewOpen = false"
-            />
+    <!-- ── Send to channel modal ── -->
+    <UModal
+      v-model:open="sendOpen"
+      :title="`Send: ${sendingTag?.name ?? ''}`"
+      description="Post this tag to a channel now."
+    >
+      <template #body>
+        <UFormField label="Channel" class="w-full">
+          <div v-if="channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
+            <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+            <span class="text-sm">Loading channels…</span>
           </div>
-          <EmbedPreview
-            v-if="previewingTag"
-            :form="previewForm"
-            :content="previewingTag.content || undefined"
-            :context="mdContext"
+          <USelectMenu
+            v-else
+            v-model="sendChannelId"
+            :items="channelOptions"
+            value-key="value"
+            placeholder="Select a channel"
+            searchable
+            icon="i-lucide-hash"
+            class="w-full"
           />
+        </UFormField>
+      </template>
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton color="neutral" variant="ghost" @click="sendOpen = false">Cancel</UButton>
+          <UButton
+            color="primary"
+            icon="i-lucide-send"
+            :loading="sendingMessage"
+            :disabled="!sendChannelId"
+            @click="sendTagToChannel"
+          >
+            Send
+          </UButton>
         </div>
       </template>
     </UModal>
 
-    <!-- ═══ Send to Channel Modal ═══ -->
-    <UModal v-model:open="sendOpen">
-      <template #content>
-        <div class="p-6 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-bold text-white">
-              Send Tag:
-              <code class="text-primary-400">{{ sendingTag?.name }}</code>
-            </h3>
-            <UButton
-              icon="i-heroicons-x-mark"
-              variant="ghost"
-              color="neutral"
-              size="sm"
-              @click="sendOpen = false"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1.5"
-              >Channel</label
-            >
-            <div
-              v-if="channelsLoading"
-              class="flex items-center gap-2 py-2 text-gray-400"
-            >
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="animate-spin text-primary-400"
-              />
-              <span class="text-sm">Loading channels...</span>
-            </div>
-            <USelectMenu
-              v-else
-              v-model="sendChannelId"
-              :items="channelOptions"
-              value-key="value"
-              placeholder="Select a channel..."
-              icon="i-heroicons-hashtag"
-              size="lg"
-              class="w-full"
-            />
-          </div>
-          <div class="flex justify-end gap-3 pt-2">
-            <UButton variant="ghost" color="neutral" @click="sendOpen = false">
-              Cancel
-            </UButton>
-            <UButton
-              color="primary"
-              icon="i-heroicons-paper-airplane"
-              :loading="sendingMessage"
-              :disabled="!sendChannelId"
-              @click="sendTagToChannel"
-            >
-              Send
-            </UButton>
-          </div>
-        </div>
-      </template>
-    </UModal>
-
-    <!-- ═══ Delete Confirmation Modal ═══ -->
+    <!-- ── Delete confirmation ── -->
     <UModal v-model:open="deleteOpen">
       <template #content>
-        <div class="p-6 space-y-4">
+        <div class="space-y-4 p-6">
           <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0"
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 ring-1 ring-inset ring-red-400/30"
             >
-              <UIcon name="i-heroicons-trash" class="w-6 h-6 text-red-400" />
-            </div>
+              <UIcon name="i-lucide-triangle-alert" class="h-5 w-5 text-red-300" />
+            </span>
             <div>
-              <h3 class="text-lg font-bold text-white">Delete Tag</h3>
-              <p class="text-sm text-gray-400">
-                Are you sure you want to delete
-                <code class="text-red-400">{{ deletingTag?.name }}</code
-                >?
-              </p>
+              <h3 class="text-base font-semibold text-white">Delete tag</h3>
+              <p class="text-[13px] text-gray-400">This can't be undone.</p>
             </div>
           </div>
-          <div class="flex justify-end gap-3 pt-2">
-            <UButton
-              variant="ghost"
-              color="neutral"
-              @click="deleteOpen = false"
-            >
-              Cancel
-            </UButton>
-            <UButton
-              color="error"
-              icon="i-heroicons-trash"
-              :loading="deleting"
-              @click="deleteTag"
-            >
-              Delete
+          <p class="text-sm text-gray-300">
+            Delete <strong class="font-mono text-white">{{ deletingTag?.name }}</strong>? Staff
+            will no longer be able to post it.
+          </p>
+          <div class="flex justify-end gap-2 pt-1">
+            <UButton color="neutral" variant="ghost" @click="deleteOpen = false">Cancel</UButton>
+            <UButton color="error" icon="i-lucide-trash-2" :loading="deleting" @click="deleteTag">
+              Delete tag
             </UButton>
           </div>
         </div>
@@ -485,7 +356,7 @@ import {
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
-const { state, loadChannels, loadRoles, channelOptions, roleOptions } =
+const { state, isModuleEnabled, loadChannels, loadRoles, channelOptions, roleOptions } =
   useServerSettings(guildId);
 const toast = useToast();
 
@@ -501,6 +372,12 @@ const mdContext = computed(() => ({
     color: r.color,
   })),
 }));
+
+const tagTypes = [
+  { value: "text", label: "Plain text", icon: "i-lucide-file-text", description: "A regular message." },
+  { value: "embed", label: "Embed", icon: "i-lucide-layout-template", description: "A rich card." },
+  { value: "both", label: "Both", icon: "i-lucide-layers", description: "Text above an embed." },
+] as const;
 
 // ── Data ──
 // Tags list — excludes presets (is_template=true) so the /tag-invocable set

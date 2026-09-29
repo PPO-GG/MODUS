@@ -1,20 +1,12 @@
 <template>
-  <!-- Full-bleed: no padding wrapper so the editor fills edge-to-edge -->
-  <WelcomeEditor :guild-id="guildId" class="h-full" />
+  <div />
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
-
+// The image editor is the Image tab on the Welcome page now; keep old links working.
 const route = useRoute();
-const guildId = route.params.guild_id as string;
-const { setFullBleed, reset: resetPageChrome } = usePageChrome();
-
-onMounted(() => {
-  setFullBleed(true);
-});
-
-onUnmounted(() => {
-  resetPageChrome();
-});
+await navigateTo(
+  { path: `/dashboard/server/${route.params.guild_id as string}/modules/welcome`, query: { tab: "image" } },
+  { replace: true },
+);
 </script>

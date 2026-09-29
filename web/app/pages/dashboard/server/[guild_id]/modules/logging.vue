@@ -1,275 +1,94 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
-      >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0"
-        >
-          <UIcon
-            name="i-heroicons-clipboard-document-list"
-            class="w-5 h-5 text-cyan-400"
-          />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-white">Audit Logging</h2>
-          <p class="text-xs text-gray-500">
-            Track server events and send them to a dedicated channel
-          </p>
-        </div>
-      </div>
-      <UBadge
-        :color="isModuleEnabled('logging') ? 'success' : 'neutral'"
-        variant="soft"
-        class="ml-auto"
-      >
-        {{ isModuleEnabled("logging") ? "Module Active" : "Module Disabled" }}
-      </UBadge>
-    </div>
+  <div class="mx-auto max-w-3xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-clipboard-list"
+      title="Audit Logging"
+      description="Track server events and post them to a dedicated channel."
+      :enabled="isModuleEnabled('logging')"
+    />
 
-    <!-- Settings Grid -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      <!-- Audit Channel Selector -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-4">
-          <div class="flex items-center gap-2 mb-1">
-            <div
-              class="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-heroicons-hashtag" class="text-cyan-400" />
-            </div>
-            <div>
-              <h3 class="font-semibold text-white">Audit Channel</h3>
-              <p class="text-[10px] text-gray-500">
-                All enabled audit events will be posted to this channel
-              </p>
-            </div>
-          </div>
-
-          <!-- Channel loading -->
-          <div
-            v-if="state.channelsLoading"
-            class="flex items-center gap-2 py-2 text-gray-400"
-          >
-            <UIcon
-              name="i-heroicons-arrow-path"
-              class="animate-spin text-cyan-400"
-            />
-            <span class="text-sm">Loading channels...</span>
-          </div>
-          <template v-else>
-            <USelectMenu
-              v-if="channelOptions.length > 0"
-              v-model="settings.auditChannelId"
-              :items="channelOptions"
-              value-key="value"
-              placeholder="Select a channel for audit logs..."
-              searchable
-              icon="i-heroicons-hashtag"
-              size="md"
-            />
-            <div v-else class="text-xs text-gray-500 italic py-2">
-              No channels available. Make sure the bot is in this server.
-            </div>
-          </template>
-
-          <div
-            v-if="settings.auditChannelId"
-            class="flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/10"
-          >
-            <UIcon
-              name="i-heroicons-check-circle"
-              class="text-cyan-400 text-sm"
-            />
-            <span class="text-xs text-cyan-300">
-              Audit events will post to
-              <strong>{{ getChannelName(settings.auditChannelId) }}</strong>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Info Card -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-4">
-          <div class="flex items-center gap-2 mb-1">
-            <div
-              class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon
-                name="i-heroicons-information-circle"
-                class="text-secondary-400"
-              />
-            </div>
-            <h3 class="font-semibold text-white">How It Works</h3>
-          </div>
-
-          <div class="space-y-3 text-xs text-gray-400 leading-relaxed">
-            <p>
-              The Audit Logging module watches for server events in real-time
-              and posts rich embeds to your designated channel.
-            </p>
-            <ul class="space-y-1.5 list-none">
-              <li class="flex items-start gap-2">
-                <UIcon
-                  name="i-heroicons-chat-bubble-bottom-center-text"
-                  class="text-yellow-400 mt-0.5 shrink-0"
-                />
-                <span
-                  ><strong class="text-gray-300">Messages</strong> — Deleted
-                  messages (with content + attachments) and edits
-                  (before/after)</span
-                >
-              </li>
-              <li class="flex items-start gap-2">
-                <UIcon
-                  name="i-heroicons-user-group"
-                  class="text-green-400 mt-0.5 shrink-0"
-                />
-                <span
-                  ><strong class="text-gray-300">Members</strong> — Joins and
-                  leaves with account age and join date</span
-                >
-              </li>
-              <li class="flex items-start gap-2">
-                <UIcon
-                  name="i-heroicons-shield-check"
-                  class="text-purple-400 mt-0.5 shrink-0"
-                />
-                <span
-                  ><strong class="text-gray-300">Roles</strong> — Creation,
-                  updates (name/color changes), and deletion</span
-                >
-              </li>
-              <li class="flex items-start gap-2">
-                <UIcon
-                  name="i-heroicons-folder"
-                  class="text-teal-400 mt-0.5 shrink-0"
-                />
-                <span
-                  ><strong class="text-gray-300">Channels</strong> — Channel
-                  creation and deletion</span
-                >
-              </li>
-              <li class="flex items-start gap-2">
-                <UIcon
-                  name="i-heroicons-link"
-                  class="text-blue-400 mt-0.5 shrink-0"
-                />
-                <span
-                  ><strong class="text-gray-300">Invites</strong> — Invite link
-                  creation and deletion with creator info</span
-                >
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Event Toggles -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
+    <DashboardModuleSection
+      title="Destination"
+      description="Every enabled event below is posted to this channel."
     >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-cyan-500/3 to-transparent pointer-events-none"
-      />
-      <div class="relative space-y-5">
-        <div class="flex items-center gap-2 mb-1">
-          <div
-            class="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0"
-          >
-            <UIcon
-              name="i-heroicons-adjustments-horizontal"
-              class="text-cyan-400"
-            />
-          </div>
-          <div>
-            <h3 class="font-semibold text-white">Event Categories</h3>
-            <p class="text-[10px] text-gray-500">
-              Toggle which events are posted to the audit channel
-            </p>
-          </div>
+      <UFormField label="Audit channel" class="w-full">
+        <div v-if="state.channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
+          <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+          <span class="text-sm">Loading channels…</span>
         </div>
+        <USelectMenu
+          v-else-if="channelOptions.length > 0"
+          v-model="settings.auditChannelId"
+          :items="channelOptions"
+          value-key="value"
+          placeholder="Select a channel for audit logs…"
+          searchable
+          icon="i-lucide-hash"
+          class="w-full"
+        />
+        <p v-else class="py-2 text-sm italic text-gray-500">
+          No channels available. Make sure the bot is in this server.
+        </p>
+      </UFormField>
 
-        <div class="space-y-1">
-          <div
-            v-for="toggle in eventToggles"
-            :key="toggle.key"
-            class="flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-150"
-            :class="
-              (settings[toggle.key] as boolean)
-                ? 'bg-white/[0.04] border border-white/[0.08]'
-                : 'bg-transparent border border-transparent hover:bg-white/[0.02]'
-            "
+      <p
+        v-if="!state.channelsLoading && !settings.auditChannelId"
+        class="mt-4 flex items-center gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+      >
+        <UIcon name="i-lucide-triangle-alert" class="h-4 w-4 shrink-0" />
+        No channel selected. Nothing will be logged until you pick one.
+      </p>
+      <p
+        v-else-if="settings.auditChannelId"
+        class="mt-4 flex items-center gap-2 rounded-lg bg-sky-200/[0.06] px-3 py-2 text-[13px] text-sky-200"
+      >
+        <UIcon name="i-lucide-info" class="h-4 w-4 shrink-0" />
+        <span>
+          Posting to
+          <strong class="font-semibold">{{ getChannelName(settings.auditChannelId) }}</strong>.
+        </span>
+      </p>
+    </DashboardModuleSection>
+
+    <DashboardModuleSection
+      title="Events"
+      :description="`${enabledCount} of ${eventToggles.length} event categories enabled.`"
+    >
+      <template #actions>
+        <UButton size="xs" color="neutral" variant="ghost" @click="setAll(!allEnabled)">
+          {{ allEnabled ? "Disable all" : "Enable all" }}
+        </UButton>
+      </template>
+
+      <div class="-mx-2 space-y-1">
+        <label
+          v-for="toggle in eventToggles"
+          :key="toggle.key"
+          class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-white/[0.04]"
+        >
+          <span
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
           >
-            <div class="flex items-center gap-3">
-              <div
-                class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                :class="toggle.iconBg"
-              >
-                <UIcon
-                  :name="toggle.icon"
-                  class="w-4 h-4"
-                  :class="toggle.iconColor"
-                />
-              </div>
-              <div>
-                <div class="text-sm font-medium text-white">
-                  {{ toggle.label }}
-                </div>
-                <div class="text-[11px] text-gray-500">
-                  {{ toggle.description }}
-                </div>
-              </div>
-            </div>
-            <USwitch
-              :model-value="settings[toggle.key]"
-              @update:model-value="
-                (val: boolean) => (settings[toggle.key] = val)
-              "
-            />
-          </div>
-        </div>
+            <UIcon :name="toggle.icon" class="h-4 w-4" />
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-medium text-white">{{ toggle.label }}</span>
+            <span class="block text-[13px] text-gray-400">{{ toggle.description }}</span>
+          </span>
+          <USwitch v-model="settings[toggle.key]" :aria-label="toggle.label" />
+        </label>
       </div>
-    </div>
+    </DashboardModuleSection>
 
     <DashboardModuleAccessSection :guild-id="guildId" module-name="logging" />
 
-    <!-- Save Button -->
-    <div class="flex justify-end">
-      <UButton
-        color="primary"
-        size="lg"
-        icon="i-heroicons-check"
-        :loading="saving"
-        @click="save"
-        class="min-w-[200px]"
-      >
-        Save Logging Settings
-      </UButton>
-    </div>
+    <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
@@ -302,59 +121,71 @@ interface LoggingSettingsForm {
   logInvites: boolean;
 }
 
-const settings = ref<LoggingSettingsForm>({
+const defaults: LoggingSettingsForm = {
   auditChannelId: "",
   logMessages: false,
   logMembers: false,
   logRoles: false,
   logChannels: false,
   logInvites: false,
-});
+};
+
+const settings = ref<LoggingSettingsForm>({ ...defaults });
+// Last loaded/saved values; drives the unsaved-changes bar and Discard.
+const baseline = ref<LoggingSettingsForm>({ ...defaults });
+const dirty = computed(
+  () => JSON.stringify(settings.value) !== JSON.stringify(baseline.value),
+);
 
 // ── Toggle definitions ──
 
-const eventToggles = [
+const eventToggles: {
+  key: BooleanToggleKey;
+  label: string;
+  description: string;
+  icon: string;
+}[] = [
   {
-    key: "logMessages" as BooleanToggleKey,
-    label: "Message Events",
-    description: "Log deleted messages (with content) and message edits",
-    icon: "i-heroicons-chat-bubble-bottom-center-text",
-    iconBg: "bg-yellow-500/10 border border-yellow-500/20",
-    iconColor: "text-yellow-400",
+    key: "logMessages",
+    label: "Message events",
+    description:
+      "Deleted messages (with content and attachments) and edits (before/after)",
+    icon: "i-lucide-message-square",
   },
   {
-    key: "logMembers" as BooleanToggleKey,
-    label: "Member Events",
-    description: "Log member joins and leaves with account details",
-    icon: "i-heroicons-user-group",
-    iconBg: "bg-green-500/10 border border-green-500/20",
-    iconColor: "text-green-400",
+    key: "logMembers",
+    label: "Member events",
+    description: "Joins and leaves, with account age and join date",
+    icon: "i-lucide-users",
   },
   {
-    key: "logRoles" as BooleanToggleKey,
-    label: "Role Events",
-    description: "Log role creation, updates, and deletion",
-    icon: "i-heroicons-shield-check",
-    iconBg: "bg-purple-500/10 border border-purple-500/20",
-    iconColor: "text-purple-400",
+    key: "logRoles",
+    label: "Role events",
+    description: "Role creation, updates (name and color) and deletion",
+    icon: "i-lucide-shield",
   },
   {
-    key: "logChannels" as BooleanToggleKey,
-    label: "Channel Events",
-    description: "Log channel creation and deletion",
-    icon: "i-heroicons-folder",
-    iconBg: "bg-teal-500/10 border border-teal-500/20",
-    iconColor: "text-teal-400",
+    key: "logChannels",
+    label: "Channel events",
+    description: "Channel creation and deletion",
+    icon: "i-lucide-folder",
   },
   {
-    key: "logInvites" as BooleanToggleKey,
-    label: "Invite Events",
-    description: "Log invite link creation and deletion",
-    icon: "i-heroicons-link",
-    iconBg: "bg-blue-500/10 border border-blue-500/20",
-    iconColor: "text-blue-400",
+    key: "logInvites",
+    label: "Invite events",
+    description: "Invite link creation and deletion, with creator info",
+    icon: "i-lucide-link",
   },
 ];
+
+const enabledCount = computed(
+  () => eventToggles.filter((t) => settings.value[t.key]).length,
+);
+const allEnabled = computed(() => enabledCount.value === eventToggles.length);
+
+const setAll = (value: boolean) => {
+  for (const t of eventToggles) settings.value[t.key] = value;
+};
 
 // ── Helpers ──
 
@@ -367,7 +198,7 @@ function getChannelName(channelId: string): string {
 
 const save = async () => {
   saving.value = true;
-  await saveModuleSettings("logging", {
+  const ok = await saveModuleSettings("logging", {
     auditChannelId: settings.value.auditChannelId,
     logMessages: settings.value.logMessages,
     logMembers: settings.value.logMembers,
@@ -375,7 +206,13 @@ const save = async () => {
     logChannels: settings.value.logChannels,
     logInvites: settings.value.logInvites,
   });
+  // A failed save keeps the form dirty so the bar stays and Save can retry.
+  if (ok) baseline.value = { ...settings.value };
   saving.value = false;
+};
+
+const discard = () => {
+  settings.value = { ...baseline.value };
 };
 
 // ── Init ──
@@ -392,6 +229,7 @@ onMounted(async () => {
       logChannels: saved.logChannels ?? false,
       logInvites: saved.logInvites ?? false,
     };
+    baseline.value = { ...settings.value };
   }
 
   // Load channels for the channel selector

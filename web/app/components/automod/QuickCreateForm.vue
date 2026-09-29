@@ -1,15 +1,13 @@
 <template>
-  <div
-    class="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-3"
-  >
-    <p class="text-xs text-gray-500">
+  <div class="space-y-3 rounded-xl bg-white/[0.03] p-4 ring-1 ring-inset ring-white/10">
+    <p class="text-[13px] text-gray-400">
       Quick create a simple rule. Need more than one condition or action?
       <button
         type="button"
-        class="text-orange-300 hover:text-orange-200 underline"
+        class="text-sky-200 underline underline-offset-2 hover:text-teal-300"
         @click="promote()"
       >
-        Open full editor
+        Open the full editor
       </button>
       instead.
     </p>

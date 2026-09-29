@@ -1,570 +1,510 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
+  <div class="mx-auto max-w-3xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-smile-plus"
+      title="Button Roles"
+      description="Panels with buttons or a dropdown that members use to toggle roles."
+      :enabled="isModuleEnabled('reaction-roles')"
+    />
+
+    <!-- ── Panel picker ── -->
+    <div v-if="settings.panels.length > 0" class="flex flex-wrap items-center gap-2" role="tablist" aria-label="Panels">
+      <button
+        v-for="panel in settings.panels"
+        :key="panel.id"
+        type="button"
+        role="tab"
+        :aria-selected="selectedPanelId === panel.id"
+        class="inline-flex max-w-full items-center gap-2 rounded-full px-3.5 py-1.5 text-sm ring-1 ring-inset transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300"
+        :class="
+          selectedPanelId === panel.id
+            ? 'bg-sky-200/10 text-white ring-2 ring-teal-300/60'
+            : 'text-gray-400 ring-white/10 hover:bg-white/[0.04] hover:text-gray-200'
+        "
+        @click="selectedPanelId = panel.id"
       >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
-        >
-          <UIcon
-            name="i-heroicons-cursor-arrow-rays"
-            class="w-5 h-5 text-primary-400"
-          />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-white">Button Roles</h2>
-          <p class="text-xs text-gray-500">
-            Create panels with buttons or dropdowns that toggle roles
-          </p>
-        </div>
-      </div>
-      <UBadge
-        :color="isModuleEnabled('reaction-roles') ? 'success' : 'neutral'"
+        <UIcon :name="typeIcon(panel.type)" class="h-4 w-4 shrink-0" />
+        <span class="truncate">{{ panel.name || "Unnamed panel" }}</span>
+        <span
+          v-if="panel.messageId"
+          class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
+          title="Deployed"
+        />
+      </button>
+      <UButton
+        color="primary"
         variant="soft"
-        class="ml-auto"
+        size="sm"
+        icon="i-lucide-plus"
+        @click="showAddPanel = true"
       >
-        {{
-          isModuleEnabled("reaction-roles")
-            ? "Module Active"
-            : "Module Disabled"
-        }}
-      </UBadge>
+        New panel
+      </UButton>
     </div>
 
-    <!-- Panel list + editor split -->
-    <div class="grid grid-cols-1 xl:grid-cols-[280px_1fr] gap-6">
-      <!-- Panel Sidebar -->
-      <div class="space-y-3">
-        <!-- Add panel -->
-        <UButton
-          color="primary"
-          variant="soft"
-          icon="i-heroicons-plus"
-          class="w-full justify-center"
-          @click="showAddPanel = true"
+    <!-- ── Empty state ── -->
+    <DashboardModuleSection v-if="settings.panels.length === 0" title="Panels">
+      <div
+        class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 px-6 py-10 text-center"
+      >
+        <span
+          class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
         >
-          New Panel
+          <UIcon name="i-lucide-mouse-pointer-click" class="h-5 w-5 text-sky-200" />
+        </span>
+        <div>
+          <h4 class="text-sm font-semibold text-white">No panels yet</h4>
+          <p class="mx-auto mt-1 max-w-sm text-[13px] text-gray-400">
+            A panel is a message with buttons or a dropdown. Members click to give themselves a
+            role, click again to remove it.
+          </p>
+        </div>
+        <UButton color="primary" icon="i-lucide-plus" @click="showAddPanel = true">
+          Create your first panel
         </UButton>
-
-        <!-- Panel list -->
-        <div class="space-y-1.5">
-          <button
-            v-for="panel in settings.panels"
-            :key="panel.id"
-            :class="[
-              'w-full text-left px-3 py-2.5 rounded-lg border transition-all',
-              selectedPanelId === panel.id
-                ? 'bg-white/10 border-primary-500/40 text-white'
-                : 'bg-white/[0.03] border-white/5 text-gray-400 hover:bg-white/5 hover:text-gray-300',
-            ]"
-            @click="selectedPanelId = panel.id"
-          >
-            <div class="flex items-center gap-2 min-w-0">
-              <UIcon
-                :name="
-                  panel.type === 'dropdown'
-                    ? 'i-heroicons-chevron-down-circle'
-                    : 'i-heroicons-squares-2x2'
-                "
-                class="text-sm shrink-0"
-              />
-              <span class="text-sm font-medium truncate">{{
-                panel.name
-              }}</span>
-              <div class="ml-auto shrink-0 flex items-center gap-1">
-                <span class="text-[10px] text-gray-600">{{
-                  panel.entries.length
-                }}</span>
-                <UIcon
-                  v-if="panel.messageId"
-                  name="i-heroicons-check-circle"
-                  class="text-green-500 text-xs"
-                />
-              </div>
-            </div>
-          </button>
-
-          <!-- Empty state -->
-          <div
-            v-if="settings.panels.length === 0"
-            class="flex flex-col items-center justify-center py-8 text-center rounded-lg bg-white/[0.02] border border-white/5"
-          >
-            <UIcon
-              name="i-heroicons-squares-2x2"
-              class="w-8 h-8 text-gray-700 mb-2"
-            />
-            <p class="text-xs text-gray-500">No panels yet</p>
-          </div>
-        </div>
       </div>
+    </DashboardModuleSection>
 
-      <!-- Panel Editor -->
-      <div v-if="selectedPanel" class="space-y-5">
-        <!-- Panel meta -->
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-        >
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
-          />
-          <div class="relative space-y-4">
-            <div class="flex items-center gap-2 justify-between">
-              <div class="flex items-center gap-2">
+    <template v-if="selectedPanel">
+      <!-- ── Panel ── -->
+      <DashboardModuleSection title="Panel" description="The panel's name and how members pick roles.">
+        <template #actions>
+          <UButton
+            color="error"
+            variant="ghost"
+            size="sm"
+            icon="i-lucide-trash-2"
+            @click="deleteTarget = selectedPanel"
+          >
+            Delete
+          </UButton>
+        </template>
+
+        <div class="space-y-5">
+          <UFormField label="Panel name" class="w-full">
+            <UInput
+              v-model="selectedPanel.name"
+              placeholder="e.g. Game Roles"
+              icon="i-lucide-tag"
+              class="w-full"
+            />
+          </UFormField>
+          <p
+            v-if="isDuplicateName(selectedPanel)"
+            class="flex items-center gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+          >
+            <UIcon name="i-lucide-triangle-alert" class="h-4 w-4 shrink-0" />
+            <span>
+              Another panel has this name. <code class="font-mono">/buttonroles deploy</code> looks
+              panels up by name, so only the first one can be deployed.
+            </span>
+          </p>
+
+          <div>
+            <span class="mb-2 block text-sm font-medium text-white">Panel type</span>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Panel type">
+              <label v-for="opt in panelTypeOptions" :key="opt.value" class="block cursor-pointer">
+                <input
+                  v-model="selectedPanel.type"
+                  type="radio"
+                  name="panel-type"
+                  :value="opt.value"
+                  class="peer sr-only"
+                />
                 <div
-                  class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
+                  class="flex h-full items-start gap-3 rounded-xl p-3.5 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
                 >
+                  <span
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
+                  >
+                    <UIcon :name="opt.icon" class="h-4 w-4" />
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold text-white">{{ opt.label }}</span>
+                    <span class="block text-[13px] leading-relaxed text-gray-400">
+                      {{ opt.description }}
+                    </span>
+                  </span>
                   <UIcon
-                    name="i-heroicons-pencil-square"
-                    class="text-primary-400"
+                    v-if="selectedPanel.type === opt.value"
+                    name="i-lucide-circle-check"
+                    class="h-5 w-5 shrink-0 text-teal-300"
                   />
                 </div>
-                <h3 class="font-semibold text-white">Panel Settings</h3>
-              </div>
-              <UButton
-                color="error"
-                variant="ghost"
-                size="xs"
-                icon="i-heroicons-trash"
-                @click="deletePanel(selectedPanel!.id)"
-              >
-                Delete
-              </UButton>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Panel Name">
-                <UInput
-                  v-model="selectedPanel.name"
-                  placeholder="e.g. Game Roles"
-                  icon="i-heroicons-tag"
-                  class="w-full"
-                />
-              </UFormField>
-
-              <UFormField
-                label="Panel Type"
-                :description="
-                  selectedPanel.type === 'dropdown'
-                    ? 'Dropdown: users pick multiple roles from a select menu (max 25)'
-                    : 'Buttons: each role gets its own clickable button (max 5×5)'
-                "
-              >
-                <USelectMenu
-                  v-model="selectedPanel.type"
-                  :items="panelTypeOptions"
-                  value-key="value"
-                  icon="i-heroicons-squares-2x2"
-                  class="w-full"
-                />
-              </UFormField>
+              </label>
             </div>
           </div>
         </div>
+      </DashboardModuleSection>
 
-        <!-- Embed editor -->
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-        >
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-          />
-          <div class="relative space-y-4">
-            <div class="flex items-center gap-2 mb-1">
-              <div
-                class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
-              >
-                <UIcon
-                  name="i-heroicons-document-text"
-                  class="text-secondary-400"
-                />
-              </div>
-              <div>
-                <h3 class="font-semibold text-white">Panel Embed</h3>
-                <p class="text-[10px] text-gray-500">
-                  The message displayed above the panel
-                </p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <UFormField label="Title">
-                <UInput
-                  v-model="selectedPanel.embed.title"
-                  placeholder="e.g. Choose Your Roles"
-                  icon="i-heroicons-h1"
-                  class="w-full"
-                />
-              </UFormField>
-
-              <UFormField label="Accent Color">
-                <div class="flex items-center gap-2">
-                  <input
-                    type="color"
-                    v-model="selectedPanel.embed.color"
-                    class="h-9 w-12 rounded-lg border border-white/10 bg-transparent cursor-pointer shrink-0"
-                  />
-                  <UInput
-                    v-model="selectedPanel.embed.color"
-                    placeholder="#5865F2"
-                    icon="i-heroicons-swatch"
-                    class="w-full"
-                  />
-                </div>
-              </UFormField>
-            </div>
-
-            <UFormField label="Description">
-              <UTextarea
-                v-model="selectedPanel.embed.description"
-                placeholder="Select a role from the options below."
-                :rows="2"
-                resize
+      <!-- ── Embed ── -->
+      <DashboardModuleSection title="Embed" description="The message shown above the panel.">
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <UFormField label="Title" class="w-full">
+              <UInput
+                v-model="selectedPanel.embed.title"
+                placeholder="e.g. Choose your roles"
+                icon="i-lucide-heading"
                 class="w-full"
               />
             </UFormField>
+            <UFormField label="Accent color" class="w-full">
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="selectedPanel.embed.color"
+                  type="color"
+                  aria-label="Pick accent color"
+                  class="h-8 w-11 shrink-0 cursor-pointer rounded-lg border border-white/10 bg-transparent p-0.5"
+                />
+                <UInput
+                  v-model="selectedPanel.embed.color"
+                  placeholder="#5865F2"
+                  icon="i-lucide-palette"
+                  class="w-full"
+                />
+              </div>
+            </UFormField>
+          </div>
+          <UFormField label="Description" class="w-full">
+            <UTextarea
+              v-model="selectedPanel.embed.description"
+              placeholder="Select a role from the options below."
+              :rows="2"
+              autoresize
+              class="w-full"
+            />
+          </UFormField>
+        </div>
+      </DashboardModuleSection>
 
-            <!-- Live preview -->
-            <div
-              v-if="
-                selectedPanel.embed.title || selectedPanel.embed.description
-              "
-              class="flex items-start gap-3 p-3 rounded-lg border-l-4 bg-white/[0.03] border"
-              :style="{
-                borderLeftColor: selectedPanel.embed.color || '#5865F2',
-                borderColor: 'rgba(255,255,255,0.06)',
-              }"
+      <!-- ── Entries ── -->
+      <DashboardModuleSection
+        :title="entryPlural"
+        :description="`${selectedPanel.entries.length} of 25 used${selectedPanel.type === 'buttons' ? ', 5 per row' : ''}.`"
+      >
+        <template #actions>
+          <UButton
+            size="sm"
+            color="primary"
+            variant="soft"
+            icon="i-lucide-plus"
+            :disabled="selectedPanel.entries.length >= 25"
+            @click="addEntry"
+          >
+            Add {{ entrySingular.toLowerCase() }}
+          </UButton>
+        </template>
+
+        <div
+          v-if="selectedPanel.entries.length === 0"
+          class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 px-6 py-8 text-center"
+        >
+          <p class="text-[13px] text-gray-400">
+            No {{ entryPlural.toLowerCase() }} yet. Each one gives members a role.
+          </p>
+          <UButton color="primary" icon="i-lucide-plus" @click="addEntry">
+            Add {{ entrySingular.toLowerCase() }}
+          </UButton>
+        </div>
+
+        <div v-else class="space-y-3">
+          <div
+            v-for="(entry, idx) in selectedPanel.entries"
+            :key="entry.id"
+            class="space-y-4 rounded-xl bg-white/[0.03] p-4 ring-1 ring-inset ring-white/10"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-white">{{ entrySingular }} {{ idx + 1 }}</span>
+              <UButton
+                color="error"
+                variant="ghost"
+                size="sm"
+                icon="i-lucide-trash-2"
+                :aria-label="`Remove ${entrySingular.toLowerCase()} ${idx + 1}`"
+                @click="removeEntry(idx)"
+              />
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_10rem]">
+              <UFormField label="Label" class="w-full">
+                <UInput
+                  v-model="entry.label"
+                  placeholder="e.g. Gamer"
+                  icon="i-lucide-tag"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField label="Emoji" hint="Optional" class="w-full">
+                <UInput v-model="entry.emoji" placeholder="🎮" icon="i-lucide-smile" class="w-full" />
+              </UFormField>
+            </div>
+
+            <div v-if="selectedPanel.type === 'buttons'">
+              <span class="mb-2 block text-sm font-medium text-white">Button color</span>
+              <div class="flex flex-wrap gap-2" role="radiogroup" aria-label="Button color">
+                <label v-for="opt in buttonStyleOptions" :key="opt.value" class="cursor-pointer">
+                  <input
+                    v-model="entry.style"
+                    type="radio"
+                    :name="`entry-style-${entry.id}`"
+                    :value="opt.value"
+                    class="peer sr-only"
+                  />
+                  <span
+                    class="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-gray-300 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:text-white peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
+                  >
+                    <span
+                      class="h-3 w-3 rounded-full"
+                      :style="{ backgroundColor: opt.hex }"
+                      aria-hidden="true"
+                    />
+                    {{ opt.label }}
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <UFormField label="Role" class="w-full">
+              <div v-if="state.rolesLoading" class="flex items-center gap-2 py-1.5 text-gray-400">
+                <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+                <span class="text-sm">Loading roles…</span>
+              </div>
+              <USelectMenu
+                v-else-if="roleOptions.length > 0"
+                v-model="entry.roleId"
+                :items="roleOptions"
+                value-key="value"
+                placeholder="Select a role…"
+                searchable
+                icon="i-lucide-users"
+                class="w-full"
+              />
+              <p v-else class="py-1.5 text-sm italic text-gray-500">No roles available.</p>
+            </UFormField>
+            <p
+              v-if="!state.rolesLoading && roleOptions.length > 0 && !entry.roleId"
+              class="flex items-center gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
             >
-              <div class="flex-1 min-w-0">
-                <p
-                  v-if="selectedPanel.embed.title"
-                  class="text-sm font-semibold text-white truncate"
-                >
+              <UIcon name="i-lucide-triangle-alert" class="h-4 w-4 shrink-0" />
+              No role selected. This {{ entrySingular.toLowerCase() }} won't grant anything.
+            </p>
+          </div>
+        </div>
+      </DashboardModuleSection>
+
+      <!-- ── Preview & deploy ── -->
+      <DashboardModuleSection
+        title="Preview & deploy"
+        description="This is how the panel will look in Discord."
+      >
+        <div class="space-y-4">
+          <div class="rounded-xl bg-[#313338] p-4">
+            <p
+              v-if="!hasEmbed && selectedPanel.entries.length === 0"
+              class="text-sm text-[#949ba4]"
+            >
+              Nothing to preview yet. Add an embed title or description, or an entry.
+            </p>
+            <template v-else>
+              <div
+                v-if="hasEmbed"
+                class="max-w-md rounded border-l-4 bg-[#2b2d31] p-3"
+                :style="{ borderLeftColor: selectedPanel.embed.color || '#5865F2' }"
+              >
+                <p v-if="selectedPanel.embed.title" class="text-base font-semibold text-white">
                   {{ selectedPanel.embed.title }}
                 </p>
                 <p
                   v-if="selectedPanel.embed.description"
-                  class="text-xs text-gray-400 mt-0.5 line-clamp-2"
+                  class="mt-1 whitespace-pre-line text-sm text-[#dbdee1]"
                 >
                   {{ selectedPanel.embed.description }}
                 </p>
               </div>
-              <UBadge size="xs" color="neutral" variant="soft">Preview</UBadge>
-            </div>
-          </div>
-        </div>
 
-        <!-- Entries / Roles -->
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-        >
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none"
-          />
-          <div class="relative space-y-4">
-            <div class="flex items-center gap-2">
-              <div
-                class="w-7 h-7 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center shrink-0"
-              >
-                <UIcon
-                  name="i-heroicons-shield-check"
-                  class="text-green-400"
-                />
-              </div>
-              <div class="flex-1">
-                <h3 class="font-semibold text-white">Role Entries</h3>
-                <p class="text-[10px] text-gray-500">
-                  {{
-                    selectedPanel.type === "dropdown"
-                      ? "Up to 25 options in the select menu"
-                      : "Up to 25 buttons (5 per row)"
-                  }}
-                </p>
-              </div>
-              <UButton
-                size="xs"
-                color="primary"
-                variant="soft"
-                icon="i-heroicons-plus"
-                :disabled="selectedPanel.entries.length >= 25"
-                @click="addEntry"
-              >
-                Add Entry
-              </UButton>
-            </div>
-
-            <!-- Empty -->
-            <div
-              v-if="selectedPanel.entries.length === 0"
-              class="flex flex-col items-center justify-center py-8 text-center"
-            >
-              <UIcon
-                name="i-heroicons-shield-check"
-                class="w-7 h-7 text-gray-700 mb-2"
-              />
-              <p class="text-xs text-gray-500">
-                No entries yet — click "Add Entry"
-              </p>
-            </div>
-
-            <!-- Entry list -->
-            <div v-else class="space-y-3">
-              <div
-                v-for="(entry, idx) in selectedPanel.entries"
-                :key="entry.id"
-                class="rounded-lg bg-white/[0.03] border border-white/5 p-4 space-y-3"
-              >
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-medium text-gray-400">
-                    {{
-                      selectedPanel.type === "dropdown" ? "Option" : "Button"
-                    }}
-                    {{ idx + 1 }}
-                  </span>
-                  <UButton
-                    color="error"
-                    variant="ghost"
-                    size="xs"
-                    icon="i-heroicons-x-mark"
-                    @click="removeEntry(idx)"
-                  />
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <UFormField label="Label">
-                    <UInput
-                      v-model="entry.label"
-                      placeholder="e.g. 🎮 Gamer"
-                      class="w-full"
-                    />
-                  </UFormField>
-
-                  <UFormField label="Emoji" hint="Optional">
-                    <UInput
-                      v-model="entry.emoji"
-                      placeholder="e.g. 🎮"
-                      class="w-full"
-                    />
-                  </UFormField>
-
-                  <!-- Style (only for buttons) -->
-                  <UFormField
-                    v-if="selectedPanel.type === 'buttons'"
-                    label="Button Color"
-                  >
-                    <USelectMenu
-                      v-model="entry.style"
-                      :items="buttonStyleOptions"
-                      value-key="value"
-                      class="w-full"
-                    />
-                  </UFormField>
-
-                  <UFormField label="Role">
-                    <div
-                      v-if="state.rolesLoading"
-                      class="flex items-center gap-2 py-1.5 text-gray-400"
-                    >
-                      <UIcon
-                        name="i-heroicons-arrow-path"
-                        class="animate-spin text-green-400 text-sm"
-                      />
-                      <span class="text-xs">Loading…</span>
-                    </div>
-                    <USelectMenu
-                      v-else-if="roleOptions.length > 0"
-                      v-model="entry.roleId"
-                      :items="roleOptions"
-                      value-key="value"
-                      placeholder="Select role…"
-                      searchable
-                      class="w-full"
-                    />
-                    <p
-                      v-else
-                      class="text-xs text-gray-600 italic py-1.5"
-                    >
-                      No roles available
-                    </p>
-                  </UFormField>
-                </div>
-
-                <!-- Button preview (only for button panels) -->
+              <template v-if="selectedPanel.type === 'buttons'">
                 <div
-                  v-if="selectedPanel.type === 'buttons'"
-                  class="flex items-center gap-2"
+                  v-for="(row, r) in buttonRows"
+                  :key="r"
+                  class="flex flex-wrap gap-2"
+                  :class="hasEmbed || r > 0 ? 'mt-2' : ''"
                 >
                   <span
-                    class="text-[10px] text-gray-600 uppercase tracking-wider"
-                    >Preview</span
+                    v-for="entry in row"
+                    :key="entry.id"
+                    class="inline-flex select-none items-center gap-1.5 rounded px-4 py-1.5 text-sm font-medium text-white"
+                    :style="{ backgroundColor: styleHex(entry.style) }"
                   >
-                  <button
-                    :class="[
-                      'px-3 py-1 rounded text-xs font-medium pointer-events-none select-none',
-                      previewClass(entry.style),
-                    ]"
-                  >
-                    <span v-if="entry.emoji" class="mr-1">{{
-                      entry.emoji
-                    }}</span>
+                    <span v-if="entry.emoji">{{ entry.emoji }}</span>
                     {{ entry.label || "Button" }}
-                  </button>
+                  </span>
+                </div>
+              </template>
+              <div
+                v-else-if="selectedPanel.entries.length > 0"
+                class="max-w-sm overflow-hidden rounded bg-[#1e1f22] ring-1 ring-black/40"
+                :class="hasEmbed ? 'mt-2' : ''"
+              >
+                <p class="px-3 pt-2 text-[11px] uppercase tracking-wide text-[#949ba4]">
+                  Dropdown options
+                </p>
+                <div
+                  v-for="entry in selectedPanel.entries"
+                  :key="entry.id"
+                  class="flex items-center gap-2 px-3 py-2 text-sm text-[#dbdee1]"
+                >
+                  <span v-if="entry.emoji">{{ entry.emoji }}</span>
+                  {{ entry.label || "Option" }}
                 </div>
               </div>
-            </div>
+            </template>
           </div>
-        </div>
 
-        <!-- Deploy info -->
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-        >
-          <div
-            class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none"
-          />
-          <div class="relative space-y-3">
-            <div class="flex items-center gap-2">
-              <div
-                class="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0"
-              >
-                <UIcon
-                  name="i-heroicons-rocket-launch"
-                  class="text-amber-400"
-                />
-              </div>
-              <h3 class="font-semibold text-white">Deploy to Discord</h3>
-            </div>
-            <p class="text-xs text-gray-400">
-              After saving, run this command in your Discord server to post the
-              panel:
+          <div>
+            <p class="mb-2 text-[13px] text-gray-400">
+              Save your changes, then run this in your server:
             </p>
-            <div
-              class="flex items-center gap-3 p-3 rounded-lg bg-black/30 border border-white/5 font-mono"
-            >
-              <UIcon
-                name="i-heroicons-command-line"
-                class="text-gray-500 shrink-0"
-              />
-              <code class="text-primary-400 text-sm select-all">
-                /buttonroles deploy {{ selectedPanel.name }} #channel
-              </code>
+            <div class="flex items-center gap-3 rounded-lg bg-black/30 p-3 ring-1 ring-inset ring-white/10">
+              <UIcon name="i-lucide-terminal" class="h-4 w-4 shrink-0 text-gray-500" />
+              <code class="min-w-0 select-all break-all font-mono text-sm text-teal-300">{{
+                deployCommand
+              }}</code>
               <UButton
                 size="xs"
                 variant="ghost"
                 color="neutral"
-                icon="i-heroicons-document-duplicate"
+                icon="i-lucide-copy"
                 class="ml-auto shrink-0"
-                @click="
-                  copyCommand(
-                    `/buttonroles deploy ${selectedPanel.name} #channel`,
-                  )
-                "
+                @click="copyCommand(deployCommand)"
               >
                 Copy
               </UButton>
             </div>
-            <div
-              v-if="selectedPanel.messageId"
-              class="flex items-center gap-2 text-xs text-green-400"
+
+            <p
+              v-if="dirty"
+              class="mt-3 flex items-center gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
             >
-              <UIcon name="i-heroicons-check-circle" />
-              <span
-                >Panel is currently deployed. Re-running the command will update
-                it in-place.</span
-              >
-            </div>
+              <UIcon name="i-lucide-triangle-alert" class="h-4 w-4 shrink-0" />
+              You have unsaved changes. Save before deploying.
+            </p>
+            <p
+              v-else-if="selectedPanel.messageId"
+              class="mt-3 flex items-center gap-2 rounded-lg bg-emerald-400/[0.08] px-3 py-2 text-[13px] text-emerald-300"
+            >
+              <UIcon name="i-lucide-circle-check" class="h-4 w-4 shrink-0" />
+              Deployed. Changes here reach Discord when you run the command again, which updates
+              the message in place.
+            </p>
+            <p v-else class="mt-3 text-[13px] text-gray-400">Not deployed yet.</p>
           </div>
         </div>
-      </div>
-
-      <!-- No panel selected placeholder -->
-      <div
-        v-else
-        class="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 py-20 text-center"
-      >
-        <div
-          class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4"
-        >
-          <UIcon
-            name="i-heroicons-cursor-arrow-rays"
-            class="w-8 h-8 text-gray-600"
-          />
-        </div>
-        <p class="text-gray-400 font-medium">Select a panel to edit</p>
-        <p class="text-xs text-gray-600 mt-1">
-          Or create a new panel with the button above
-        </p>
-      </div>
-    </div>
+      </DashboardModuleSection>
+    </template>
 
     <DashboardModuleAccessSection :guild-id="guildId" module-name="reaction-roles" />
 
-    <!-- Save -->
-    <div class="flex justify-end">
-      <UButton
-        color="primary"
-        size="lg"
-        icon="i-heroicons-check"
-        :loading="saving"
-        @click="save"
-        class="min-w-[200px]"
-      >
-        Save All Panels
-      </UButton>
-    </div>
+    <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
 
-    <!-- Add Panel Modal -->
-    <UModal v-model:open="showAddPanel" title="Create New Panel">
+    <!-- ── New panel ── -->
+    <UModal v-model:open="showAddPanel" title="Create new panel" description="You can change both later.">
       <template #body>
-        <div class="space-y-4 p-1">
-          <UFormField label="Panel Name">
+        <div class="space-y-5">
+          <UFormField label="Panel name" class="w-full">
             <UInput
               v-model="newPanel.name"
               placeholder="e.g. Game Roles"
-              icon="i-heroicons-tag"
+              icon="i-lucide-tag"
               class="w-full"
               autofocus
+              @keydown.enter="createPanel"
             />
           </UFormField>
 
-          <UFormField
-            label="Panel Type"
-            :description="
-              newPanel.type === 'dropdown'
-                ? 'A select menu where users pick from a list — great for many roles.'
-                : 'Individual buttons for each role — great for up to 5–10 visually distinct roles.'
-            "
-          >
-            <USelectMenu
-              v-model="newPanel.type"
-              :items="panelTypeOptions"
-              value-key="value"
-              class="w-full"
-            />
-          </UFormField>
+          <div>
+            <span class="mb-2 block text-sm font-medium text-white">Panel type</span>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Panel type">
+              <label v-for="opt in panelTypeOptions" :key="opt.value" class="block cursor-pointer">
+                <input
+                  v-model="newPanel.type"
+                  type="radio"
+                  name="new-panel-type"
+                  :value="opt.value"
+                  class="peer sr-only"
+                />
+                <div
+                  class="flex h-full items-start gap-3 rounded-xl p-3.5 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
+                >
+                  <span
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
+                  >
+                    <UIcon :name="opt.icon" class="h-4 w-4" />
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold text-white">{{ opt.label }}</span>
+                    <span class="block text-[13px] leading-relaxed text-gray-400">
+                      {{ opt.description }}
+                    </span>
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
       </template>
       <template #footer>
-        <div class="flex gap-2 justify-end">
-          <UButton
-            variant="ghost"
-            color="neutral"
-            @click="showAddPanel = false"
-            >Cancel</UButton
-          >
+        <div class="flex w-full justify-end gap-2">
+          <UButton variant="ghost" color="neutral" @click="showAddPanel = false">Cancel</UButton>
           <UButton
             color="primary"
-            icon="i-heroicons-plus"
+            icon="i-lucide-plus"
             :disabled="!newPanel.name.trim()"
             @click="createPanel"
           >
-            Create Panel
+            Create panel
           </UButton>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- ── Delete confirmation ── -->
+    <UModal :open="!!deleteTarget" @update:open="(v: boolean) => !v && (deleteTarget = null)">
+      <template #content>
+        <div class="space-y-4 p-6">
+          <div class="flex items-center gap-3">
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 ring-1 ring-inset ring-red-400/30"
+            >
+              <UIcon name="i-lucide-triangle-alert" class="h-5 w-5 text-red-300" />
+            </span>
+            <div>
+              <h3 class="text-base font-semibold text-white">Delete panel</h3>
+              <p class="text-[13px] text-gray-400">
+                Applies when you save.
+              </p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-300">
+            Delete <strong class="text-white">{{ deleteTarget?.name || "this panel" }}</strong>?
+          </p>
+          <p
+            v-if="deleteTarget?.messageId"
+            class="flex items-start gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+          >
+            <UIcon name="i-lucide-triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              This panel is deployed. Its message stays in Discord, and members who click it will
+              see "interaction failed". Delete the message in Discord too.
+            </span>
+          </p>
+          <div class="flex justify-end gap-2 pt-1">
+            <UButton color="neutral" variant="ghost" @click="deleteTarget = null">Cancel</UButton>
+            <UButton color="error" icon="i-lucide-trash-2" @click="confirmDeletePanel">
+              Delete panel
+            </UButton>
+          </div>
         </div>
       </template>
     </UModal>
@@ -589,6 +529,7 @@ const {
 const saving = ref(false);
 const showAddPanel = ref(false);
 const selectedPanelId = ref<string | null>(null);
+const deleteTarget = ref<RolePanel | null>(null);
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -624,6 +565,10 @@ interface ButtonRolesForm {
 
 const settings = reactive<ButtonRolesForm>({ panels: [] });
 
+// Last loaded/saved values (JSON); drives the unsaved-changes bar and Discard.
+const baseline = ref(JSON.stringify(settings));
+const dirty = computed(() => JSON.stringify(settings) !== baseline.value);
+
 const newPanel = reactive({
   name: "",
   type: "buttons" as "buttons" | "dropdown",
@@ -637,15 +582,26 @@ const selectedPanel = computed<RolePanel | null>(() => {
 // ── Constants ────────────────────────────────────────────────────────
 
 const panelTypeOptions = [
-  { label: "🔲 Buttons", value: "buttons" },
-  { label: "▾ Dropdown (Select Menu)", value: "dropdown" },
+  {
+    value: "buttons",
+    label: "Buttons",
+    description: "Each role gets its own button. Up to 25 buttons, 5 per row.",
+    icon: "i-lucide-layout-grid",
+  },
+  {
+    value: "dropdown",
+    label: "Dropdown",
+    description: "Members pick roles from a select menu. Up to 25 options.",
+    icon: "i-lucide-circle-chevron-down",
+  },
 ];
 
+// Discord's own button colors, so the preview matches what members see.
 const buttonStyleOptions = [
-  { label: "🟦 Blurple (Primary)", value: "Primary" },
-  { label: "⬜ Grey (Secondary)", value: "Secondary" },
-  { label: "🟩 Green (Success)", value: "Success" },
-  { label: "🟥 Red (Danger)", value: "Danger" },
+  { label: "Blurple", value: "Primary", hex: "#5865F2" },
+  { label: "Grey", value: "Secondary", hex: "#4f545c" },
+  { label: "Green", value: "Success", hex: "#3ba55d" },
+  { label: "Red", value: "Danger", hex: "#ed4245" },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -654,15 +610,44 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function previewClass(style: string): string {
-  const map: Record<string, string> = {
-    Primary: "bg-[#5865F2] text-white",
-    Secondary: "bg-[#4f545c] text-white",
-    Success: "bg-[#3ba55d] text-white",
-    Danger: "bg-[#ed4245] text-white",
-  };
-  return map[style] ?? map["Primary"]!;
-}
+const typeIcon = (type: string) =>
+  panelTypeOptions.find((o) => o.value === type)?.icon ?? "i-lucide-layout-grid";
+
+const styleHex = (style: string): string =>
+  buttonStyleOptions.find((o) => o.value === style)?.hex ?? "#5865F2";
+
+const entrySingular = computed(() =>
+  selectedPanel.value?.type === "dropdown" ? "Option" : "Button",
+);
+const entryPlural = computed(() =>
+  selectedPanel.value?.type === "dropdown" ? "Options" : "Buttons",
+);
+
+const hasEmbed = computed(
+  () => !!(selectedPanel.value?.embed.title || selectedPanel.value?.embed.description),
+);
+
+// Discord lays buttons out 5 per row.
+const buttonRows = computed(() => {
+  const entries = selectedPanel.value?.entries ?? [];
+  const rows: RoleEntry[][] = [];
+  for (let i = 0; i < entries.length; i += 5) rows.push(entries.slice(i, i + 5));
+  return rows;
+});
+
+// /buttonroles deploy looks panels up by name (case-insensitive), first match wins.
+const isDuplicateName = (panel: RolePanel): boolean => {
+  const name = panel.name.trim().toLowerCase();
+  return (
+    !!name &&
+    settings.panels.some((p) => p.id !== panel.id && p.name.trim().toLowerCase() === name)
+  );
+};
+
+const deployCommand = computed(
+  () =>
+    `/buttonroles deploy panel:${selectedPanel.value?.name.trim() || "<name>"} channel:#channel`,
+);
 
 function copyCommand(text: string) {
   navigator.clipboard.writeText(text).then(() => {
@@ -686,7 +671,10 @@ function createPanel() {
   showAddPanel.value = false;
 }
 
-function deletePanel(id: string) {
+function confirmDeletePanel() {
+  const id = deleteTarget.value?.id;
+  deleteTarget.value = null;
+  if (!id) return;
   const idx = settings.panels.findIndex((p) => p.id === id);
   if (idx > -1) {
     settings.panels.splice(idx, 1);
@@ -713,7 +701,7 @@ function removeEntry(index: number) {
 
 const save = async () => {
   saving.value = true;
-  await saveModuleSettings("reaction-roles", {
+  const ok = await saveModuleSettings("reaction-roles", {
     panels: settings.panels.map((p) => ({
       id: p.id,
       name: p.name,
@@ -734,7 +722,17 @@ const save = async () => {
       })),
     })),
   });
+  // A failed save keeps the form dirty so the bar stays and Save can retry.
+  if (ok) baseline.value = JSON.stringify(settings);
   saving.value = false;
+};
+
+const discard = () => {
+  const b = JSON.parse(baseline.value) as ButtonRolesForm;
+  settings.panels = b.panels;
+  if (!settings.panels.some((p) => p.id === selectedPanelId.value)) {
+    selectedPanelId.value = settings.panels[0]?.id ?? null;
+  }
 };
 
 // ── Init ─────────────────────────────────────────────────────────────
@@ -765,6 +763,7 @@ onMounted(async () => {
       selectedPanelId.value = settings.panels[0]!.id;
     }
   }
+  baseline.value = JSON.stringify(settings);
   await loadRoles();
 });
 </script>

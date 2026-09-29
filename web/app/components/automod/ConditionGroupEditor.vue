@@ -27,7 +27,7 @@
           class="px-3 py-1 text-xs font-bold rounded-md transition-all"
           :class="
             modelValue.operator === 'AND'
-              ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+              ? 'bg-sky-200/15 text-sky-200 border border-sky-200/30'
               : 'text-gray-500 hover:text-gray-300'
           "
           @click="setOperator('AND')"
@@ -58,7 +58,7 @@
         variant="soft"
         color="primary"
         size="xs"
-        icon="i-heroicons-plus"
+        icon="i-lucide-plus"
         @click="addCondition()"
       >
         Condition
@@ -66,9 +66,9 @@
       <UButton
         v-if="depth < 3"
         variant="soft"
-        color="warning"
+        color="neutral"
         size="xs"
-        icon="i-heroicons-folder-plus"
+        icon="i-lucide-folder-plus"
         @click="addGroup()"
       >
         Sub-group
@@ -78,7 +78,7 @@
         variant="ghost"
         color="error"
         size="xs"
-        icon="i-heroicons-x-mark"
+        icon="i-lucide-x"
         @click="$emit('remove')"
       />
     </div>
@@ -86,8 +86,7 @@
     <!-- Column headers (only when there are plain conditions) -->
     <div
       v-if="hasPlainConditions"
-      class="grid gap-2 px-1"
-      style="grid-template-columns: 1fr 1fr 1fr auto auto"
+      class="hidden gap-2 px-1 sm:grid sm:grid-cols-[1fr_1fr_1fr_auto_auto]"
     >
       <span
         class="text-[10px] font-semibold uppercase tracking-wider text-gray-600"
@@ -118,7 +117,7 @@
             class="text-[9px] font-bold px-2 py-0.5 rounded-full"
             :class="
               modelValue.operator === 'AND'
-                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                ? 'bg-sky-200/10 text-sky-300 border border-sky-200/20'
                 : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
             "
           >
@@ -139,8 +138,7 @@
         <!-- Single Condition Row -->
         <div
           v-else
-          class="grid gap-2 items-center p-3 rounded-lg bg-white/[0.04] border border-white/8 hover:border-white/15 transition-colors"
-          style="grid-template-columns: 1fr 1fr 1fr auto auto"
+          class="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-lg border border-white/8 bg-white/[0.04] p-3 transition-colors hover:border-white/15 sm:grid-cols-[1fr_1fr_1fr_auto_auto]"
         >
           <!-- Field -->
           <USelectMenu
@@ -148,6 +146,7 @@
             :items="fieldOptions"
             value-key="value"
             size="sm"
+            class="col-span-3 sm:col-span-1"
             @update:model-value="updateConditionField(idx, 'field', $event)"
           />
           <!-- Operator -->
@@ -156,6 +155,7 @@
             :items="operatorOptions"
             value-key="value"
             size="sm"
+            class="col-span-3 sm:col-span-1"
             @update:model-value="updateConditionField(idx, 'operator', $event)"
           />
           <!-- Value -->
@@ -163,6 +163,7 @@
             :model-value="String((node as Condition).value ?? '')"
             placeholder="Value..."
             size="sm"
+            class="col-span-3 sm:col-span-1"
             @update:model-value="updateConditionField(idx, 'value', $event)"
           />
           <!-- Case Insensitive toggle -->
@@ -175,7 +176,7 @@
                   ? 'primary'
                   : 'neutral'
               "
-              class="font-mono font-bold"
+              class="col-start-2 font-mono font-bold sm:col-start-auto"
               @click="toggleFlag(idx, 'case_insensitive')"
             >
               Aa
@@ -186,7 +187,7 @@
             variant="ghost"
             color="error"
             size="sm"
-            icon="i-heroicons-x-mark"
+            icon="i-lucide-x"
             @click="removeNode(idx)"
           />
         </div>
@@ -196,7 +197,7 @@
         v-if="modelValue.conditions.length === 0"
         class="flex items-center justify-center gap-2 py-6 text-gray-600 border border-dashed border-white/8 rounded-lg"
       >
-        <UIcon name="i-heroicons-plus-circle" class="text-lg" />
+        <UIcon name="i-lucide-circle-plus" class="text-lg" />
         <span class="text-xs"
           >No conditions yet — click <strong>+ Condition</strong> above</span
         >
@@ -232,8 +233,8 @@ const emit = defineEmits<{
 }>();
 
 // ── Visual theming based on nesting depth ──
-// Cycles indigo → purple → teal for depth 1, 2, 3, 4(=indigo again), ...
-const RAIL_COLORS = ["#6366f1", "#a855f7", "#14b8a6"];
+// Cycles sky → teal → violet for depth 1, 2, 3, 4(=sky again), ...
+const RAIL_COLORS = ["#38bdf8", "#2dd4bf", "#a78bfa"];
 
 const railColor = computed(() =>
   props.depth > 0

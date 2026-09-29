@@ -401,6 +401,10 @@ export type NewAdminAuditEvent = typeof adminAuditEvents.$inferInsert;
 
 // ── milestone_users ───────────────────────────────────────────────────────
 
+// LEGACY: the Milestones module was removed (replaced by XP) and nothing reads
+// or writes this table any more. The definition is kept on purpose so the
+// schema still matches the database; dropping it discards the stored rows and
+// needs its own migration (`pnpm db:generate` after deleting this block).
 export const milestoneUsers = pgTable(
   "milestone_users",
   {

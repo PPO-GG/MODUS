@@ -194,20 +194,6 @@ export const ModerationSettingsSchema = z.object({
 
 export type ModerationSettingsType = z.infer<typeof ModerationSettingsSchema>;
 
-// ── Milestones ─────────────────────────────────────────────────────
-
-const MilestoneConfigSchema = z.object({
-  threshold: z.number(),
-  message: z.string(),
-});
-
-export const MilestoneSettingsSchema = z.object({
-  milestones: z.array(MilestoneConfigSchema).optional(),
-  announcementChannel: z.string().optional(),
-});
-
-export type MilestoneSettingsType = z.infer<typeof MilestoneSettingsSchema>;
-
 // ── XP & Leveling ──────────────────────────────────────────────────
 
 const RankCardElementSchema = z

@@ -12,6 +12,7 @@ import {
   User,
   TextBasedChannel,
   MessageFlags,
+  PermissionFlagsBits,
 } from "discord.js";
 import type { ModuleManager } from "../ModuleManager";
 import type { BotModule } from "../ModuleManager";
@@ -207,6 +208,68 @@ async function getSettings(
   );
   const parsed = parseSettings(MusicSettingsSchema, saved, "music", guildId);
   return parsed ?? MusicSettingsSchema.parse({});
+}
+
+/**
+ * Update individual settings without rewriting the blob from the parsed
+ * schema: parsing strips keys the schema doesn't know (the dashboard playlist
+ * `preQueue` lives in the same row), so a parsed round-trip would delete them.
+ */
+async function patchSettings(
+  moduleManager: ModuleManager,
+  guildId: string,
+  patch: Partial<MusicSettings>,
+): Promise<void> {
+  const raw =
+    (await moduleManager.databaseService.getModuleSettings(guildId, "music")) ?? {};
+  await moduleManager.databaseService.setModuleSettings(guildId, "music", {
+    ...raw,
+    ...patch,
+  });
+}
+
+/** Commands that change playback; the DJ role (when set) gates these. Viewing the queue, now playing, lyrics and settings stays open to everyone. */
+const DJ_CONTROL_COMMANDS = new Set([
+  "play",
+  "playqueue",
+  "skip",
+  "stop",
+  "pause",
+  "resume",
+  "volume",
+  "shuffle",
+  "loop",
+  "filter",
+  "autoplay",
+  "speed",
+  "pitch",
+]);
+
+/**
+ * Returns a user-facing refusal when a DJ role is configured and the member
+ * neither holds it nor manages the server, otherwise null. Fails open if the
+ * settings can't be read so an outage never locks everyone out of playback.
+ */
+async function djDenial(
+  moduleManager: ModuleManager,
+  guildId: string,
+  member: GuildMember | null | undefined,
+): Promise<string | null> {
+  let djRoleId = "";
+  try {
+    djRoleId = (await getSettings(moduleManager, guildId)).djRoleId;
+  } catch {
+    return null;
+  }
+  if (!djRoleId) return null;
+  if (
+    member?.permissions?.has(PermissionFlagsBits.Administrator) ||
+    member?.permissions?.has(PermissionFlagsBits.ManageGuild) ||
+    member?.roles?.cache?.has(djRoleId)
+  ) {
+    return null;
+  }
+  return `🎧 Only members with the <@&${djRoleId}> role can control music here.`;
 }
 
 function announceContext(guildId: string): AnnounceContext {
@@ -1219,13 +1282,7 @@ async function handleVolume(
 
   // Persist the new volume setting for future sessions
   try {
-    const settings = await getSettings(moduleManager, guildId);
-    settings.defaultVolume = level;
-    await moduleManager.databaseService.setModuleSettings(
-      guildId,
-      "music",
-      settings,
-    );
+    await patchSettings(moduleManager, guildId, { defaultVolume: level });
   } catch (err) {
     moduleManager.logger.error("Failed to save volume settings", guildId, err, "music");
   }
@@ -1370,13 +1427,7 @@ async function handleFilter(
   const persist = async (names: string[]) => {
     if (!shouldSave) return;
     try {
-      const settings = await getSettings(moduleManager, guildId);
-      settings.activeFilters = names;
-      await moduleManager.databaseService.setModuleSettings(
-        guildId,
-        "music",
-        settings,
-      );
+      await patchSettings(moduleManager, guildId, { activeFilters: names });
     } catch (err) {
       moduleManager.logger.error("Failed to save filter settings", guildId, err, "music");
     }
@@ -2049,7 +2100,33 @@ async function registerMusicEvents(moduleManager: ModuleManager) {
 
 // ─── AI Tool Actions ─────────────────────────────────────────────────────
 
-export const musicAiTools: AiTool[] = [
+/** Wraps a playback-changing AI tool so it honours the DJ role like the slash commands do. */
+function djGated(tool: AiTool): AiTool {
+  return {
+    ...tool,
+    execute: async (ctx) => {
+      const denial = await djDenial(
+        ctx.moduleManager,
+        ctx.guildId,
+        ctx.message.member as GuildMember | null,
+      );
+      if (denial) return denial;
+      return tool.execute(ctx);
+    },
+  };
+}
+
+const DJ_GATED_AI_TOOLS = new Set([
+  "play_music",
+  "skip_track",
+  "stop_music",
+  "pause_music",
+  "resume_music",
+  "set_volume",
+  "shuffle_queue",
+]);
+
+const musicAiToolDefinitions: AiTool[] = [
   {
     name: "play_music",
     description:
@@ -2151,6 +2228,10 @@ export const musicAiTools: AiTool[] = [
       (await musicShuffle(guildId, moduleManager)).message,
   },
 ];
+
+export const musicAiTools: AiTool[] = musicAiToolDefinitions.map((tool) =>
+  DJ_GATED_AI_TOOLS.has(tool.name) ? djGated(tool) : tool,
+);
 
 // ─── Module Export ────────────────────────────────────────────────────────
 
@@ -2285,6 +2366,21 @@ const musicModule: BotModule = {
     interaction: ChatInputCommandInteraction,
     moduleManager: ModuleManager,
   ) {
+    if (DJ_CONTROL_COMMANDS.has(interaction.commandName) && interaction.guildId) {
+      const denial = await djDenial(
+        moduleManager,
+        interaction.guildId,
+        interaction.member as GuildMember | null,
+      );
+      if (denial) {
+        await interaction.reply({
+          content: denial,
+          flags: [MessageFlags.Ephemeral],
+        });
+        return;
+      }
+    }
+
     // Defer publicly — music responses should be visible to everyone
     await interaction.deferReply();
 
@@ -2365,6 +2461,17 @@ const musicModule: BotModule = {
         flags: [MessageFlags.Ephemeral],
       });
       return;
+    }
+
+    if (action !== "lyrics") {
+      const denial = await djDenial(moduleManager, guildId, member);
+      if (denial) {
+        await interaction.reply({
+          content: denial,
+          flags: [MessageFlags.Ephemeral],
+        });
+        return;
+      }
     }
 
     const snapshot = await runtime.musicService.getQueue(guildId);
@@ -2726,13 +2833,7 @@ export async function musicSetVolume(
   if (!result.ok) return { ok: false, message: musicErrorMessage(result.error) };
 
   try {
-    const settings = await getSettings(moduleManager, guildId);
-    settings.defaultVolume = clamped;
-    await moduleManager.databaseService.setModuleSettings(
-      guildId,
-      "music",
-      settings,
-    );
+    await patchSettings(moduleManager, guildId, { defaultVolume: clamped });
   } catch {}
 
   return { ok: true, message: `🔊 Volume set to **${clamped}%**.` };

@@ -3,19 +3,16 @@
     <!-- Content Section -->
     <details class="group" open>
       <summary
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
+        class="rounded-xl border border-white/10 bg-[rgba(3,7,18,0.55)] p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors group-open:rounded-b-none"
       >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"
-        />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20"
+              class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
             >
               <UIcon
-                name="i-heroicons-document-text"
-                class="text-blue-400 text-sm"
+                name="i-lucide-file-text"
+                class="h-4 w-4 text-sky-200"
               />
             </div>
             <h3 class="text-sm font-semibold text-white">Content</h3>
@@ -29,13 +26,13 @@
             </UBadge>
           </div>
           <UIcon
-            name="i-heroicons-chevron-down"
+            name="i-lucide-chevron-down"
             class="text-gray-400 transition-transform group-open:rotate-180"
           />
         </div>
       </summary>
       <div
-        class="rounded-b-xl border border-t-0 border-white/10 bg-gray-900/50 p-4 space-y-3 -mt-1"
+        class="rounded-b-xl border border-t-0 border-white/10 bg-[rgba(3,7,18,0.4)] p-4 space-y-3"
       >
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5"
@@ -141,17 +138,14 @@
     <!-- Author Section -->
     <details v-if="sections.author" class="group">
       <summary
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
+        class="rounded-xl border border-white/10 bg-[rgba(3,7,18,0.55)] p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors group-open:rounded-b-none"
       >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
-        />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-primary-500/10 border border-primary-500/20"
+              class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
             >
-              <UIcon name="i-heroicons-user" class="text-primary-400 text-sm" />
+              <UIcon name="i-lucide-user" class="h-4 w-4 text-sky-200" />
             </div>
             <h3 class="text-sm font-semibold text-white">Author</h3>
             <UBadge
@@ -164,13 +158,13 @@
             </UBadge>
           </div>
           <UIcon
-            name="i-heroicons-chevron-down"
+            name="i-lucide-chevron-down"
             class="text-gray-400 transition-transform group-open:rotate-180"
           />
         </div>
       </summary>
       <div
-        class="rounded-b-xl border border-t-0 border-white/10 bg-gray-900/50 p-4 space-y-3 -mt-1"
+        class="rounded-b-xl border border-t-0 border-white/10 bg-[rgba(3,7,18,0.4)] p-4 space-y-3"
       >
         <UInput
           v-model="form.authorName"
@@ -193,19 +187,16 @@
     <!-- Fields Section -->
     <details v-if="sections.fields" class="group">
       <summary
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
+        class="rounded-xl border border-white/10 bg-[rgba(3,7,18,0.55)] p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors group-open:rounded-b-none"
       >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none"
-        />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20"
+              class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
             >
               <UIcon
-                name="i-heroicons-list-bullet"
-                class="text-emerald-400 text-sm"
+                name="i-lucide-list"
+                class="h-4 w-4 text-sky-200"
               />
             </div>
             <h3 class="text-sm font-semibold text-white">Fields</h3>
@@ -219,7 +210,7 @@
           </div>
           <div class="flex items-center gap-2">
             <UButton
-              icon="i-heroicons-plus"
+              icon="i-lucide-plus"
               size="xs"
               :disabled="form.fields.length >= 25"
               @click.stop="addField"
@@ -227,18 +218,18 @@
               Add
             </UButton>
             <UIcon
-              name="i-heroicons-chevron-down"
+              name="i-lucide-chevron-down"
               class="text-gray-400 transition-transform group-open:rotate-180"
             />
           </div>
         </div>
       </summary>
       <div
-        class="rounded-b-xl border border-t-0 border-white/10 bg-gray-900/50 p-4 -mt-1"
+        class="rounded-b-xl border border-t-0 border-white/10 bg-[rgba(3,7,18,0.4)] p-4"
       >
         <div v-if="form.fields.length === 0" class="py-4 text-center">
           <UIcon
-            name="i-heroicons-inbox"
+            name="i-lucide-inbox"
             class="text-3xl text-gray-600 mb-1"
           />
           <p class="text-xs text-gray-500">
@@ -249,14 +240,14 @@
           <div
             v-for="(field, index) in form.fields"
             :key="index"
-            class="relative group/field p-3 rounded-lg bg-gray-800/50 border border-white/5 hover:border-white/10 transition-colors"
+            class="relative group/field p-3 rounded-lg bg-white/[0.03] border border-white/10 hover:border-white/20 transition-colors"
           >
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-medium text-gray-400"
                 >Field {{ index + 1 }}</span
               >
               <UButton
-                icon="i-heroicons-trash"
+                icon="i-lucide-trash-2"
                 size="xs"
                 color="error"
                 variant="ghost"
@@ -289,17 +280,14 @@
     <!-- Images Section -->
     <details v-if="sections.images" class="group">
       <summary
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
+        class="rounded-xl border border-white/10 bg-[rgba(3,7,18,0.55)] p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors group-open:rounded-b-none"
       >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent pointer-events-none"
-        />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-pink-500/10 border border-pink-500/20"
+              class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
             >
-              <UIcon name="i-heroicons-photo" class="text-pink-400 text-sm" />
+              <UIcon name="i-lucide-image" class="h-4 w-4 text-sky-200" />
             </div>
             <h3 class="text-sm font-semibold text-white">Images</h3>
             <UBadge
@@ -312,13 +300,13 @@
             </UBadge>
           </div>
           <UIcon
-            name="i-heroicons-chevron-down"
+            name="i-lucide-chevron-down"
             class="text-gray-400 transition-transform group-open:rotate-180"
           />
         </div>
       </summary>
       <div
-        class="rounded-b-xl border border-t-0 border-white/10 bg-gray-900/50 p-4 space-y-3 -mt-1"
+        class="rounded-b-xl border border-t-0 border-white/10 bg-[rgba(3,7,18,0.4)] p-4 space-y-3"
       >
         <div>
           <label class="block text-sm font-medium text-gray-300 mb-1.5">
@@ -350,19 +338,16 @@
     <!-- Footer Section -->
     <details v-if="sections.footer" class="group">
       <summary
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
+        class="rounded-xl border border-white/10 bg-[rgba(3,7,18,0.55)] p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors group-open:rounded-b-none"
       >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none"
-        />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20"
+              class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
             >
               <UIcon
-                name="i-heroicons-chat-bubble-bottom-center-text"
-                class="text-orange-400 text-sm"
+                name="i-lucide-message-square-text"
+                class="h-4 w-4 text-sky-200"
               />
             </div>
             <h3 class="text-sm font-semibold text-white">Footer</h3>
@@ -376,13 +361,13 @@
             </UBadge>
           </div>
           <UIcon
-            name="i-heroicons-chevron-down"
+            name="i-lucide-chevron-down"
             class="text-gray-400 transition-transform group-open:rotate-180"
           />
         </div>
       </summary>
       <div
-        class="rounded-b-xl border border-t-0 border-white/10 bg-gray-900/50 p-4 space-y-3 -mt-1"
+        class="rounded-b-xl border border-t-0 border-white/10 bg-[rgba(3,7,18,0.4)] p-4 space-y-3"
       >
         <UInput
           v-model="form.footerText"
@@ -404,19 +389,16 @@
     <!-- Buttons Section -->
     <details v-if="sections.buttons" class="group">
       <summary
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
+        class="rounded-xl border border-white/10 bg-[rgba(3,7,18,0.55)] p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors group-open:rounded-b-none"
       >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-        />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-secondary-500/10 border border-secondary-500/20"
+              class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
             >
               <UIcon
-                name="i-heroicons-cursor-arrow-rays"
-                class="text-secondary-400 text-sm"
+                name="i-lucide-mouse-pointer-click"
+                class="h-4 w-4 text-sky-200"
               />
             </div>
             <h3 class="text-sm font-semibold text-white">Buttons</h3>
@@ -430,7 +412,7 @@
           </div>
           <div class="flex items-center gap-2">
             <UButton
-              icon="i-heroicons-plus"
+              icon="i-lucide-plus"
               size="xs"
               :disabled="form.buttons.length >= 5"
               @click.stop="addButton"
@@ -438,18 +420,18 @@
               Add
             </UButton>
             <UIcon
-              name="i-heroicons-chevron-down"
+              name="i-lucide-chevron-down"
               class="text-gray-400 transition-transform group-open:rotate-180"
             />
           </div>
         </div>
       </summary>
       <div
-        class="rounded-b-xl border border-t-0 border-white/10 bg-gray-900/50 p-4 -mt-1"
+        class="rounded-b-xl border border-t-0 border-white/10 bg-[rgba(3,7,18,0.4)] p-4"
       >
         <div v-if="form.buttons.length === 0" class="py-4 text-center">
           <UIcon
-            name="i-heroicons-cursor-arrow-ripple"
+            name="i-lucide-mouse-pointer-click"
             class="text-3xl text-gray-600 mb-1"
           />
           <p class="text-xs text-gray-500">
@@ -460,14 +442,14 @@
           <div
             v-for="(btn, index) in form.buttons"
             :key="index"
-            class="relative group/btn p-3 rounded-lg bg-gray-800/50 border border-white/5 hover:border-white/10 transition-colors"
+            class="relative group/btn p-3 rounded-lg bg-white/[0.03] border border-white/10 hover:border-white/20 transition-colors"
           >
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-medium text-gray-400"
                 >Button {{ index + 1 }}</span
               >
               <UButton
-                icon="i-heroicons-trash"
+                icon="i-lucide-trash-2"
                 size="xs"
                 color="error"
                 variant="ghost"
@@ -494,19 +476,16 @@
     <!-- Media Gallery Section -->
     <details v-if="sections.mediaGallery" class="group">
       <summary
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors"
+        class="rounded-xl border border-white/10 bg-[rgba(3,7,18,0.55)] p-4 cursor-pointer list-none select-none hover:border-white/20 transition-colors group-open:rounded-b-none"
       >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none"
-        />
         <div class="relative flex items-center justify-between">
           <div class="flex items-center gap-2">
             <div
-              class="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20"
+              class="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
             >
               <UIcon
-                name="i-heroicons-squares-2x2"
-                class="text-emerald-400 text-sm"
+                name="i-lucide-layout-grid"
+                class="h-4 w-4 text-sky-200"
               />
             </div>
             <h3 class="text-sm font-semibold text-white">Media Gallery</h3>
@@ -520,7 +499,7 @@
           </div>
           <div class="flex items-center gap-2">
             <UButton
-              icon="i-heroicons-plus"
+              icon="i-lucide-plus"
               size="xs"
               :disabled="form.mediaGallery.length >= 4"
               @click.stop="addMediaGalleryItem"
@@ -528,18 +507,18 @@
               Add Media
             </UButton>
             <UIcon
-              name="i-heroicons-chevron-down"
+              name="i-lucide-chevron-down"
               class="text-gray-400 transition-transform group-open:rotate-180"
             />
           </div>
         </div>
       </summary>
       <div
-        class="rounded-b-xl border border-t-0 border-white/10 bg-gray-900/50 p-4 -mt-1 space-y-3"
+        class="rounded-b-xl border border-t-0 border-white/10 bg-[rgba(3,7,18,0.4)] p-4 space-y-3"
       >
         <div v-if="form.mediaGallery.length === 0" class="py-4 text-center">
           <UIcon
-            name="i-heroicons-photo"
+            name="i-lucide-image"
             class="text-3xl text-gray-600 mb-1"
           />
           <p class="text-xs text-gray-500">
@@ -558,7 +537,7 @@
               class="flex-1"
             />
             <UButton
-              icon="i-heroicons-trash"
+              icon="i-lucide-trash-2"
               size="xs"
               color="error"
               variant="ghost"
