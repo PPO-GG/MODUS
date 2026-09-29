@@ -1,341 +1,389 @@
 <template>
   <NuxtLayout name="landing">
-    <!-- ========== HERO SECTION ========== -->
-    <section class="hero-section">
-      <div class="landing-container relative z-10">
-        <div
-          class="flex flex-col items-center text-center pt-32 pb-20 md:pt-40 md:pb-28"
-        >
-          <!-- Status badge -->
-          <div v-if="stats" class="hero-badge mb-8">
-            <div
-              :class="[
-                'w-2 h-2 rounded-full',
-                stats.online
-                  ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]'
-                  : 'bg-red-400',
-              ]"
-            ></div>
-            <span
-              class="text-xs font-bold uppercase tracking-widest text-gray-400"
+    <div ref="root">
+      <!-- ========== HERO ========== -->
+      <section class="glide-section hero">
+        <div class="bounded">
+          <div class="hero-inner">
+            <svg
+              class="hero-grid"
+              viewBox="0 0 935 425"
+              fill="none"
+              aria-hidden="true"
             >
+              <template v-for="r in GRID_ROWS" :key="r">
+                <path
+                  v-for="c in GRID_COLS"
+                  :key="c"
+                  class="grid-item"
+                  fill="currentColor"
+                  opacity=".2"
+                  :d="`M${(c - 1) * 32 + 5},${(r - 1) * 32 + 10}l1.806,-2.951l-5,2.951l3.936,1.049l-0.742,-1.049z`"
+                />
+              </template>
+            </svg>
+
+            <div v-if="stats" class="hero-status">
+              <span
+                class="hero-status-dot"
+                :class="stats.online ? 'is-online' : 'is-offline'"
+              ></span>
               {{ stats.online ? "Online" : "Offline" }}
-              <span v-if="stats.online" class="text-gray-600 ml-1"
-                >• v{{ stats.version }}</span
+              <template v-if="stats.online">
+                · v{{ stats.version }} · {{ stats.shardCount }}/{{
+                  stats.totalShards
+                }}
+                shards
+              </template>
+            </div>
+
+            <h1 class="hero-heading">
+              Your Discord server,
+              <em class="glide-text">supercharged</em>
+            </h1>
+            <p class="hero-body">
+              One modular bot for music, moderation, AI, anti-raid and
+              multi-track recordings. Configure all of it from a web dashboard.
+            </p>
+            <div class="hero-ctas">
+              <a
+                :href="botInviteUrl"
+                target="_blank"
+                rel="noopener"
+                class="glide-btn"
               >
-            </span>
-          </div>
-
-          <!-- Logo -->
-          <div class="hero-logo-wrapper mb-8">
-            <div class="hero-logo-glow"></div>
-            <img src="/modus2-animated.svg" alt="MODUS" class="hero-logo" />
-          </div>
-
-          <!-- Headline -->
-          <h1 class="hero-headline">
-            Your Discord Server,
-            <span class="hero-headline-gradient">Supercharged</span>
-          </h1>
-
-          <p class="hero-subtitle">
-            MODUS is a modular Discord bot with {{ moduleList.length }}+
-            powerful features - from
-            music and moderation to AI, anti-raid, recordings, and more. Take
-            control of your server with ease, right from the Web Dashboard.
-          </p>
-
-          <!-- CTA Buttons -->
-          <div class="flex flex-col sm:flex-row items-center gap-4 mt-10">
-            <a
-              :href="botInviteUrl"
-              target="_blank"
-              rel="noopener"
-              class="hero-btn-primary group"
-            >
-              <UIcon name="i-simple-icons-discord" class="w-5 h-5" />
-              <span>Add MODUS to Your Server</span>
-              <UIcon
-                name="i-heroicons-arrow-right"
-                class="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300"
-              />
-            </a>
-            <NuxtLink to="/dashboard" class="hero-btn-secondary">
-              <UIcon
-                name="i-heroicons-arrow-right-on-rectangle"
-                class="w-5 h-5"
-              />
-              <span>Open Dashboard</span>
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-
-      <!-- Hero bottom fade -->
-      <div class="hero-fade"></div>
-    </section>
-
-    <!-- ========== STATS BAR ========== -->
-    <section id="stats" class="py-12 relative z-10">
-      <div class="landing-container">
-        <div class="stats-bar">
-          <div class="stat-item">
-            <span class="stat-number">{{ stats?.serverCount ?? "—" }}</span>
-            <span class="stat-label">Servers</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-number">{{ moduleList.length }}+</span>
-            <span class="stat-label">Modules</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-number"
-              >{{ stats?.shardCount ?? "0" }}/{{
-                stats?.totalShards ?? "0"
-              }}</span
-            >
-            <span class="stat-label">Shards Online</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <span class="stat-number">v{{ stats?.version ?? "—" }}</span>
-            <span class="stat-label">Version</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== FEATURES SECTION ========== -->
-    <section id="features" class="py-20 relative z-10">
-      <div class="landing-container">
-        <div class="text-center mb-16">
-          <p
-            class="text-xs font-bold uppercase tracking-[0.3em] text-violet-400 mb-3"
-          >
-            Why MODUS
-          </p>
-          <h2
-            class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4"
-          >
-            Everything Your Server Needs
-          </h2>
-          <p class="text-gray-400 max-w-2xl mx-auto text-lg">
-            One bot to replace them all. MODUS gives you a suite of
-            professional-grade tools, all managed from a simple to use web
-            dashboard.
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="feature in highlights"
-            :key="feature.title"
-            class="feature-card group"
-          >
-            <div class="feature-icon" :style="{ background: feature.gradient }">
-              <UIcon :name="feature.icon" class="w-6 h-6 text-white" />
+                <UIcon name="i-simple-icons-discord" class="w-5 h-5" />
+                Add MODUS to your server
+              </a>
+              <NuxtLink to="/dashboard" class="glide-btn glide-btn-ghost">
+                Open dashboard
+                <UIcon name="i-lucide-arrow-right" class="w-4 h-4" />
+              </NuxtLink>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">
-              {{ feature.title }}
-            </h3>
-            <p class="text-sm text-gray-400 leading-relaxed">
-              {{ feature.description }}
-            </p>
+
+            <!-- Dashboard preview -->
+            <div class="hero-shot glide-glass">
+              <div class="hero-glow hero-glow--one"></div>
+              <div class="hero-glow hero-glow--two"></div>
+              <img
+                class="hero-shot-img"
+                src="/screenshots/herodash.webp"
+                width="1920"
+                height="953"
+                fetchpriority="high"
+                decoding="async"
+                alt="The MODUS dashboard's server configuration page, listing modules by category with an on/off toggle for each"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ========== MODULES GRID SECTION ========== -->
-    <section id="modules" class="py-20 relative z-10">
-      <div class="landing-container">
-        <div class="text-center mb-16">
-          <p
-            class="text-xs font-bold uppercase tracking-[0.3em] text-indigo-400 mb-3"
-          >
-            Full Module List
-          </p>
-          <h2
-            class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4"
-          >
-            {{ moduleList.length }}+ Modules, One Bot
-          </h2>
-          <p class="text-gray-400 max-w-2xl mx-auto text-lg">
-            Every module is independently configurable from the web dashboard.
-            Enable what you need, disable what you don't.
-          </p>
+      <!-- ========== STATS ========== -->
+      <section id="stats" class="stats" aria-label="Live bot stats">
+        <div class="bounded">
+          <div class="stats-row">
+            <div class="stat">
+              <b>{{ stats?.serverCount?.toLocaleString() ?? "—" }}</b>
+              <small>Servers</small>
+            </div>
+            <div class="stat">
+              <b>{{ moduleList.length }}</b><small>Modules</small>
+            </div>
+            <div class="stat">
+              <b>{{ stats?.shardCount ?? 0 }}/{{ stats?.totalShards ?? 0 }}</b>
+              <small>Shards online</small>
+            </div>
+            <div class="stat">
+              <b>v{{ stats?.version ?? "—" }}</b><small>Version</small>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+      <!-- ========== BENTO ========== -->
+      <section id="features" class="glide-section">
+        <div class="bounded">
+          <h2 class="glide-h2">
+            Everything your server <em class="glide-text">needs</em>
+          </h2>
+          <p class="glide-lede">
+            Replace a stack of single-purpose bots with one. Each module is
+            independent, so you only turn on what you use.
+          </p>
+
+          <div class="bento">
+            <article class="bento-box glide-glass is-wide">
+              <h3>Music that sounds right</h3>
+              <p>
+                Lavalink-backed playback with queues, filters and per-guild
+                volume. Search YouTube or paste a link.
+              </p>
+              <div class="bento-art bento-art--col">
+                <div class="wave" aria-hidden="true">
+                  <i
+                    v-for="(h, i) in waveBars"
+                    :key="i"
+                    class="wave-bar"
+                    :style="{ height: `${h}px`, opacity: i > waveBars.length * 0.38 ? 0.3 : 0.85 }"
+                  ></i>
+                </div>
+                <div class="now-playing">
+                  <UIcon name="i-lucide-play" class="w-4 h-4 text-teal-400" />
+                  <span><b>Midnight City</b> · M83</span>
+                  <span class="now-playing-bar"></span>
+                  <span class="mono">1:34 / 4:03</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="bento-box glide-glass">
+              <h3>AI assistant</h3>
+              <p>GPT and Claude, with tools that set reminders and start polls.</p>
+              <div class="bento-art">
+                <div class="chat">
+                  <div class="chat-msg is-user">
+                    remind the mods about the raid drill friday 8pm
+                  </div>
+                  <div class="chat-msg is-bot">
+                    Done. I'll ping <b>@Mods</b> on Fri at 8:00 PM.
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="bento-box glide-glass">
+              <h3>Moderation</h3>
+              <p>Kick, ban, warn and timeout with a full audit trail.</p>
+              <div class="bento-art">
+                <div class="modlog">
+                  <div><span class="t">21:04</span><span class="k">BAN</span>spam_acc</div>
+                  <div><span class="t">21:06</span><span class="w">WARN</span>nova · caps</div>
+                  <div><span class="t">21:09</span><span class="w">TIMEOUT</span>kai · 10m</div>
+                  <div><span class="t">21:12</span><span class="ok">AUTOMOD</span>link blocked</div>
+                </div>
+              </div>
+            </article>
+
+            <article class="bento-box glide-glass">
+              <h3>Anti-raid</h3>
+              <p>Spots join floods and locks the server before raiders post.</p>
+              <div class="bento-art">
+                <svg
+                  class="raid-chart"
+                  viewBox="0 0 240 110"
+                  role="img"
+                  aria-label="Join rate spiking above the lockdown threshold"
+                >
+                  <line x1="0" y1="40" x2="240" y2="40" stroke="#fb7185" stroke-dasharray="4 4" />
+                  <text x="236" y="34" text-anchor="end" fill="#fda4af" font-size="10" font-family="DM Mono, monospace">lockdown · 15/min</text>
+                  <path
+                    d="M0 96 L30 92 L60 94 L90 90 L110 86 L130 30 L150 12 L170 58 L190 92 L240 95"
+                    fill="none"
+                    stroke="#2dd4bf"
+                    stroke-width="2"
+                  />
+                  <circle cx="150" cy="12" r="4" fill="#fb7185" />
+                </svg>
+              </div>
+            </article>
+
+            <article class="bento-box glide-glass">
+              <h3>XP &amp; rank cards</h3>
+              <p>Leveling, role rewards and rank cards you design yourself.</p>
+              <div class="bento-art">
+                <div class="rank">
+                  <span class="rank-avatar"></span>
+                  <div class="rank-meta">
+                    <div><b>nova</b><small>LVL 24 · #3</small></div>
+                    <div class="rank-xp"><i></i></div>
+                    <small>7,210 / 10,000 XP</small>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="bento-box glide-glass">
+              <h3>Recordings</h3>
+              <p>One audio track per speaker. Download a zip or mix in the browser.</p>
+              <div class="bento-art">
+                <div class="tracks">
+                  <div v-for="t in tracks" :key="t.name" class="track">
+                    <span>{{ t.name }}</span>
+                    <div class="track-lane">
+                      <i
+                        v-for="(seg, i) in t.segments"
+                        :key="i"
+                        :style="{ left: `${seg[0]}%`, width: `${seg[1]}%`, background: t.color }"
+                      ></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== ONE BOT (Glide "Integrations") ========== -->
+      <section class="glide-section integr">
+        <div class="integr-bg"></div>
+        <svg
+          v-for="(frame, i) in logoFrames"
+          :key="i"
+          class="integr-frame"
+          :style="{ transform: frame }"
+          viewBox="0 0 767 604"
+          fill="none"
+          aria-hidden="true"
         >
+          <path
+            d="M282.5 519.7 603.7 604 489.9 445.6l52.3-84.2H381.3ZM406 321.8h160.8L767 0 515.8 145.9ZM442.6 188.5l-83.2 133.3H213Zm-107.9 172.9-92.3 147.8L0 445.6l144.9-84.2Z"
+            fill="rgba(240,241,244,.04)"
+            stroke="rgba(255,255,255,.12)"
+            stroke-width="2"
+          />
+        </svg>
+        <div class="bounded">
+          <h2 class="glide-h2 integr-heading">One bot, every job</h2>
+          <p class="glide-lede">
+            Music, moderation, AI, alerts and tickets share one config, one
+            permission model and one dashboard.
+          </p>
           <div
-            v-for="mod in moduleList"
-            :key="mod.name"
-            class="module-card group"
+            class="chain"
+            role="img"
+            aria-label="MODUS connects music, moderation, AI, social alerts, tickets and recordings"
           >
-            <div class="flex items-center gap-3">
-              <div class="module-icon" :style="{ background: mod.color }">
-                <UIcon :name="mod.icon" class="w-4 h-4 text-white" />
+            <template v-for="(node, i) in chainNodes" :key="node.icon">
+              <template v-if="i === chainMid">
+                <div class="chain-core glide-glass">
+                  <img src="/modus2-animated.svg" alt="" />
+                </div>
+                <div class="chain-signal is-rev"></div>
+              </template>
+              <div class="chain-node">
+                <UIcon :name="node.icon" class="chain-node-icon" />
               </div>
-              <div class="min-w-0">
-                <h4 class="text-sm font-bold text-white truncate">
-                  {{ mod.name }}
-                </h4>
-                <p class="text-[11px] text-gray-500 truncate">
-                  {{ mod.tagline }}
-                </p>
-              </div>
-            </div>
+              <div
+                v-if="i !== chainNodes.length - 1"
+                class="chain-signal"
+                :class="{ 'is-rev': i >= chainMid }"
+              ></div>
+            </template>
+          </div>
+          <div class="chain-caption">
+            <span v-for="node in chainNodes" :key="node.label">{{ node.label }}</span>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ========== HOW IT WORKS ========== -->
-    <section class="py-20 relative z-10">
-      <div class="landing-container">
-        <div class="text-center mb-16">
-          <p
-            class="text-xs font-bold uppercase tracking-[0.3em] text-cyan-400 mb-3"
-          >
-            Get Started
-          </p>
-          <h2
-            class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4"
-          >
-            Up and Running in 60 Seconds
+      <!-- ========== SHOWCASE ========== -->
+      <section id="dashboard" class="glide-section">
+        <div class="bounded">
+          <div class="showcase-glow"></div>
+          <h2 class="glide-h2">
+            Configure it all <em class="glide-text">in the browser</em>
           </h2>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div
-            v-for="(step, index) in steps"
-            :key="step.title"
-            class="step-card"
-          >
-            <div class="step-number">{{ index + 1 }}</div>
-            <h3 class="text-lg font-bold text-white mb-2">{{ step.title }}</h3>
-            <p class="text-sm text-gray-400 leading-relaxed">
-              {{ step.description }}
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== DASHBOARD PREVIEW ========== -->
-    <section class="py-20 relative z-10">
-      <div class="landing-container">
-        <div class="text-center mb-12">
-          <p
-            class="text-xs font-bold uppercase tracking-[0.3em] text-violet-400 mb-3"
-          >
-            Web Dashboard
-          </p>
-          <h2
-            class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4"
-          >
-            Manage Everything from the Browser
-          </h2>
-          <p class="text-gray-400 max-w-2xl mx-auto text-lg">
-            An easy to use Web Dashboard to configure modules, view logs, manage
-            recordings, and monitor your bot - all in real time.
-          </p>
-        </div>
-
-        <!-- Dashboard preview card -->
-        <div class="dashboard-preview">
-          <div class="dashboard-preview-header">
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full bg-red-500/60"></div>
-              <div class="w-3 h-3 rounded-full bg-yellow-500/60"></div>
-              <div class="w-3 h-3 rounded-full bg-green-500/60"></div>
+          <div class="showcase">
+            <div class="showcase-grid"></div>
+            <div class="showcase-copy">
+              <figure>
+                <UIcon name="i-lucide-shield-ban" class="w-7 h-7" />
+              </figure>
+              <h3>AutoMod rules, no regex required</h3>
+              <p>
+                Pick a trigger, add the conditions that must match, and chain
+                the actions to take. Group conditions with AND / OR when one
+                rule needs more logic.
+              </p>
+              <ul>
+                <li><UIcon name="i-lucide-check" class="w-4 h-4 mt-1 shrink-0 text-teal-400" />Delete, warn, timeout or log on match</li>
+                <li><UIcon name="i-lucide-check" class="w-4 h-4 mt-1 shrink-0 text-teal-400" />Nested condition groups and per-action delays</li>
+                <li><UIcon name="i-lucide-check" class="w-4 h-4 mt-1 shrink-0 text-teal-400" />Changes apply on every shard instantly</li>
+              </ul>
+              <NuxtLink to="/dashboard" class="glide-btn">Open dashboard</NuxtLink>
             </div>
-            <span
-              class="text-[10px] font-bold text-gray-600 uppercase tracking-widest"
-              >modus.ppo.gg/dashboard</span
-            >
-          </div>
-          <div class="dashboard-preview-body">
-            <div class="dashboard-preview-sidebar">
-              <div class="w-8 h-8 rounded-lg bg-violet-500/20 mb-4"></div>
-              <div class="space-y-2">
-                <div class="h-2.5 rounded bg-white/10 w-full"></div>
-                <div class="h-2.5 rounded bg-violet-500/30 w-3/4"></div>
-                <div class="h-2.5 rounded bg-white/10 w-5/6"></div>
-                <div class="h-2.5 rounded bg-white/10 w-2/3"></div>
-                <div class="h-2.5 rounded bg-white/10 w-4/5"></div>
-              </div>
-            </div>
-            <div class="dashboard-preview-main">
-              <div class="flex gap-4 mb-6">
-                <div
-                  class="flex-1 h-20 rounded-xl bg-violet-500/10 border border-violet-500/20"
-                ></div>
-                <div
-                  class="flex-1 h-20 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
-                ></div>
-                <div
-                  class="flex-1 h-20 rounded-xl bg-blue-500/10 border border-blue-500/20 hidden sm:block"
-                ></div>
-              </div>
-              <div class="grid grid-cols-2 gap-4">
-                <div
-                  class="h-32 rounded-xl bg-white/[0.02] border border-white/5"
-                ></div>
-                <div
-                  class="h-32 rounded-xl bg-white/[0.02] border border-white/5"
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== FINAL CTA ========== -->
-    <section class="py-24 relative z-10">
-      <div class="landing-container text-center">
-        <div class="cta-card">
-          <div class="cta-glow"></div>
-          <div class="relative z-10">
-            <img
-              src="/modus2-animated.svg"
-              alt="MODUS"
-              class="w-16 h-16 mx-auto mb-6 rounded-xl opacity-80"
-            />
-            <h2
-              class="text-3xl md:text-4xl font-black text-white tracking-tight mb-4"
-            >
-              Ready to Level Up Your Server?
-            </h2>
-            <p class="text-gray-400 mb-8 max-w-lg mx-auto">
-              Why have multiple bots when you can have one bot that does it all?
-              Add MODUS to your server and see the difference.
-            </p>
-            <a
-              :href="botInviteUrl"
-              target="_blank"
-              rel="noopener"
-              class="hero-btn-primary inline-flex group"
-            >
-              <UIcon name="i-simple-icons-discord" class="w-5 h-5" />
-              <span>Add MODUS to Your Server</span>
-              <UIcon
-                name="i-heroicons-arrow-right"
-                class="w-4 h-4 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300"
+            <div class="showcase-image is-narrow">
+              <img
+                src="/screenshots/automod.webp"
+                width="895"
+                height="889"
+                loading="lazy"
+                decoding="async"
+                alt="The AutoMod rule builder with a Message Created trigger, a message-content condition, and a Delete Message action"
               />
-            </a>
+            </div>
+          </div>
+
+          <div class="showcase is-reversed">
+            <div class="showcase-grid"></div>
+            <div class="showcase-copy">
+              <figure>
+                <UIcon name="i-lucide-party-popper" class="w-7 h-7" />
+              </figure>
+              <h3>Welcome cards, drawn your way</h3>
+              <p>
+                Drag avatars, text and backgrounds on a canvas. MODUS renders
+                the image for every new member.
+              </p>
+              <NuxtLink to="/dashboard" class="glide-btn">Try the editor</NuxtLink>
+            </div>
+            <div class="showcase-image">
+              <img
+                src="/screenshots/welcome_editor.webp"
+                width="1920"
+                height="1038"
+                loading="lazy"
+                decoding="async"
+                alt="The welcome card editor: layer list and shape tools on the left, a welcome card with an avatar and greeting text on the canvas, and position and border controls on the right"
+              />
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- ========== MODULES ========== -->
+      <section id="modules" class="glide-section pt-0!">
+        <div class="bounded">
+          <h2 class="glide-h2">
+            {{ moduleList.length }} modules, <em class="glide-text">one bot</em>
+          </h2>
+          <p class="glide-lede">Enable what you need and leave the rest off.</p>
+          <ul class="module-chips">
+            <li v-for="mod in moduleList" :key="mod.name" class="module-chip" :title="mod.tagline">
+              <UIcon :name="mod.icon" class="w-4 h-4" />
+              {{ mod.name }}
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ========== CTA ========== -->
+      <section class="glide-section cta">
+        <div class="bounded">
+          <div class="cta-glow"></div>
+          <div class="cta-icon glide-glass">
+            <img src="/modus2-animated.svg" alt="MODUS" />
+          </div>
+          <h2>Ready to level up your server?</h2>
+          <div class="hero-ctas cta-buttons">
+            <a :href="botInviteUrl" target="_blank" rel="noopener" class="glide-btn">
+              <UIcon name="i-simple-icons-discord" class="w-5 h-5" />
+              Add MODUS to Discord
+            </a>
+            <NuxtLink to="/docs" class="glide-btn">Read the docs</NuxtLink>
+          </div>
+        </div>
+      </section>
+    </div>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
+import gsap from "gsap";
+
 definePageMeta({
   layout: false,
 });
@@ -395,590 +443,873 @@ useHead({
   ],
 });
 
-const highlights = [
-  {
-    title: "Music & Audio",
-    icon: "i-lucide-disc-3",
-    description:
-      "High-fidelity music playback with queue management, filters, and multi-channel recording with per-user audio tracks.",
-    gradient: "linear-gradient(135deg, #7c3aed, #6366f1)",
-  },
-  {
-    title: "AI Assistant",
-    icon: "i-lucide-bot",
-    description:
-      "Powered by GPT and Claude. Context-aware conversations, image analysis, and intelligent command suggestions.",
-    gradient: "linear-gradient(135deg, #06b6d4, #3b82f6)",
-  },
-  {
-    title: "Moderation Suite",
-    icon: "i-lucide-gavel",
-    description:
-      "Kick, ban, timeout, warn, and purge with full audit trails. Automod filters for spam, links, and bad words.",
-    gradient: "linear-gradient(135deg, #ef4444, #f97316)",
-  },
-  {
-    title: "Web Dashboard",
-    icon: "i-lucide-layout-dashboard",
-    description:
-      "A premium glassmorphic control panel to configure every module, view logs, and manage your bot visually.",
-    gradient: "linear-gradient(135deg, #8b5cf6, #a855f7)",
-  },
-  {
-    title: "Anti-Raid Protection",
-    icon: "i-lucide-siren",
-    description:
-      "Detect and stop join floods in real time. Automatic lockdown, mass-kick raiders, and alert your admin team.",
-    gradient: "linear-gradient(135deg, #f43f5e, #e11d48)",
-  },
-  {
-    title: "Fully Configurable",
-    icon: "i-lucide-sliders-horizontal",
-    description:
-      "Every module has deep settings — enable/disable per-channel, set custom thresholds, and fine-tune behavior.",
-    gradient: "linear-gradient(135deg, #10b981, #059669)",
-  },
-];
-
 const moduleList = [
-  {
-    name: "Music",
-    icon: "i-lucide-disc-3",
-    tagline: "High-fidelity playback & queue",
-    color: "rgba(124,58,237,0.2)",
-  },
-  {
-    name: "Recording",
-    icon: "i-lucide-audio-waveform",
-    tagline: "Per-user voice recording",
-    color: "rgba(239,68,68,0.2)",
-  },
-  {
-    name: "AI Assistant",
-    icon: "i-lucide-bot",
-    tagline: "GPT & Claude integration",
-    color: "rgba(6,182,212,0.2)",
-  },
-  {
-    name: "Moderation",
-    icon: "i-lucide-gavel",
-    tagline: "Kick, ban, warn, timeout",
-    color: "rgba(249,115,22,0.2)",
-  },
-  {
-    name: "AutoMod",
-    icon: "i-lucide-shield-ban",
-    tagline: "Spam, link & word filters",
-    color: "rgba(234,88,12,0.2)",
-  },
-  {
-    name: "Logging",
-    icon: "i-lucide-scroll-text",
-    tagline: "Full audit log system",
-    color: "rgba(59,130,246,0.2)",
-  },
-  {
-    name: "Anti-Raid",
-    icon: "i-lucide-siren",
-    tagline: "Join flood detection",
-    color: "rgba(244,63,94,0.2)",
-  },
-  {
-    name: "Verification",
-    icon: "i-lucide-badge-check",
-    tagline: "Button-based member gate",
-    color: "rgba(34,197,94,0.2)",
-  },
-  {
-    name: "Welcome",
-    icon: "i-lucide-party-popper",
-    tagline: "Dynamic welcome images",
-    color: "rgba(168,85,247,0.2)",
-  },
-  {
-    name: "XP & Leveling",
-    icon: "i-lucide-trophy",
-    tagline: "XP tracking, rank cards & leaderboards",
-    color: "rgba(99,102,241,0.2)",
-  },
-  {
-    name: "Giveaways",
-    icon: "i-lucide-gift",
-    tagline: "Prizes, raffles & entry requirements",
-    color: "rgba(234,179,8,0.2)",
-  },
-  {
-    name: "Tickets",
-    icon: "i-lucide-ticket",
-    tagline: "Support ticket system",
-    color: "rgba(14,165,233,0.2)",
-  },
-  {
-    name: "Reaction Roles",
-    icon: "i-lucide-smile-plus",
-    tagline: "Self-assign roles via reactions",
-    color: "rgba(236,72,153,0.2)",
-  },
-  {
-    name: "Temp Voice",
-    icon: "i-lucide-mic-vocal",
-    tagline: "Auto-create voice rooms",
-    color: "rgba(99,102,241,0.2)",
-  },
-  {
-    name: "Triggers",
-    icon: "i-lucide-zap",
-    tagline: "Custom auto-responses",
-    color: "rgba(245,158,11,0.2)",
-  },
-  {
-    name: "Social Alerts",
-    icon: "i-lucide-bell-ring",
-    tagline: "YouTube & Twitch notifications",
-    color: "rgba(239,68,68,0.2)",
-  },
-  {
-    name: "Custom Embeds",
-    icon: "i-lucide-layout-template",
-    tagline: "Visual embed builder",
-    color: "rgba(139,92,246,0.2)",
-  },
-  {
-    name: "Tags",
-    icon: "i-lucide-tag",
-    tagline: "Reusable message snippets",
-    color: "rgba(20,184,166,0.2)",
-  },
-  {
-    name: "Polls",
-    icon: "i-lucide-bar-chart-3",
-    tagline: "Interactive voting system",
-    color: "rgba(59,130,246,0.2)",
-  },
-  {
-    name: "Events",
-    icon: "i-lucide-calendar-clock",
-    tagline: "Scheduled events manager",
-    color: "rgba(168,85,247,0.2)",
-  },
-  {
-    name: "Help",
-    icon: "i-lucide-circle-question-mark",
-    tagline: "Auto-generated command help",
-    color: "rgba(107,114,128,0.2)",
-  },
-  {
-    name: "Reminders",
-    icon: "i-lucide-clock",
-    tagline: "Natural-language reminders",
-    color: "rgba(56,189,248,0.2)",
-  },
-  {
-    name: "Text-to-Speech",
-    icon: "i-lucide-volume-2",
-    tagline: "AI voice speaks in your channel",
-    color: "rgba(217,70,239,0.2)",
-  },
+  { name: "Music", icon: "i-lucide-disc-3", tagline: "High-fidelity playback & queue" },
+  { name: "Recording", icon: "i-lucide-audio-waveform", tagline: "Per-user voice recording" },
+  { name: "AI Assistant", icon: "i-lucide-bot", tagline: "GPT & Claude integration" },
+  { name: "Moderation", icon: "i-lucide-gavel", tagline: "Kick, ban, warn, timeout" },
+  { name: "AutoMod", icon: "i-lucide-shield-ban", tagline: "Spam, link & word filters" },
+  { name: "Logging", icon: "i-lucide-scroll-text", tagline: "Full audit log system" },
+  { name: "Anti-Raid", icon: "i-lucide-siren", tagline: "Join flood detection" },
+  { name: "Verification", icon: "i-lucide-badge-check", tagline: "Button-based member gate" },
+  { name: "Welcome", icon: "i-lucide-party-popper", tagline: "Dynamic welcome images" },
+  { name: "XP & Leveling", icon: "i-lucide-trophy", tagline: "XP tracking, rank cards & leaderboards" },
+  { name: "Giveaways", icon: "i-lucide-gift", tagline: "Prizes, raffles & entry requirements" },
+  { name: "Tickets", icon: "i-lucide-ticket", tagline: "Support ticket system" },
+  { name: "Reaction Roles", icon: "i-lucide-smile-plus", tagline: "Self-assign roles via reactions" },
+  { name: "Temp Voice", icon: "i-lucide-mic-vocal", tagline: "Auto-create voice rooms" },
+  { name: "Triggers", icon: "i-lucide-zap", tagline: "Custom auto-responses" },
+  { name: "Social Alerts", icon: "i-lucide-bell-ring", tagline: "YouTube & Twitch notifications" },
+  { name: "Custom Embeds", icon: "i-lucide-layout-template", tagline: "Visual embed builder" },
+  { name: "Tags", icon: "i-lucide-tag", tagline: "Reusable message snippets" },
+  { name: "Polls", icon: "i-lucide-bar-chart-3", tagline: "Interactive voting system" },
+  { name: "Events", icon: "i-lucide-calendar-clock", tagline: "Scheduled events manager" },
+  { name: "Help", icon: "i-lucide-circle-question-mark", tagline: "Auto-generated command help" },
+  { name: "Ping", icon: "i-lucide-activity", tagline: "Latency metrics" },
+  { name: "Shard Info", icon: "i-lucide-server-cog", tagline: "Shard diagnostics & performance" },
+  { name: "Reminders", icon: "i-lucide-clock", tagline: "Natural-language reminders" },
+  { name: "Text-to-Speech", icon: "i-lucide-volume-2", tagline: "AI voice speaks in your channel" },
 ];
 
-const steps = [
-  {
-    title: "Invite the Bot",
-    description:
-      "Click 'Add MODUS' and authorize it for your Discord server with a single click.",
-  },
-  {
-    title: "Open the Dashboard",
-    description:
-      "Sign in at modus.ppo.gg/dashboard with Discord and select your server.",
-  },
-  {
-    title: "Configure & Go",
-    description:
-      "Enable modules, set channels, tweak settings, and you're live. It's that simple.",
-  },
+// ── Bento illustrations ─────────────────────────────────────────────────
+// Deterministic so SSR and hydration agree.
+const waveBars = Array.from({ length: 64 }, (_, i) =>
+  Math.min(96, 18 + Math.abs(Math.sin(i * 0.37) * 55 + Math.sin(i * 1.3) * 22)),
+);
+const tracks = [
+  { name: "nova", color: "rgba(45,212,191,.55)", segments: [[4, 22], [40, 14], [70, 20]] },
+  { name: "kai", color: "rgba(56,189,248,.55)", segments: [[18, 18], [58, 10]] },
+  { name: "mynd", color: "rgba(34,211,238,.45)", segments: [[0, 8], [30, 26], [82, 14]] },
 ];
+
+// ── "One bot" chain ─────────────────────────────────────────────────────
+const chainNodes = [
+  { label: "Music", icon: "i-lucide-disc-3" },
+  { label: "Moderation", icon: "i-lucide-gavel" },
+  { label: "AI", icon: "i-lucide-bot" },
+  { label: "Social alerts", icon: "i-lucide-bell-ring" },
+  { label: "Tickets", icon: "i-lucide-ticket" },
+  { label: "Recordings", icon: "i-lucide-audio-waveform" },
+];
+const chainMid = Math.floor(chainNodes.length / 2);
+const logoFrames = [
+  "translate(-50%, -50%) scale(1.3)",
+  "translate(-120%, -33%) scale(1.3)",
+  "translate(20%, -66%) scale(1.3)",
+];
+
+// ── Motion (ported from the Glide template's GSAP timelines) ────────────
+const GRID_ROWS = 14;
+const GRID_COLS = 30;
+const root = ref<HTMLElement | null>(null);
+let ctx: gsap.Context | undefined;
+
+onMounted(() => {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  ctx = gsap.context(() => {
+    // Hero entrance — transforms only, so content is readable at rest.
+    gsap
+      .timeline({ defaults: { ease: "power2.inOut" } })
+      .from(".hero-heading", { scale: 0.9, duration: 1.2 })
+      .from(".hero-body", { y: 14, duration: 1 }, "-=0.7")
+      .from(".hero-ctas", { scale: 1.08, duration: 1 }, "-=0.7")
+      .from(".hero-shot", { y: 60, duration: 1.2 }, "-=0.5");
+
+    // Arrow-grid ripple from the center, repeating.
+    const ripple = {
+      stagger: (amount: number) => ({
+        amount,
+        grid: [GRID_ROWS, GRID_COLS] as [number, number],
+        from: "center" as const,
+      }),
+    };
+    gsap.set(".grid-item", { transformOrigin: "center", color: "#fff" });
+    gsap.to(".grid-item", {
+      repeat: -1,
+      repeatDelay: 12,
+      keyframes: [
+        { opacity: 0.4, rotate: "+=180", color: "#0284c7", scale: 3, duration: 0.6, stagger: ripple.stagger(2) },
+        { opacity: 0.2, rotate: "+=180", color: "#fff", scale: 1, delay: -2, duration: 0.6, stagger: ripple.stagger(3) },
+      ],
+    });
+
+    // Roaming glows behind the dashboard preview.
+    const roam = (sel: string, path: [string, string][]) =>
+      gsap.to(sel, {
+        ease: "power2.inOut",
+        repeat: -1,
+        keyframes: path.map(([top, left], i) => ({
+          top,
+          left,
+          duration: [0, 2, 3, 2, 3][i],
+        })),
+      });
+    roam(".hero-glow--one", [["0%", "33%"], ["33%", "33%"], ["33%", "0%"], ["0%", "0%"], ["0%", "33%"]]);
+    roam(".hero-glow--two", [["33%", "0%"], ["0%", "0%"], ["0%", "33%"], ["33%", "33%"], ["33%", "0%"]]);
+
+    // "One bot" pulse: core flashes, signals travel outward, nodes light up.
+    gsap
+      .timeline({ repeat: -1, defaults: { ease: "power2.inOut" } })
+      .to(".chain-core", {
+        keyframes: [
+          { filter: "brightness(2)", opacity: 1, duration: 0.4, ease: "power2.in" },
+          { filter: "brightness(1)", opacity: 0.8, duration: 0.9 },
+        ],
+      })
+      .to(".chain-signal", {
+        keyframes: [
+          { backgroundPosition: "0% 0%" },
+          { backgroundPosition: "100% 100%", stagger: { from: "center", each: 0.3 }, duration: 1 },
+        ],
+      }, "-=1.4")
+      .to(".chain-node", {
+        keyframes: [
+          { opacity: 1, duration: 1, stagger: { from: "center", each: 0.3 } },
+          { opacity: 0.4, duration: 1, stagger: { from: "center", each: 0.3 } },
+        ],
+      }, "-=2");
+
+    // Waveform shimmer.
+    gsap.to(".wave-bar", {
+      scaleY: () => 0.55 + Math.random() * 0.6,
+      transformOrigin: "center",
+      duration: 0.5,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+      stagger: { each: 0.03, from: "random" },
+    });
+  }, root.value ?? undefined);
+});
+
+onUnmounted(() => ctx?.revert());
 </script>
 
 <style scoped>
-/* ============================================
-   LANDING PAGE STYLES
-   ============================================ */
-
-/* Hero Section */
-.hero-section {
+/* Layout primitives (Glide "Bounded") */
+.glide-section {
   position: relative;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  padding: 3.5rem 1rem;
 }
-
-.hero-section::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(
-    circle,
-    rgba(124, 58, 237, 0.15) 0%,
-    rgba(99, 102, 241, 0.08) 30%,
-    transparent 60%
-  );
-  filter: blur(80px);
-  pointer-events: none;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 1rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
-}
-
-.hero-logo-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.hero-logo-glow {
-  position: absolute;
-  inset: -20px;
-  background: radial-gradient(
-    circle,
-    rgba(139, 92, 246, 0.35) 0%,
-    transparent 70%
-  );
-  filter: blur(40px);
-  animation: hero-glow-pulse 3s ease-in-out infinite;
-}
-
-.hero-logo {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.4));
-}
-
-.hero-headline {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
-  font-weight: 900;
-  color: white;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  margin-bottom: 1.25rem;
-}
-
-.hero-headline-gradient {
-  background: linear-gradient(135deg, #a78bfa, #818cf8, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.hero-subtitle {
-  font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.45);
-  max-width: 640px;
-  line-height: 1.7;
-}
-
-.hero-btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.875rem 2rem;
-  font-size: 1rem;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(135deg, #7c3aed, #6366f1);
-  border-radius: 1rem;
-  text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 8px 32px rgba(124, 58, 237, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.hero-btn-primary:hover {
-  background: linear-gradient(135deg, #8b5cf6, #818cf8);
-  transform: translateY(-2px);
-  box-shadow:
-    0 16px 48px rgba(124, 58, 237, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-.hero-btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.875rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.hero-btn-secondary:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
-}
-
-.hero-fade {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, transparent, #050507);
-  pointer-events: none;
-}
-
-@keyframes hero-glow-pulse {
-  0%,
-  100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.15);
+@media (min-width: 768px) {
+  .glide-section {
+    padding: 5rem 1.5rem;
   }
 }
-
-/* Stats Bar */
-.stats-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  padding: 1.5rem 2.5rem;
-  border-radius: 1.5rem;
-  background: rgba(20, 20, 26, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px);
-  flex-wrap: wrap;
+@media (min-width: 1024px) {
+  .glide-section {
+    padding-block: 6rem;
+  }
 }
-
-.stat-item {
+.bounded {
+  position: relative;
+  max-width: 72rem;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
 }
-
-.stat-number {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: white;
+.glide-h2 {
+  max-width: 48rem;
+  margin: 0;
+  text-align: center;
+  text-wrap: balance;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.05;
+  font-weight: 500;
   letter-spacing: -0.02em;
 }
-
-.stat-label {
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.stat-divider {
-  width: 1px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-@media (max-width: 640px) {
-  .stat-divider {
-    display: none;
-  }
-  .stats-bar {
-    gap: 1.5rem;
-  }
-}
-
-/* Feature Cards */
-.feature-card {
-  padding: 1.75rem;
-  border-radius: 1.25rem;
-  background: rgba(20, 20, 26, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.feature-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.02),
-    transparent
-  );
-  transition: left 0.6s ease;
-}
-
-.feature-card:hover {
-  background: rgba(24, 24, 32, 0.7);
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3);
-}
-
-.feature-card:hover::before {
-  left: 100%;
-}
-
-.feature-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-/* Module Cards */
-.module-card {
-  padding: 1rem 1.25rem;
-  border-radius: 1rem;
-  background: rgba(20, 20, 26, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  transition: all 0.3s ease;
-}
-
-.module-card:hover {
-  background: rgba(28, 28, 38, 0.6);
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-}
-
-.module-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-/* Step Cards */
-.step-card {
+.glide-lede {
+  max-width: 28rem;
+  margin: 1.5rem auto 0;
   text-align: center;
-  padding: 2rem;
-  border-radius: 1.25rem;
-  background: rgba(20, 20, 26, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  text-wrap: balance;
+  color: var(--glide-ink-2);
+}
+.mono {
+  font-family: var(--glide-mono);
 }
 
-.step-number {
+/* ── Hero ── */
+.hero {
+  padding-top: 7.5rem;
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .hero {
+    padding-top: 9rem;
+  }
+}
+.hero-inner {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hero-grid {
+  position: absolute;
+  top: -3.5rem;
+  left: 50%;
+  z-index: -1;
+  width: min(935px, 120%);
+  transform: translateX(-50%);
+  color: #fff;
+  pointer-events: none;
+  mask-image: linear-gradient(black, transparent);
+}
+.hero-status {
   display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid var(--glide-line);
+  background: rgba(3, 7, 18, 0.6);
+  font: 500 0.75rem/1 var(--glide-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--glide-ink-3);
+}
+.hero-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.hero-status-dot.is-online {
+  background: #34d399;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.7);
+}
+.hero-status-dot.is-offline {
+  background: #f87171;
+}
+.hero-heading {
+  max-width: 48rem;
+  margin: 0;
+  text-wrap: balance;
+  font-size: clamp(2.75rem, 7.5vw, 5rem);
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+.hero-body {
+  max-width: 30rem;
+  margin: 1.5rem auto 0;
+  text-wrap: balance;
+  color: var(--glide-ink-2);
+}
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    rgba(124, 58, 237, 0.2),
-    rgba(99, 102, 241, 0.2)
-  );
-  border: 1px solid rgba(124, 58, 237, 0.3);
-  color: #a78bfa;
-  font-size: 1.25rem;
-  font-weight: 900;
-  margin-bottom: 1rem;
+  gap: 1rem 1.5rem;
+  margin-top: 2rem;
+}
+.hero-shot {
+  width: 100%;
+  max-width: 64rem;
+  margin-top: 4rem;
+}
+.hero-shot-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.hero-glow {
+  position: absolute;
+  z-index: -1;
+  width: 66%;
+  height: 66%;
+  mix-blend-mode: screen;
+  filter: blur(64px);
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .hero-glow {
+    filter: blur(120px);
+  }
+}
+.hero-glow--one {
+  top: 0;
+  left: 33%;
+  background: var(--glide-glow-1);
+}
+.hero-glow--two {
+  top: 33%;
+  left: 0;
+  background: var(--glide-glow-2);
 }
 
-/* Dashboard Preview */
-.dashboard-preview {
-  border-radius: 1.25rem;
-  overflow: hidden;
-  background: rgba(10, 10, 15, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(124, 58, 237, 0.1);
+/* ── Stats ── */
+.stats {
+  padding: 0.5rem 1rem 1.5rem;
+}
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 3rem;
+  width: 100%;
+  padding: 1.375rem 0.5rem;
+  border-block: 1px solid rgba(255, 255, 255, 0.08);
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+.stat b {
+  font: 500 1.625rem/1.1 var(--glide-mono);
+  font-variant-numeric: tabular-nums;
+}
+.stat small {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--glide-ink-4);
 }
 
-.dashboard-preview-header {
+/* ── Bento ── */
+.bento {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  width: 100%;
+  max-width: 56rem;
+  margin-top: 4rem;
+}
+@media (min-width: 768px) {
+  .bento {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+}
+.bento-box {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(3, 7, 18, 0.6);
+}
+.bento-box::before {
+  background: rgba(243, 244, 246, 0.08);
+}
+@media (min-width: 768px) {
+  .bento-box.is-wide {
+    grid-column: span 2;
+  }
+}
+.bento-box h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.bento-box p {
+  max-width: 28rem;
+  margin: 0;
+  text-wrap: balance;
+  color: var(--glide-ink-2);
+}
+.bento-art {
+  display: flex;
+  align-items: flex-end;
+  align-self: end;
+  min-height: 120px;
+}
+.bento-art--col {
+  flex-direction: column;
+  align-items: stretch;
+}
+.wave {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 3px;
+  width: 100%;
+  height: 96px;
 }
-
-.dashboard-preview-body {
+.wave-bar {
+  flex: 1;
+  border-radius: 2px;
+  background: linear-gradient(to top, var(--glide-a2), var(--glide-a1));
+}
+.now-playing {
   display: flex;
-  min-height: 300px;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--glide-ink-3);
 }
-
-.dashboard-preview-sidebar {
-  width: 200px;
-  padding: 1.25rem;
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
+.now-playing b {
+  font-weight: 500;
+  color: var(--glide-ink);
+}
+.now-playing-bar {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.now-playing-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 62% 0 0;
+  border-radius: 3px;
+  background: var(--glide-a1);
+}
+.chat {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  font-size: 0.8125rem;
+}
+.chat-msg {
+  max-width: 92%;
+  padding: 0.5rem 0.6875rem;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+.chat-msg.is-user {
+  justify-self: end;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--glide-ink-2);
+}
+.chat-msg.is-bot {
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(56, 189, 248, 0.14);
+}
+.modlog {
+  width: 100%;
+  font: 400 0.75rem/1.8 var(--glide-mono);
+  color: var(--glide-ink-3);
+}
+.modlog div {
+  display: flex;
+  gap: 0.625rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.modlog .t {
+  color: var(--glide-ink-4);
+}
+.modlog .k {
+  color: #fca5a5;
+}
+.modlog .w {
+  color: #fcd34d;
+}
+.modlog .ok {
+  color: #6ee7b7;
+}
+.raid-chart {
+  display: block;
+  width: 100%;
+  height: 110px;
+}
+.rank {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+}
+.rank-avatar {
   flex-shrink: 0;
-  display: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f472b6, #fb923c);
+}
+.rank-meta {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+}
+.rank-meta > div:first-child {
+  display: flex;
+  justify-content: space-between;
+}
+.rank-meta small {
+  font-family: var(--glide-mono);
+  color: var(--glide-ink-4);
+}
+.rank-xp {
+  height: 6px;
+  margin: 0.5rem 0 0.375rem;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.rank-xp i {
+  display: block;
+  width: 72%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--glide-a1), var(--glide-a2));
+}
+.tracks {
+  display: grid;
+  gap: 0.4375rem;
+  width: 100%;
+}
+.track {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.75rem;
+  color: var(--glide-ink-3);
+}
+.track-lane {
+  position: relative;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.track-lane i {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  border-radius: 3px;
 }
 
+/* ── One bot / integrations ── */
+.integr {
+  overflow: hidden;
+}
+.integr-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 55% at 50% 58%, rgba(3, 105, 161, 0.55), transparent 70%),
+    radial-gradient(35% 40% at 22% 70%, rgba(45, 212, 191, 0.18), transparent 70%),
+    radial-gradient(35% 40% at 80% 35%, rgba(56, 189, 248, 0.16), transparent 70%);
+}
+.integr-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: 760px;
+  max-width: none;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.integr-heading {
+  padding-block: 0.5rem;
+  background: linear-gradient(to bottom, #f0f9ff, #7dd3fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.chain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 4.5rem;
+}
 @media (min-width: 768px) {
-  .dashboard-preview-sidebar {
-    display: block;
+  .chain {
+    flex-direction: row;
+  }
+}
+.chain-node {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  padding: 1rem;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 249, 255, 0.3);
+  background: rgba(240, 249, 255, 0.14);
+  color: #e0f2fe;
+  opacity: 0.4;
+}
+.chain-node-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+@media (min-width: 1024px) {
+  .chain-node-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+.chain-core {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 8rem;
+  height: 8rem;
+  margin-block: 0.5rem;
+  border-radius: 28px;
+  background: linear-gradient(to bottom, #1f2937, #111827);
+  opacity: 0.8;
+}
+.chain-core::before {
+  border-radius: 34px;
+}
+.chain-core img {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+@media (min-width: 768px) {
+  .chain-core {
+    margin: 0 0.75rem;
+  }
+}
+.chain-signal {
+  --rotation: 0deg;
+  width: 1.5px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  background-image: linear-gradient(
+    var(--rotation),
+    rgba(255, 255, 255, 0) 50%,
+    #0ea5e9 50%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  background-size: 500% 500%;
+}
+@media (min-width: 768px) {
+  .chain-signal {
+    --rotation: 90deg;
+    width: 30px;
+    height: 1.5px;
+  }
+}
+@media (min-width: 1024px) {
+  .chain-signal {
+    width: 44px;
+  }
+}
+@media (min-width: 1280px) {
+  .chain-signal {
+    width: 54px;
+  }
+}
+.chain-signal.is-rev {
+  transform: rotate(180deg);
+}
+.chain-caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 1.75rem;
+  font: 400 0.75rem/1 var(--glide-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--glide-ink-4);
+}
+
+/* ── Showcase ── */
+.showcase-glow {
+  position: absolute;
+  top: 2.5rem;
+  z-index: -1;
+  width: 100%;
+  max-width: 42rem;
+  aspect-ratio: 16 / 9;
+  border-radius: 50%;
+  background: var(--glide-glow-solid);
+  mix-blend-mode: screen;
+  filter: blur(120px);
+  opacity: 0.8;
+}
+.showcase {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  margin-top: 4rem;
+  padding: 2rem;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(240, 249, 255, 0.2);
+  background: linear-gradient(to bottom, rgba(249, 250, 251, 0.12), rgba(249, 250, 251, 0.04));
+  backdrop-filter: blur(4px);
+}
+@media (min-width: 1024px) {
+  .showcase {
+    grid-template-columns: 1fr 2fr;
+    gap: 3rem;
+    padding-block: 3rem;
+    overflow: visible;
+  }
+  /* Image-first panels: the image (order -1) takes the wide column. */
+  .showcase:not(.is-reversed) {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+.showcase-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: center;
+  mask-image: radial-gradient(circle at 60% 50%, black 10%, transparent 42%);
+}
+.showcase-copy figure {
+  display: grid;
+  place-items: center;
+  width: fit-content;
+  margin: 0;
+  padding: 0.875rem;
+  border-radius: 8px;
+  background: var(--glide-icon-bg);
+}
+.showcase-copy h3 {
+  margin: 1.5rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+.showcase-copy p {
+  max-width: 36rem;
+  margin: 0.875rem 0 1.375rem;
+  color: var(--glide-ink-2);
+}
+.showcase-copy ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1.375rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+  color: var(--glide-ink-2);
+}
+.showcase-copy li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+.showcase-image {
+  min-width: 0;
+  filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.5));
+}
+.showcase-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+/* Near-square captures (e.g. a modal) would dominate the 2fr column. */
+.showcase-image.is-narrow img {
+  max-width: 28rem;
+  margin-inline: auto;
+}
+@media (min-width: 1024px) {
+  .showcase:not(.is-reversed) .showcase-image {
+    order: -1;
+    transform: translateX(-12%);
+  }
+  .showcase .showcase-image.is-narrow {
+    transform: none;
+  }
+  /* Hug the copy column so the gap stays 3rem instead of centering. */
+  .showcase:not(.is-reversed) .showcase-image.is-narrow img {
+    margin-right: 0;
+  }
+  .showcase.is-reversed .showcase-image {
+    transform: translateX(12%);
   }
 }
 
-.dashboard-preview-main {
-  flex: 1;
-  padding: 1.5rem;
+/* ── Modules ── */
+.module-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.625rem;
+  max-width: 56rem;
+  margin: 3rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.module-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--glide-ink-2);
+  font-size: 0.875rem;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+.module-chip > :first-child {
+  color: var(--glide-a1);
+}
+.module-chip:hover {
+  border-color: rgba(45, 212, 191, 0.45);
+  color: var(--glide-ink);
 }
 
-/* CTA Card */
-.cta-card {
-  position: relative;
-  padding: 4rem 2rem;
-  border-radius: 2rem;
-  background: rgba(20, 20, 26, 0.6);
-  border: 1px solid rgba(124, 58, 237, 0.15);
-  overflow: hidden;
+/* ── CTA ── */
+.cta {
+  padding-block: 8rem;
+  text-align: center;
 }
-
+@media (min-width: 768px) {
+  .cta {
+    padding-block: 10rem;
+  }
+}
 .cta-glow {
   position: absolute;
-  top: -50%;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 400px;
-  background: radial-gradient(
-    circle,
-    rgba(124, 58, 237, 0.15) 0%,
-    transparent 60%
-  );
-  filter: blur(60px);
-  pointer-events: none;
+  z-index: -1;
+  width: 100%;
+  max-width: 24rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.5);
+  filter: blur(160px);
+  transform: translate(-50%, -50%);
+}
+.cta-icon {
+  padding: 1rem;
+  border-radius: 10px;
+  background: linear-gradient(to bottom, #1f2937, #111827);
+}
+.cta-icon img {
+  display: block;
+  width: 6rem;
+  height: 6rem;
+}
+.cta h2 {
+  max-width: 36rem;
+  margin: 2rem 0 0;
+  text-wrap: balance;
+  font-size: clamp(2.25rem, 5vw, 3rem);
+  font-weight: 500;
+  line-height: 1.1;
+}
+.cta-buttons {
+  margin-top: 1.5rem;
 }
 </style>
