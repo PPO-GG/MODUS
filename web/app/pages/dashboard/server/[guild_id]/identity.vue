@@ -34,10 +34,9 @@
                 @drop.prevent="onDrop"
               >
                 <UAvatar
-                  :src="avatarPreview || undefined"
+                  :src="avatarSrc"
                   :alt="nickname || 'Bot avatar'"
                   size="3xl"
-                  icon="i-lucide-bot"
                 />
                 <div class="min-w-0 space-y-2">
                   <div class="flex flex-wrap gap-2">
@@ -132,10 +131,9 @@
       >
         <div class="flex gap-3 rounded-lg bg-[#313338] p-4">
           <UAvatar
-            :src="avatarPreview || undefined"
+            :src="avatarSrc"
             :alt="previewName"
             size="lg"
-            icon="i-lucide-bot"
             class="shrink-0"
           />
           <div class="min-w-0 flex-1">
@@ -187,6 +185,7 @@ const dirty = computed(
 );
 
 const previewName = computed(() => nickname.value.trim() || DEFAULT_BOT_NAME);
+const avatarSrc = computed(() => avatarPreview.value || "/modus.svg");
 const previewTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
 async function load() {
