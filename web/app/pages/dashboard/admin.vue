@@ -129,6 +129,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  unregisterSidebar("__admin__");
+  unregisterSidebar();
 });
 </script>
