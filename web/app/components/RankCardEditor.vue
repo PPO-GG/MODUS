@@ -1593,6 +1593,7 @@ import {
   parseGradientColors,
   parseGradientStops,
 } from "~/utils/gradient";
+import { remeasureText } from "~/utils/konva-text";
 import { useGoogleFonts } from "~/composables/useGoogleFonts";
 
 const { loadFont, loadTemplateFonts } = useGoogleFonts();
@@ -3395,7 +3396,8 @@ async function handleFontChange(family: string) {
   if (!selectedElement.value) return;
   selectedElement.value.fontFamily = family;
   await loadFont(family);
-  stageRef.value?.getNode()?.batchDraw();
+  remeasureText(stageRef.value?.getNode());
+  void rebindTransformer();
 }
 
 // ── Keyboard Shortcuts ─────────────────────────────────────────────────
@@ -3597,7 +3599,7 @@ onMounted(async () => {
   window.addEventListener("blur", handleWindowBlur);
 
   await loadTemplateFonts(template.value.elements);
-  stageRef.value?.getNode()?.batchDraw();
+  remeasureText(stageRef.value?.getNode());
   undoStack.value = [JSON.stringify(template.value)];
 });
 

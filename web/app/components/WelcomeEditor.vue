@@ -1392,6 +1392,7 @@ import {
   getWelcomeImageTintRasterSize,
   isTintableWelcomeSvgSource,
 } from "~/utils/welcome-images";
+import { remeasureText } from "~/utils/konva-text";
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import { useGoogleFonts } from "~/composables/useGoogleFonts";
 
@@ -2887,7 +2888,8 @@ async function handleFontChange(family: string) {
   if (!selectedElement.value) return;
   selectedElement.value.fontFamily = family;
   await loadFont(family);
-  stageRef.value?.getNode()?.batchDraw();
+  remeasureText(stageRef.value?.getNode());
+  void rebindTransformer();
 }
 
 // ── Keyboard Shortcuts ──
@@ -3168,7 +3170,7 @@ onMounted(() => {
     // Load Google Fonts used in the template, then repaint once every
     // one of them is actually ready to draw (fixes flash-of-fallback).
     await loadTemplateFonts(template.value.elements);
-    stageRef.value?.getNode()?.batchDraw();
+    remeasureText(stageRef.value?.getNode());
     undoStack.value = [JSON.stringify(template.value)];
   });
 });
