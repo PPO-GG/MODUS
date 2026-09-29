@@ -3,7 +3,7 @@
     <!-- Loading -->
     <div v-if="state.loading" class="flex justify-center py-20">
       <UIcon
-        name="i-heroicons-arrow-path"
+        name="i-lucide-loader-circle"
         class="w-12 h-12 animate-spin text-primary-500"
       />
     </div>
@@ -11,7 +11,7 @@
     <!-- Unauthorized -->
     <div v-else-if="state.unauthorized" class="text-center py-20">
       <UIcon
-        name="i-heroicons-lock-closed"
+        name="i-lucide-lock"
         class="w-16 h-16 text-red-500 mx-auto mb-4"
       />
       <h1 class="text-3xl font-bold mb-2">Access Denied</h1>
@@ -25,7 +25,7 @@
     <!-- Module-scoped user hitting a page outside their grant -->
     <div v-else-if="state.guild && !canAccessActiveTab" class="text-center py-20">
       <UIcon
-        name="i-heroicons-lock-closed"
+        name="i-lucide-lock"
         class="w-16 h-16 text-red-500 mx-auto mb-4"
       />
       <h1 class="text-3xl font-bold mb-2">Access Denied</h1>
