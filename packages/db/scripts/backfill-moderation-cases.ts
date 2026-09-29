@@ -6,12 +6,22 @@
  * (guild_id, case_number), so re-running is safe.
  *
  * Usage:
- *   DATABASE_URL=postgres://...  pnpm --filter @modus/db run migrate:mod-cases [--dry-run]
+ *   pnpm --filter @modus/db run migrate:mod-cases [--dry-run]
+ *
+ * DATABASE_URL is read from the environment, else from the repo-root .env
+ * (then packages/db/.env) — the same files drizzle.config.ts loads.
  */
+import fs from "fs";
+import path from "path";
 import { eq } from "drizzle-orm";
 import { createDb } from "../src/client";
 import { guildConfigs } from "../src/schema";
 import { ModerationCaseRepository } from "../src/repositories/moderation-cases";
+
+// Existing environment variables win; files never override them.
+for (const file of [path.resolve(__dirname, "../../../.env"), path.resolve(__dirname, "../.env")]) {
+  if (fs.existsSync(file)) process.loadEnvFile(file);
+}
 
 interface LegacyWarning {
   caseId: number;
