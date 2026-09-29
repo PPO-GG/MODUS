@@ -33,7 +33,6 @@ import { ServerRepository } from "../src/repositories/servers";
 import { ModuleRepository } from "../src/repositories/modules";
 import { BotStatusRepository } from "../src/repositories/bot-status";
 import { LogRepository } from "../src/repositories/logs";
-import { MilestoneUserRepository } from "../src/repositories/milestones";
 import { AutomodRuleRepository } from "../src/repositories/automod";
 import { AIUsageLogRepository } from "../src/repositories/ai-usage";
 import { TagRepository } from "../src/repositories/tags";
@@ -122,7 +121,6 @@ function buildMigrators(repos: {
   modules: ModuleRepository;
   botStatus: BotStatusRepository;
   logs: LogRepository;
-  milestones: MilestoneUserRepository;
   automod: AutomodRuleRepository;
   aiUsage: AIUsageLogRepository;
   tags: TagRepository;
@@ -132,7 +130,7 @@ function buildMigrators(repos: {
   // Ordering rationale:
   //  1. Independent roots first (modules, servers, bot_status).
   //  2. Owner-dependent sets next (guild_configs depends on servers
-  //     conceptually; logs, milestones, ai_usage depend on guild_id).
+  //     conceptually; logs, ai_usage depend on guild_id).
   //  3. recordings before recording_tracks (true FK).
   return [
     {
@@ -284,25 +282,6 @@ function buildMigrators(repos: {
           },
           d.$createdAt,
         ),
-    },
-    {
-      name: "milestone_users",
-      collectionId: "milestone_users",
-      order: 70,
-      describe: (d) => `${d.guild_id}/${d.user_id}`,
-      write: async (d) =>
-        repos.milestones.upsertMigrated({
-          id: d.$id,
-          guild_id: d.guild_id,
-          user_id: d.user_id,
-          username: d.username,
-          char_count: typeof d.char_count === "number" ? d.char_count : 0,
-          last_milestone:
-            typeof d.last_milestone === "number" ? d.last_milestone : 0,
-          notification_pref: d.notification_pref || "public",
-          opted_in: Boolean(d.opted_in),
-          createdAt: d.$createdAt,
-        }),
     },
     {
       name: "automod_rules",
@@ -463,7 +442,6 @@ async function main() {
     modules: new ModuleRepository(db),
     botStatus: new BotStatusRepository(db),
     logs: new LogRepository(db),
-    milestones: new MilestoneUserRepository(db),
     automod: new AutomodRuleRepository(db),
     aiUsage: new AIUsageLogRepository(db),
     tags: new TagRepository(db),

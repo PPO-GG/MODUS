@@ -21,7 +21,6 @@ import {
   BotStatusRepository,
   LogRepository,
   type LogInput,
-  MilestoneUserRepository,
   AutomodRuleRepository,
   AIUsageLogRepository,
   TagRepository,
@@ -68,7 +67,6 @@ export class DatabaseService {
   public readonly modules: ModuleRepository;
   public readonly botStatus: BotStatusRepository;
   public readonly logs: LogRepository;
-  public readonly milestones: MilestoneUserRepository;
   public readonly xp: XpUserRepository;
   public readonly automod: AutomodRuleRepository;
   public readonly aiUsage: AIUsageLogRepository;
@@ -145,7 +143,6 @@ export class DatabaseService {
     this.modules = new ModuleRepository(db);
     this.botStatus = new BotStatusRepository(db);
     this.logs = new LogRepository(db);
-    this.milestones = new MilestoneUserRepository(db);
     this.xp = new XpUserRepository(db);
     this.automod = new AutomodRuleRepository(db);
     this.aiUsage = new AIUsageLogRepository(db);
@@ -680,73 +677,6 @@ export class DatabaseService {
 
   async getRecordingTracks(recordingId: string): Promise<any[]> {
     return this.recordings.listTracks(recordingId);
-  }
-
-  // ── Milestones ─────────────────────────────────────────────────────────
-
-  async getMilestoneUser(
-    guildId: string,
-    userId: string,
-  ): Promise<any | null> {
-    try {
-      return await this.milestones.getByGuildAndUser(guildId, userId);
-    } catch (error) {
-      console.error(
-        `[DatabaseService] getMilestoneUser(${guildId}/${userId}) failed:`,
-        error,
-      );
-      return null;
-    }
-  }
-
-  async createMilestoneUser(data: {
-    guild_id: string;
-    user_id: string;
-    username: string;
-    char_count: number;
-    last_milestone: number;
-    notification_pref: string;
-    opted_in: boolean;
-  }): Promise<string> {
-    return this.milestones.create(data);
-  }
-
-  async updateMilestoneUser(
-    docId: string,
-    data: Record<string, any>,
-  ): Promise<void> {
-    await this.milestones.update(docId, data);
-  }
-
-  async getMilestoneLeaderboard(
-    guildId: string,
-    limit: number,
-    offset: number,
-  ): Promise<{ users: any[]; total: number }> {
-    try {
-      return await this.milestones.getLeaderboard(guildId, limit, offset);
-    } catch (error) {
-      console.error(
-        `[DatabaseService] getLeaderboard failed for ${guildId}:`,
-        error,
-      );
-      return { users: [], total: 0 };
-    }
-  }
-
-  async getMilestoneUserRank(
-    guildId: string,
-    charCount: number,
-  ): Promise<number> {
-    try {
-      return await this.milestones.getRank(guildId, charCount);
-    } catch (error) {
-      console.error(
-        `[DatabaseService] getRank failed for ${guildId}:`,
-        error,
-      );
-      return 0;
-    }
   }
 
   // ── XP & Leveling ──────────────────────────────────────────────────────

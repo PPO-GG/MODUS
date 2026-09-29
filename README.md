@@ -85,7 +85,6 @@ Velocity-based join flood detection. Configurable thresholds (X joins in Y secon
 - **Events** — Schedule server events with timezone support
 - **Tags** — Reusable text/embed snippets with autocomplete
 - **Polls** — Native Discord polls with visual result bars
-- **Milestones** — Track and celebrate member activity milestones
 - **Verification** — Button-based gate verification with role assignment
 - **Triggers** — Receive webhooks from GitHub, Twitch, or custom sources and post formatted embeds
 - **Embeds** — Build and send custom embeds via slash command or modal

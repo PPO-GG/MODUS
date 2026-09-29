@@ -14,7 +14,6 @@ import {
   ModuleAccessRepository,
   BotStatusRepository,
   LogRepository,
-  MilestoneUserRepository,
   AutomodRuleRepository,
   AIUsageLogRepository,
   TagRepository,
@@ -43,7 +42,6 @@ export interface Repos {
   modules: ModuleRepository;
   botStatus: BotStatusRepository;
   logs: LogRepository;
-  milestones: MilestoneUserRepository;
   xp: XpUserRepository;
   automod: AutomodRuleRepository;
   aiUsage: AIUsageLogRepository;
@@ -82,7 +80,6 @@ export function getRepos(): Repos | null {
       modules: new ModuleRepository(db),
       botStatus: new BotStatusRepository(db),
       logs: new LogRepository(db),
-      milestones: new MilestoneUserRepository(db),
       xp: new XpUserRepository(db),
       automod: new AutomodRuleRepository(db),
       aiUsage: new AIUsageLogRepository(db),
