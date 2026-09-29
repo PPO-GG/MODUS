@@ -1,182 +1,158 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h2
-          class="text-2xl font-bold mb-1 bg-gradient-to-r from-teal-400 to-emerald-500 bg-clip-text text-transparent"
-        >
-          Server Logs
-        </h2>
-        <p class="text-sm text-gray-400">
-          Recent bot activity and moderation events for this server.
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <UButton
-          icon="i-heroicons-trash"
-          variant="ghost"
-          color="neutral"
-          :disabled="logs.length === 0"
-          title="Clear Server Logs"
-          class="rounded-xl border border-white/8 hover:text-red-400 hover:bg-red-500/10"
-          @click="confirmModalOpen = true"
-        />
-        <UButton
-          icon="i-heroicons-arrow-path"
-          variant="ghost"
-          color="neutral"
-          :loading="refreshing"
-          title="Refresh"
-          class="rounded-xl border border-white/8"
-          @click="fetchLogs"
-        />
-      </div>
-    </div>
+  <div class="mx-auto max-w-6xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-scroll-text"
+      title="Server Logs"
+      description="Recent bot activity and moderation events for this server."
+    >
+      <template #status>
+        <div class="flex shrink-0 items-center gap-2">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            icon="i-lucide-refresh-cw"
+            :loading="refreshing"
+            aria-label="Refresh logs"
+            @click="fetchLogs"
+          />
+          <UButton
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            icon="i-lucide-trash-2"
+            :disabled="logs.length === 0"
+            aria-label="Clear server logs"
+            class="hover:!bg-red-500/10 hover:!text-red-300"
+            @click="confirmModalOpen = true"
+          />
+        </div>
+      </template>
+    </DashboardModuleHeader>
 
     <!-- Filters -->
     <div class="flex flex-wrap items-center gap-3">
-      <!-- Level Filter -->
-      <div class="flex items-center gap-1 bg-gray-800/50 rounded-lg p-1">
-        <UButton
+      <div
+        class="inline-flex max-w-full overflow-x-auto rounded-full bg-white/[0.04] p-1 ring-1 ring-inset ring-white/10"
+        role="group"
+        aria-label="Filter by level"
+      >
+        <button
           v-for="lvl in logLevels"
           :key="lvl.value"
-          size="xs"
-          :variant="levelFilter === lvl.value ? 'solid' : 'ghost'"
-          :color="lvl.color"
-          class="rounded-md text-xs font-bold uppercase tracking-wider"
+          type="button"
+          :aria-pressed="levelFilter === lvl.value"
+          class="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
+          :class="
+            levelFilter === lvl.value
+              ? 'bg-sky-200/15 text-white ring-1 ring-inset ring-sky-100/25'
+              : 'text-gray-400 hover:text-white'
+          "
           @click="levelFilter = lvl.value"
         >
           {{ lvl.label }}
-          <UBadge
+          <span
             v-if="getLevelCount(lvl.value) > 0"
-            variant="soft"
-            :color="lvl.color"
-            size="xs"
-            class="ml-1"
+            class="rounded-full px-1.5 text-[11px]"
+            :class="lvl.badge"
           >
             {{ getLevelCount(lvl.value) }}
-          </UBadge>
-        </UButton>
+          </span>
+        </button>
       </div>
 
       <UInput
         v-model="searchQuery"
-        placeholder="Search logs..."
-        icon="i-heroicons-magnifying-glass"
-        size="sm"
-        class="w-56"
+        placeholder="Search logs…"
+        icon="i-lucide-search"
+        class="w-full sm:w-64"
+        aria-label="Search logs"
       />
 
-      <!-- Log count -->
-      <span class="text-xs text-gray-500 font-mono ml-auto">
+      <span class="ml-auto font-mono text-xs text-gray-400" aria-live="polite">
         {{ filteredLogs.length }} / {{ logs.length }} entries
       </span>
     </div>
 
-    <!-- Terminal -->
-    <div
-      class="bg-gray-950 rounded-xl border border-gray-800/50 p-4 font-mono text-[11px] h-[65vh] flex flex-col"
+    <!-- Log stream -->
+    <section
+      class="flex h-[65vh] min-h-[24rem] flex-col rounded-xl bg-[rgba(3,7,18,0.55)] p-3 font-mono text-xs ring-1 ring-inset ring-white/10"
+      aria-label="Server log entries"
     >
-      <div
-        v-if="loading"
-        class="flex-1 flex items-center justify-center text-gray-500"
-      >
-        <UIcon
-          name="i-heroicons-arrow-path"
-          class="w-5 h-5 animate-spin mr-2"
-        />
-        Loading logs…
+      <div v-if="loading" class="space-y-2 p-2" aria-busy="true">
+        <div v-for="i in 8" :key="i" class="h-5 animate-pulse rounded bg-white/[0.04]" />
       </div>
+
       <div
         v-else-if="logs.length === 0"
-        class="flex-1 flex items-center justify-center text-gray-600 italic"
+        class="flex flex-1 flex-col items-center justify-center gap-2 text-center font-sans"
       >
-        <div class="text-center">
-          <UIcon
-            name="i-heroicons-inbox"
-            class="w-8 h-8 mx-auto mb-2 opacity-30"
-          />
-          <p>No logs recorded yet.</p>
-        </div>
+        <UIcon name="i-lucide-inbox" class="h-8 w-8 text-gray-600" />
+        <p class="text-sm text-gray-300">No logs recorded yet</p>
+        <p class="text-[13px] text-gray-400">Bot activity for this server will show up here.</p>
       </div>
+
       <div
         v-else-if="filteredLogs.length === 0"
-        class="flex-1 flex items-center justify-center text-gray-600 italic"
+        class="flex flex-1 flex-col items-center justify-center gap-2 text-center font-sans"
       >
-        <p>No logs matching your filters.</p>
+        <UIcon name="i-lucide-search" class="h-8 w-8 text-gray-600" />
+        <p class="text-sm text-gray-300">No logs match your filters</p>
+        <UButton
+          color="neutral"
+          variant="soft"
+          size="xs"
+          @click="clearFilters"
+        >
+          Clear filters
+        </UButton>
       </div>
-      <div v-else class="flex-1 overflow-y-auto space-y-0.5">
+
+      <div v-else class="flex-1 space-y-px overflow-y-auto pr-1" role="log">
         <div
           v-for="log in filteredLogs"
           :key="log.$id"
-          class="flex gap-3 py-1 px-2 rounded hover:bg-white/5 transition-colors"
+          class="flex flex-wrap gap-x-3 rounded px-2 py-1 transition-colors hover:bg-white/[0.04]"
         >
-          <span class="text-gray-600 whitespace-nowrap shrink-0">{{
-            formatTime(log.timestamp)
-          }}</span>
+          <span class="shrink-0 whitespace-nowrap text-gray-500">{{ formatTime(log.timestamp) }}</span>
           <span
-            :class="[
-              'font-black uppercase min-w-[45px] shrink-0',
+            class="min-w-[3.25rem] shrink-0 font-bold uppercase"
+            :class="
               log.level === 'error'
-                ? 'text-red-400'
+                ? 'text-red-300'
                 : log.level === 'warn'
-                  ? 'text-amber-400'
-                  : 'text-blue-400',
-            ]"
-            >[{{ log.level }}]</span
+                  ? 'text-amber-300'
+                  : 'text-sky-300'
+            "
           >
+            {{ log.level }}
+          </span>
           <span
             v-if="log.shardId !== undefined && log.shardId !== null"
-            class="text-cyan-500/60 shrink-0"
-            >S{{ log.shardId }}</span
+            class="shrink-0 text-gray-500"
           >
-          <span v-if="log.source" class="text-emerald-400/60 shrink-0"
-            >[{{ log.source }}]</span
-          >
-          <span class="text-gray-300 break-words">{{ log.message }}</span>
+            S{{ log.shardId }}
+          </span>
+          <span v-if="log.source" class="shrink-0 text-teal-300/80">{{ log.source }}</span>
+          <!-- On narrow screens the message wraps onto its own line under the metadata. -->
+          <span class="min-w-0 basis-full break-words text-gray-200 sm:flex-1 sm:basis-0">{{ log.message }}</span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Clear Logs Confirmation Modal -->
-    <UModal v-model:open="confirmModalOpen">
-      <template #content>
-        <div class="p-6 space-y-4">
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon
-                name="i-heroicons-trash"
-                class="w-5 h-5 text-red-400"
-              />
-            </div>
-            <div>
-              <h3 class="text-lg font-bold text-white">Clear Server Logs</h3>
-              <p class="text-xs text-gray-400">
-                Are you sure you want to delete all logs for this server? This action cannot be undone.
-              </p>
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-2 pt-2">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              :disabled="deleting"
-              @click="confirmModalOpen = false"
-            >
-              Cancel
-            </UButton>
-            <UButton
-              color="error"
-              :loading="deleting"
-              @click="deleteLogs"
-            >
-              Clear Logs
-            </UButton>
-          </div>
+    <!-- Clear confirmation -->
+    <UModal
+      v-model:open="confirmModalOpen"
+      title="Clear server logs"
+      description="Delete all logs for this server? This can't be undone."
+    >
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton color="neutral" variant="ghost" :disabled="deleting" @click="confirmModalOpen = false">
+            Cancel
+          </UButton>
+          <UButton color="error" :loading="deleting" @click="deleteLogs">Clear logs</UButton>
         </div>
       </template>
     </UModal>
@@ -200,10 +176,10 @@ const searchQuery = ref("");
 const levelFilter = ref("all");
 
 const logLevels = [
-  { value: "all", label: "All", color: "neutral" as const },
-  { value: "info", label: "Info", color: "info" as const },
-  { value: "warn", label: "Warn", color: "warning" as const },
-  { value: "error", label: "Error", color: "error" as const },
+  { value: "all", label: "All", badge: "bg-white/[0.08] text-gray-300" },
+  { value: "info", label: "Info", badge: "bg-sky-400/15 text-sky-200" },
+  { value: "warn", label: "Warn", badge: "bg-amber-400/15 text-amber-200" },
+  { value: "error", label: "Error", badge: "bg-red-400/15 text-red-200" },
 ];
 
 const filteredLogs = computed(() => {
@@ -214,9 +190,7 @@ const filteredLogs = computed(() => {
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     result = result.filter(
-      (l) =>
-        l.message?.toLowerCase().includes(q) ||
-        l.source?.toLowerCase().includes(q),
+      (l) => l.message?.toLowerCase().includes(q) || l.source?.toLowerCase().includes(q),
     );
   }
   return result;
@@ -227,12 +201,15 @@ const getLevelCount = (level: string) => {
   return logs.value.filter((l) => l.level === level).length;
 };
 
+const clearFilters = () => {
+  levelFilter.value = "all";
+  searchQuery.value = "";
+};
+
 const fetchLogs = async () => {
   refreshing.value = true;
   try {
-    logs.value = await $fetch<any[]>(
-      `/api/logs?guild_id=${encodeURIComponent(guildId)}&limit=500`,
-    );
+    logs.value = await $fetch<any[]>(`/api/logs?guild_id=${encodeURIComponent(guildId)}&limit=500`);
   } catch (error) {
     console.error("Error fetching logs:", error);
   } finally {
