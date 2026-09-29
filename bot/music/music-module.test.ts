@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../modules/recording", () => ({ activeSessions: new Map<string, unknown>() }));
 
 import { activeSessions as recordingActiveSessions } from "../modules/recording";
-import musicModule, { musicSeek, musicSkip, musicStop } from "../modules/music";
+import musicModule, { musicAiTools, musicSeek, musicSkip, musicStop } from "../modules/music";
 import type { MusicPlaybackEvent } from "./LavalinkEvents";
 import type {
   CanonicalTrack,
@@ -202,11 +202,20 @@ class FakeInteraction {
   readonly user = { id: "user-1", tag: "user#0001", toString: () => "<@user-1>" };
   readonly guild = { id: "guild-1", name: "Test Guild" };
 
+  roleIds: string[] = [];
+  canManageGuild = false;
+
   get member() {
     return {
       id: "user-1",
       voice: this.inVoice ? { channel: { id: "voice-1" } } : {},
+      roles: { cache: new Set(this.roleIds) },
+      permissions: { has: () => this.canManageGuild },
     };
+  }
+
+  async reply(payload: any) {
+    this.replies.push(payload);
   }
 
   readonly options = {
@@ -433,6 +442,105 @@ describe("music module command handlers", () => {
     expect(volumes[0]!.volume).toBe(80);
     expect(harness.savedSettings.at(-1)?.defaultVolume).toBe(80);
     expect(interaction.lastReply.content).toContain("80%");
+  });
+
+  it("keeps dashboard playlist entries when the volume default is saved", async () => {
+    const harness = createHarness({
+      queue: snapshot({
+        volume: 50,
+        currentEntryId: "entry-1",
+        entries: [{ id: "entry-1", track: track("entry-1", "One"), position: 0, status: "playing" }],
+      }),
+    });
+    harness.settings.preQueue = [{ url: "https://example.com/a", title: "A" }];
+
+    await run(harness, "volume", { level: 80 });
+
+    expect(harness.savedSettings.at(-1)?.preQueue).toEqual([
+      { url: "https://example.com/a", title: "A" },
+    ]);
+  });
+
+  describe("DJ role", () => {
+    async function runAs(
+      harness: Harness,
+      commandName: string,
+      who: { roleIds?: string[]; canManageGuild?: boolean } = {},
+      options: Record<string, string | number | boolean> = {},
+    ) {
+      const interaction = new FakeInteraction(commandName, options, true, "guild-1", harness.sent);
+      interaction.roleIds = who.roleIds ?? [];
+      interaction.canManageGuild = who.canManageGuild ?? false;
+      await musicModule.execute(interaction as any, harness.moduleManager);
+      return interaction;
+    }
+
+    it("refuses playback commands from members without the DJ role", async () => {
+      const harness = createHarness();
+      harness.settings.djRoleId = "dj-role";
+
+      const interaction = await runAs(harness, "play", {}, { query: "Durable Song" });
+
+      expect(interaction.deferred).toBe(false);
+      expect(interaction.lastReply.content).toContain("<@&dj-role>");
+      expect(harness.service.commands).toHaveLength(0);
+      expect(harness.engine.loadRequests).toHaveLength(0);
+    });
+
+    it("allows members who hold the DJ role", async () => {
+      const harness = createHarness();
+      harness.settings.djRoleId = "dj-role";
+
+      await runAs(harness, "play", { roleIds: ["dj-role"] }, { query: "Durable Song" });
+
+      expect(commandsOfType(harness.service, "play")).toHaveLength(1);
+    });
+
+    it("lets server managers bypass the DJ role", async () => {
+      const harness = createHarness();
+      harness.settings.djRoleId = "dj-role";
+
+      await runAs(harness, "play", { canManageGuild: true }, { query: "Durable Song" });
+
+      expect(commandsOfType(harness.service, "play")).toHaveLength(1);
+    });
+
+    it("keeps read-only commands open to everyone", async () => {
+      const harness = createHarness();
+      harness.settings.djRoleId = "dj-role";
+
+      const interaction = await runAs(harness, "queue");
+
+      expect(interaction.deferred).toBe(true);
+    });
+
+    it("gates the AI music tools the same way", async () => {
+      const harness = createHarness({
+        queue: snapshot({
+          currentEntryId: "entry-1",
+          entries: [{ id: "entry-1", track: track("entry-1", "One"), position: 0, status: "playing" }],
+        }),
+      });
+      harness.settings.djRoleId = "dj-role";
+      const skip = musicAiTools.find((tool) => tool.name === "skip_track")!;
+      const ctx = (roleIds: string[]) =>
+        ({
+          guildId: "guild-1",
+          moduleManager: harness.moduleManager,
+          message: {
+            member: {
+              roles: { cache: new Set(roleIds) },
+              permissions: { has: () => false },
+            },
+          },
+          args: {},
+        }) as any;
+
+      expect(await skip.execute(ctx([]))).toContain("<@&dj-role>");
+      expect(commandsOfType(harness.service, "skip")).toHaveLength(0);
+      await skip.execute(ctx(["dj-role"]));
+      expect(commandsOfType(harness.service, "skip")).toHaveLength(1);
+    });
   });
 
   it("sets the repeat mode from the loop command", async () => {
