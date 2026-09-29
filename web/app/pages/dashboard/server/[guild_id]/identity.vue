@@ -1,119 +1,193 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <div class="mb-6">
-      <h2
-        class="text-2xl font-bold mb-2 bg-gradient-to-r from-primary-400 to-fuchsia-500 bg-clip-text text-transparent"
-      >
-        Bot Identity
-      </h2>
-      <p class="text-sm text-gray-400">
-        Give the bot a custom nickname and avatar in this server only. Other
-        servers are unaffected.
-      </p>
-    </div>
+  <div class="mx-auto max-w-5xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-id-card"
+      title="Bot Identity"
+      description="Give the bot its own nickname and avatar in this server. Other servers keep the default."
+    />
 
-    <div
+    <p
       v-if="errorMessage"
-      class="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+      class="flex items-start gap-2 rounded-xl bg-red-400/[0.06] px-4 py-3 text-sm text-red-200 ring-1 ring-inset ring-red-400/25"
+      role="alert"
     >
+      <UIcon name="i-lucide-circle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
       {{ errorMessage }}
-    </div>
+    </p>
 
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative space-y-5">
-        <div class="flex items-center gap-4">
+    <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div class="min-w-0 space-y-6">
+        <DashboardModuleSection
+          title="Identity"
+          description="Applied to Discord when you save, and only in this server."
+        >
+          <div class="space-y-6">
+            <!-- Avatar -->
+            <div>
+              <p class="mb-2 text-sm font-medium text-white">Avatar</p>
+              <div
+                class="flex flex-wrap items-center gap-4 rounded-xl border border-dashed p-4 transition-colors"
+                :class="dragging ? 'border-teal-300/60 bg-teal-300/[0.05]' : 'border-white/10'"
+                @dragover.prevent="dragging = true"
+                @dragleave.prevent="dragging = false"
+                @drop.prevent="onDrop"
+              >
+                <UAvatar
+                  :src="avatarPreview || undefined"
+                  :alt="nickname || 'Bot avatar'"
+                  size="3xl"
+                  icon="i-lucide-bot"
+                />
+                <div class="min-w-0 space-y-2">
+                  <div class="flex flex-wrap gap-2">
+                    <UButton
+                      color="neutral"
+                      variant="soft"
+                      size="sm"
+                      icon="i-lucide-upload"
+                      :loading="uploading"
+                      @click="avatarInput?.click()"
+                    >
+                      {{ avatarImage ? "Replace" : "Upload" }}
+                    </UButton>
+                    <UButton
+                      v-if="avatarImage"
+                      color="error"
+                      variant="ghost"
+                      size="sm"
+                      icon="i-lucide-trash-2"
+                      @click="clearAvatar"
+                    >
+                      Remove
+                    </UButton>
+                  </div>
+                  <p class="text-[13px] text-gray-400">
+                    Drop an image here or upload one. PNG, JPG or GIF, up to 8 MB.
+                  </p>
+                </div>
+                <input
+                  ref="avatarInput"
+                  type="file"
+                  accept="image/*"
+                  class="sr-only"
+                  aria-label="Upload avatar image"
+                  @change="onFileInput"
+                />
+              </div>
+            </div>
+
+            <!-- Nickname -->
+            <UFormField label="Nickname" class="w-full">
+              <template #hint>
+                <span class="text-xs tabular-nums text-gray-400">{{ nickname.length }}/32</span>
+              </template>
+              <div class="flex flex-wrap items-center gap-2">
+                <UInput
+                  v-model="nickname"
+                  placeholder="Leave blank to use the bot's default name"
+                  :maxlength="32"
+                  icon="i-lucide-user-round-pen"
+                  class="w-full sm:max-w-sm"
+                />
+                <UButton
+                  v-if="nickname"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  @click="nickname = ''"
+                >
+                  Use default name
+                </UButton>
+              </div>
+            </UFormField>
+          </div>
+        </DashboardModuleSection>
+
+        <DashboardModuleSection
+          title="Troubleshooting"
+          description="If the bot looks different in Discord than it does here, push the values shown on this page again."
+        >
+          <UButton
+            color="neutral"
+            variant="soft"
+            icon="i-lucide-rotate-cw"
+            :loading="forceSaving"
+            @click="forceReapply"
+          >
+            Force re-apply
+          </UButton>
+          <p class="mt-2 text-[13px] text-gray-400">
+            This resends the nickname and avatar even when nothing changed, for example after the
+            bot was removed from the server and added back.
+          </p>
+        </DashboardModuleSection>
+      </div>
+
+      <!-- Preview -->
+      <DashboardModuleSection
+        title="Preview"
+        description="How the bot appears in a message in this server."
+        class="xl:sticky xl:top-6"
+      >
+        <div class="flex gap-3 rounded-lg bg-[#313338] p-4">
           <UAvatar
             :src="avatarPreview || undefined"
-            :alt="nickname || 'Bot'"
-            size="3xl"
+            :alt="previewName"
+            size="lg"
+            icon="i-lucide-bot"
+            class="shrink-0"
           />
-          <div class="flex flex-col gap-2">
-            <div class="flex gap-2">
-              <UButton
-                size="sm"
-                variant="soft"
-                :loading="uploading"
-                @click="(($refs.avatarInput as HTMLInputElement).click())"
-              >
-                Upload avatar
-              </UButton>
-              <UButton
-                v-if="avatarImage"
-                size="sm"
-                variant="ghost"
-                color="error"
-                @click="clearAvatar"
-              >
-                Remove
-              </UButton>
+          <div class="min-w-0 flex-1">
+            <div class="mb-1 flex flex-wrap items-center gap-x-1.5">
+              <span class="text-sm font-medium text-white">{{ previewName }}</span>
+              <span class="rounded bg-indigo-500 px-1 text-[10px] font-semibold leading-4 text-white">APP</span>
+              <span class="text-[11px] text-gray-400">Today at {{ previewTime }}</span>
             </div>
-            <input
-              ref="avatarInput"
-              type="file"
-              accept="image/*"
-              class="sr-only"
-              @change="handleAvatarUpload"
-            />
-            <p class="text-xs text-gray-500">PNG, JPG, or GIF. Max 8 MB.</p>
+            <p class="text-sm text-[#dbdee1]">Welcome aboard! This is how I look in this server.</p>
           </div>
         </div>
-
-        <UFormField label="Nickname">
-          <UInput
-            v-model="nickname"
-            placeholder="Leave blank to use the bot's default name"
-            :maxlength="32"
-            class="w-full max-w-sm"
-          />
-          <p class="mt-1 text-xs text-gray-500">{{ nickname.length }}/32</p>
-        </UFormField>
-
-        <div class="flex flex-col items-end gap-1">
-          <div class="flex justify-end gap-2">
-            <UButton
-              variant="ghost"
-              color="neutral"
-              :loading="forceSaving"
-              @click="forceReapply"
-            >
-              Force re-apply
-            </UButton>
-            <UButton color="primary" :loading="saving" @click="save">
-              Save
-            </UButton>
-          </div>
-          <p class="text-xs text-gray-500">
-            Use "Force re-apply" if the bot's identity in Discord doesn't
-            match what's shown here.
-          </p>
-        </div>
-      </div>
+        <p v-if="!nickname.trim()" class="mt-2 text-[13px] text-gray-400">
+          With no nickname the bot shows its default name.
+        </p>
+      </DashboardModuleSection>
     </div>
+
+    <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
 const toast = useToast();
 
+const DEFAULT_BOT_NAME = "MODUS";
+
 const nickname = ref("");
 const avatarImage = ref<string | null>(null);
 const avatarPreview = ref<string | null>(null);
+const avatarInput = ref<HTMLInputElement | null>(null);
+const dragging = ref(false);
 const uploading = ref(false);
 const saving = ref(false);
 const forceSaving = ref(false);
 const errorMessage = ref("");
 
+// What Discord currently has (as of the last successful load or save).
 const savedNickname = ref<string | null>(null);
 const savedAvatarImage = ref<string | null>(null);
+
+const dirty = computed(
+  () =>
+    (nickname.value.trim() || null) !== savedNickname.value ||
+    avatarImage.value !== savedAvatarImage.value,
+);
+
+const previewName = computed(() => nickname.value.trim() || DEFAULT_BOT_NAME);
+const previewTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
 async function load() {
   try {
@@ -131,11 +205,7 @@ async function load() {
   }
 }
 
-async function handleAvatarUpload(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
-
+async function uploadAvatar(file: File) {
   // Guard flag to prevent late FileReader.onload from overwriting error rollback
   let isCurrentUpload = true;
 
@@ -176,13 +246,40 @@ async function handleAvatarUpload(event: Event) {
     avatarPreview.value = avatarImage.value;
   } finally {
     uploading.value = false;
+  }
+}
+
+async function onFileInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  try {
+    if (file) await uploadAvatar(file);
+  } finally {
     input.value = "";
   }
+}
+
+async function onDrop(event: DragEvent) {
+  dragging.value = false;
+  const file = event.dataTransfer?.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    errorMessage.value = "That file isn't an image.";
+    return;
+  }
+  await uploadAvatar(file);
 }
 
 function clearAvatar() {
   avatarImage.value = null;
   avatarPreview.value = null;
+}
+
+function discard() {
+  nickname.value = savedNickname.value ?? "";
+  avatarImage.value = savedAvatarImage.value;
+  avatarPreview.value = savedAvatarImage.value;
+  errorMessage.value = "";
 }
 
 /**
@@ -195,6 +292,14 @@ function clearAvatar() {
  * which wipes the identity row but never touches Discord itself).
  */
 async function performSave(force: boolean, loadingFlag: { value: boolean }) {
+  if (uploading.value) {
+    toast.add({
+      title: "Upload in progress",
+      description: "Wait for the avatar to finish uploading, then save.",
+      color: "warning",
+    });
+    return;
+  }
   loadingFlag.value = true;
   errorMessage.value = "";
   try {
@@ -216,8 +321,7 @@ async function performSave(force: boolean, loadingFlag: { value: boolean }) {
       color: "success",
     });
   } catch (err: any) {
-    errorMessage.value =
-      err?.data?.statusMessage || err?.message || "Failed to save.";
+    errorMessage.value = err?.data?.statusMessage || err?.message || "Failed to save.";
     // Roll back to the last known-applied values on failure so the form
     // doesn't show a state that Discord actually rejected.
     nickname.value = savedNickname.value || "";
@@ -235,6 +339,12 @@ async function save() {
 async function forceReapply() {
   await performSave(true, forceSaving);
 }
+
+onBeforeRouteLeave(() => {
+  if (dirty.value && !window.confirm("You have unsaved identity changes. Leave anyway?")) {
+    return false;
+  }
+});
 
 onMounted(load);
 </script>

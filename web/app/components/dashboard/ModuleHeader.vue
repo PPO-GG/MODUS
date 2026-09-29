@@ -17,8 +17,10 @@
       <p class="mt-0.5 text-sm text-gray-400">{{ description }}</p>
     </div>
     <!-- Pages can replace the status pill (the AI page shows its enable switch here). -->
+    <!-- Pages that aren't modules (Bot Identity, Server Logs) leave `enabled` unset and get no pill. -->
     <slot name="status">
       <span
+        v-if="enabled !== undefined"
         class="hidden shrink-0 items-center gap-2 rounded-full border px-3 py-1 font-mono text-[11px] sm:inline-flex"
         :class="
           enabled
@@ -37,11 +39,15 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  guildId: string;
-  icon: string;
-  title: string;
-  description: string;
-  enabled: boolean;
-}>();
+// Vue casts an absent Boolean prop to false, so `undefined` must be the explicit default.
+withDefaults(
+  defineProps<{
+    guildId: string;
+    icon: string;
+    title: string;
+    description: string;
+    enabled?: boolean;
+  }>(),
+  { enabled: undefined },
+);
 </script>
