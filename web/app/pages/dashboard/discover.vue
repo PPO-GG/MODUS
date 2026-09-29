@@ -23,7 +23,7 @@
       class="flex flex-col items-center justify-center py-32 space-y-4"
     >
       <div
-        class="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"
+        class="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"
       ></div>
       <p class="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
         Synchronizing with Discord...
@@ -58,7 +58,7 @@
       <div class="flex flex-col items-center gap-3">
         <UButton
           v-if="tokenExpired"
-          class="rounded-2xl px-10 py-3 bg-gradient-to-r from-purple-600 to-pink-600 font-bold"
+          class="rounded-2xl px-10 py-3 bg-gradient-to-r from-primary-600 to-pink-600 font-bold"
           @click="refreshLogin"
         >
           Refresh Discord Connection
@@ -91,7 +91,7 @@
         or a dashboard role. Try refreshing your session.
       </p>
       <UButton
-        class="rounded-2xl px-10 py-3 bg-gradient-to-r from-purple-600 to-pink-600 font-bold"
+        class="rounded-2xl px-10 py-3 bg-gradient-to-r from-primary-600 to-pink-600 font-bold"
         @click="refreshLogin"
       >
         Refresh Discord Connection
@@ -250,11 +250,11 @@
           <!-- Header -->
           <div class="space-y-3">
             <div
-              class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center"
+              class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-secondary-500/20 to-primary-500/20 border border-secondary-500/30 flex items-center justify-center"
             >
               <UIcon
                 name="i-heroicons-puzzle-piece"
-                class="w-8 h-8 text-indigo-400"
+                class="w-8 h-8 text-secondary-400"
               />
             </div>
             <h2 class="text-2xl font-black text-white tracking-tight">
@@ -313,7 +313,7 @@
               block
               size="xl"
               color="primary"
-              class="rounded-xl font-black uppercase tracking-widest text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 border-none shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-[1.02]"
+              class="rounded-xl font-black uppercase tracking-widest text-sm bg-gradient-to-r from-secondary-600 to-primary-600 hover:from-secondary-500 hover:to-primary-500 border-none shadow-lg shadow-secondary-500/25 hover:shadow-secondary-500/40 transition-all hover:scale-[1.02]"
               @click="openDiscordInvite"
             >
               <UIcon
@@ -351,6 +351,7 @@ const userStore = useUserStore();
 const toast = useToast();
 const router = useRouter();
 const config = useRuntimeConfig();
+const { refresh: refreshMyServers } = useMyServers();
 
 useHead({ title: "Discover Servers" });
 
@@ -602,6 +603,9 @@ const addServer = async (guild: any) => {
       color: "success",
     });
 
+    // Update the dashboard rail without a reload
+    await refreshMyServers();
+
     // Refresh the existing servers list via server API
     if (adminGuilds.value.length > 0) {
       const guildIds = adminGuilds.value.map((g: any) => g.id).join(",");
@@ -654,6 +658,9 @@ const joinServer = async (guild: any) => {
       description: `You are now an admin of ${guild.name} on the dashboard.`,
       color: "success",
     });
+
+    // Update the dashboard rail without a reload
+    await refreshMyServers();
 
     // Refresh the existing servers list so the button state updates
     if (adminGuilds.value.length > 0) {

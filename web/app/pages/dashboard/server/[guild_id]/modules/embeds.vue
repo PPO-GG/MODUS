@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h2
-          class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent"
+          class="text-2xl font-bold bg-gradient-to-r from-secondary-400 to-primary-500 bg-clip-text text-transparent"
         >
           Embed Builder
         </h2>
@@ -136,14 +136,14 @@
           class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-4"
         >
           <div
-            class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none"
+            class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
           />
           <div class="relative">
             <div class="flex items-center gap-2 mb-3">
               <div
-                class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"
+                class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
               >
-                <UIcon name="i-heroicons-eye" class="text-indigo-400 text-sm" />
+                <UIcon name="i-heroicons-eye" class="text-secondary-400 text-sm" />
               </div>
               <h3 class="text-sm font-semibold text-white">Live Preview</h3>
               <UBadge variant="soft" color="success" class="ml-auto" size="xs">

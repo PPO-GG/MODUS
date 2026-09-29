@@ -10,11 +10,11 @@
       </NuxtLink>
       <div class="flex items-center gap-3">
         <div
-          class="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0"
+          class="w-9 h-9 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
         >
           <UIcon
             name="i-heroicons-cursor-arrow-rays"
-            class="w-5 h-5 text-violet-400"
+            class="w-5 h-5 text-primary-400"
           />
         </div>
         <div>
@@ -60,7 +60,7 @@
             :class="[
               'w-full text-left px-3 py-2.5 rounded-lg border transition-all',
               selectedPanelId === panel.id
-                ? 'bg-white/10 border-violet-500/40 text-white'
+                ? 'bg-white/10 border-primary-500/40 text-white'
                 : 'bg-white/[0.03] border-white/5 text-gray-400 hover:bg-white/5 hover:text-gray-300',
             ]"
             @click="selectedPanelId = panel.id"
@@ -111,17 +111,17 @@
           class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
         >
           <div
-            class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent pointer-events-none"
+            class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
           />
           <div class="relative space-y-4">
             <div class="flex items-center gap-2 justify-between">
               <div class="flex items-center gap-2">
                 <div
-                  class="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0"
+                  class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
                 >
                   <UIcon
                     name="i-heroicons-pencil-square"
-                    class="text-violet-400"
+                    class="text-primary-400"
                   />
                 </div>
                 <h3 class="font-semibold text-white">Panel Settings</h3>
@@ -172,16 +172,16 @@
           class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
         >
           <div
-            class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none"
+            class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
           />
           <div class="relative space-y-4">
             <div class="flex items-center gap-2 mb-1">
               <div
-                class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"
+                class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
               >
                 <UIcon
                   name="i-heroicons-document-text"
-                  class="text-indigo-400"
+                  class="text-secondary-400"
                 />
               </div>
               <div>
@@ -450,7 +450,7 @@
                 name="i-heroicons-command-line"
                 class="text-gray-500 shrink-0"
               />
-              <code class="text-violet-400 text-sm select-all">
+              <code class="text-primary-400 text-sm select-all">
                 /buttonroles deploy {{ selectedPanel.name }} #channel
               </code>
               <UButton

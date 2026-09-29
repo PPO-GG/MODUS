@@ -6,7 +6,7 @@
         class="flex-1 rounded-md py-1 text-xs font-medium transition-colors"
         :class="
           tab === 'solid'
-            ? 'bg-violet-600/30 text-violet-300'
+            ? 'bg-primary-600/30 text-primary-300'
             : 'text-zinc-400 hover:text-zinc-200'
         "
         @click="tab = 'solid'"
@@ -18,7 +18,7 @@
         class="flex-1 rounded-md py-1 text-xs font-medium transition-colors"
         :class="
           tab === 'gradient'
-            ? 'bg-violet-600/30 text-violet-300'
+            ? 'bg-primary-600/30 text-primary-300'
             : 'text-zinc-400 hover:text-zinc-200'
         "
         @click="tab = 'gradient'"
@@ -39,7 +39,7 @@
           class="flex-1 rounded-md py-1 text-xs font-medium transition-colors"
           :class="
             gradType === 'linear'
-              ? 'bg-violet-600/30 text-violet-300'
+              ? 'bg-primary-600/30 text-primary-300'
               : 'text-zinc-400 hover:text-zinc-200'
           "
           @click="gradType = 'linear'"
@@ -52,7 +52,7 @@
           class="flex-1 rounded-md py-1 text-xs font-medium transition-colors"
           :class="
             gradType === 'radial'
-              ? 'bg-violet-600/30 text-violet-300'
+              ? 'bg-primary-600/30 text-primary-300'
               : 'text-zinc-400 hover:text-zinc-200'
           "
           @click="gradType = 'radial'"

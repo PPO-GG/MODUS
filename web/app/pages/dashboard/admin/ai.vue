@@ -3,9 +3,9 @@
     <!-- Header -->
     <div class="flex items-start gap-4">
       <div
-        class="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20 flex-shrink-0 mt-0.5"
+        class="p-2.5 rounded-xl bg-gradient-to-br from-primary-500/10 to-secondary-500/10 border border-primary-500/20 flex-shrink-0 mt-0.5"
       >
-        <UIcon name="i-heroicons-cpu-chip" class="w-5 h-5 text-violet-400" />
+        <UIcon name="i-heroicons-cpu-chip" class="w-5 h-5 text-primary-400" />
       </div>
       <div>
         <h1 class="text-2xl font-black text-white tracking-tight gradient-text">
@@ -144,7 +144,7 @@
           :key="link.name"
           :href="link.url"
           target="_blank"
-          class="text-xs text-violet-400 hover:text-violet-300 underline underline-offset-2 transition-colors"
+          class="text-xs text-primary-400 hover:text-primary-300 underline underline-offset-2 transition-colors"
           >{{ link.name }}</a
         >
       </div>

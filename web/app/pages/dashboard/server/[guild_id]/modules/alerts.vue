@@ -103,14 +103,14 @@
       class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
     >
       <div
-        class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent pointer-events-none"
+        class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
       />
       <div class="relative space-y-4">
         <div class="flex items-center gap-2 mb-1">
           <div
-            class="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0"
+            class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
           >
-            <UIcon name="i-heroicons-list-bullet" class="text-violet-400" />
+            <UIcon name="i-heroicons-list-bullet" class="text-primary-400" />
           </div>
           <h3 class="font-semibold text-white">Active Alerts</h3>
           <UBadge color="neutral" variant="soft" size="xs" class="ml-auto">
@@ -187,16 +187,16 @@
       class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
     >
       <div
-        class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none"
+        class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
       />
       <div class="relative space-y-4">
         <div class="flex items-center gap-2 mb-1">
           <div
-            class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"
+            class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
           >
             <UIcon
               name="i-heroicons-information-circle"
-              class="text-indigo-400"
+              class="text-secondary-400"
             />
           </div>
           <h3 class="font-semibold text-white">Supported Platforms</h3>

@@ -15,7 +15,7 @@
     <div v-if="modulesLoading" class="flex justify-center py-12">
       <UIcon
         name="i-lucide-loader-circle"
-        class="w-8 h-8 animate-spin text-violet-400"
+        class="w-8 h-8 animate-spin text-primary-400"
       />
     </div>
 
@@ -114,12 +114,12 @@
 
     <!-- Admin Access Info -->
     <div
-      class="glass-card rounded-2xl p-6 border border-violet-500/10 bg-violet-500/5"
+      class="glass-card rounded-2xl p-6 border border-primary-500/10 bg-primary-500/5"
     >
       <div class="flex items-center gap-3 mb-2">
         <UIcon
           name="i-lucide-info"
-          class="w-5 h-5 text-violet-400 flex-shrink-0"
+          class="w-5 h-5 text-primary-400 flex-shrink-0"
         />
         <h2 class="text-sm font-bold text-white">Admin Access</h2>
       </div>

@@ -11,9 +11,9 @@
         </NuxtLink>
         <div class="flex items-center gap-3.5">
           <div
-            class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/10"
+            class="w-12 h-12 rounded-2xl bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0 shadow-lg shadow-secondary-500/10"
           >
-            <UIcon name="i-heroicons-trophy" class="w-6 h-6 text-indigo-400" />
+            <UIcon name="i-heroicons-trophy" class="w-6 h-6 text-secondary-400" />
           </div>
           <div>
             <div class="flex items-center gap-3">
@@ -37,7 +37,7 @@
         <NuxtLink
           :to="`/xp/${guildId}`"
           target="_blank"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 transition-all hover:scale-[1.02] shadow-sm"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary-500/10 border border-secondary-500/20 text-xs font-semibold text-secondary-300 hover:bg-secondary-500/20 transition-all hover:scale-[1.02] shadow-sm"
         >
           <UIcon name="i-heroicons-globe-alt" class="w-4 h-4" />
           <span>Public Server Leaderboard</span>
@@ -53,7 +53,7 @@
         class="flex-1 flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold transition-all duration-150"
         :class="
           activeTab === 'general'
-            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+            ? 'bg-secondary-600 text-white shadow-md shadow-secondary-600/30'
             : 'text-gray-400 hover:text-white'
         "
         @click="activeTab = 'general'"
@@ -66,7 +66,7 @@
         class="flex-1 flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold transition-all duration-150"
         :class="
           activeTab === 'card'
-            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+            ? 'bg-secondary-600 text-white shadow-md shadow-secondary-600/30'
             : 'text-gray-400 hover:text-white'
         "
         @click="activeTab = 'card'"
@@ -86,8 +86,8 @@
           <!-- Card Header -->
           <div class="flex items-center justify-between border-b border-white/10 pb-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                <UIcon name="i-heroicons-bolt" class="w-5 h-5 text-indigo-400" />
+              <div class="w-10 h-10 rounded-xl bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0">
+                <UIcon name="i-heroicons-bolt" class="w-5 h-5 text-secondary-400" />
               </div>
               <div>
                 <h2 class="text-base font-bold text-white">XP Earning Rules</h2>
@@ -103,7 +103,7 @@
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <label class="text-xs font-semibold text-gray-200">XP Range per Message</label>
-              <span class="text-xs text-indigo-300 font-mono font-medium">
+              <span class="text-xs text-secondary-300 font-mono font-medium">
                 {{ settings.minXpPerMessage }} – {{ settings.maxXpPerMessage }} XP
               </span>
             </div>
@@ -146,7 +146,7 @@
           <div class="space-y-3 pt-2 border-t border-white/5">
             <div class="flex items-center justify-between">
               <label class="text-xs font-semibold text-gray-200">Message Cooldown</label>
-              <span class="text-xs text-indigo-300 font-mono font-medium">
+              <span class="text-xs text-secondary-300 font-mono font-medium">
                 {{ formatCooldown(settings.cooldownSeconds) }}
               </span>
             </div>
@@ -170,7 +170,7 @@
                   :key="preset"
                   type="button"
                   class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                  :class="settings.cooldownSeconds === preset ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+                  :class="settings.cooldownSeconds === preset ? 'bg-secondary-600 text-white font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/5'"
                   @click="settings.cooldownSeconds = preset"
                 >
                   {{ preset >= 60 ? `${preset / 60}m` : `${preset}s` }}
@@ -186,7 +186,7 @@
           <div class="space-y-3 pt-2 border-t border-white/5">
             <div class="flex items-center justify-between">
               <label class="text-xs font-semibold text-gray-200">Minimum Message Length</label>
-              <span class="text-xs text-indigo-300 font-mono font-medium">
+              <span class="text-xs text-secondary-300 font-mono font-medium">
                 {{ settings.minMessageLength }} characters
               </span>
             </div>
@@ -213,8 +213,8 @@
           <div class="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 backdrop-blur-xl p-6 sm:p-7 space-y-6 shadow-xl">
             <!-- Card Header -->
             <div class="flex items-center gap-3 border-b border-white/10 pb-4">
-              <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-                <UIcon name="i-heroicons-megaphone" class="w-5 h-5 text-purple-400" />
+              <div class="w-10 h-10 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0">
+                <UIcon name="i-heroicons-megaphone" class="w-5 h-5 text-primary-400" />
               </div>
               <div>
                 <h2 class="text-base font-bold text-white">Level-Up Announcements</h2>
@@ -259,10 +259,10 @@
                   v-for="tag in ['{user}', '{username}', '{level}', '{server}']"
                   :key="tag"
                   type="button"
-                  class="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-mono text-indigo-300 hover:text-white transition-all duration-150 flex items-center gap-1"
+                  class="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-mono text-secondary-300 hover:text-white transition-all duration-150 flex items-center gap-1"
                   @click="insertVariable(tag)"
                 >
-                  <span class="text-indigo-400 font-bold">+</span>
+                  <span class="text-secondary-400 font-bold">+</span>
                   <span>{{ tag }}</span>
                 </button>
               </div>
@@ -271,13 +271,13 @@
             <!-- Live Discord Chat Mock Preview -->
             <div class="space-y-2 pt-3 border-t border-white/5">
               <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                <UIcon name="i-lucide-sparkles" class="w-3.5 h-3.5 text-indigo-400" />
+                <UIcon name="i-lucide-sparkles" class="w-3.5 h-3.5 text-secondary-400" />
                 Live Discord Message Preview
               </span>
 
               <div class="rounded-xl border border-white/10 bg-[#313338] p-4 flex items-start gap-3.5 shadow-inner">
                 <!-- Bot Avatar -->
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shrink-0 shadow-md">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-secondary-600 to-primary-600 flex items-center justify-center shrink-0 shadow-md">
                   <UIcon name="i-lucide-bot" class="w-5 h-5 text-white" />
                 </div>
                 <!-- Message Content -->
@@ -298,16 +298,16 @@
       </div>
 
       <!-- 3. Interactive Progression Calculator Helper -->
-      <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-950/40 via-gray-900/60 to-gray-950/90 backdrop-blur-xl p-6 sm:p-7 space-y-5">
+      <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-secondary-950/40 via-gray-900/60 to-gray-950/90 backdrop-blur-xl p-6 sm:p-7 space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
-              <UIcon name="i-heroicons-calculator" class="w-5 h-5 text-indigo-300" />
+            <div class="w-9 h-9 rounded-xl bg-secondary-500/20 border border-secondary-500/30 flex items-center justify-center shrink-0">
+              <UIcon name="i-heroicons-calculator" class="w-5 h-5 text-secondary-300" />
             </div>
             <div>
               <h3 class="text-base font-bold text-white">XP Level Progression Simulator</h3>
               <p class="text-xs text-gray-400">
-                Formula: <span class="font-mono text-indigo-300">5×L² + 50×L + 100 XP</span> per level
+                Formula: <span class="font-mono text-secondary-300">5×L² + 50×L + 100 XP</span> per level
               </p>
             </div>
           </div>
@@ -319,9 +319,9 @@
               v-model.number="calcLevel"
               min="1"
               max="100"
-              class="w-32 accent-indigo-500 cursor-pointer"
+              class="w-32 accent-secondary-500 cursor-pointer"
             />
-            <span class="font-bold font-mono text-base text-indigo-300 min-w-[2.5rem] text-right">
+            <span class="font-bold font-mono text-base text-secondary-300 min-w-[2.5rem] text-right">
               Lv. {{ calcLevel }}
             </span>
           </div>
@@ -336,7 +336,7 @@
           </div>
           <div class="bg-white/[0.03] border border-white/5 rounded-xl p-4 space-y-1">
             <span class="text-[11px] font-medium text-gray-400">XP to Reach Level {{ calcLevel + 1 }}</span>
-            <p class="text-xl font-bold font-mono text-indigo-400">
+            <p class="text-xl font-bold font-mono text-secondary-400">
               {{ simulatedLevelStats.xpForNext.toLocaleString() }} <span class="text-xs text-gray-500 font-normal">XP</span>
             </p>
           </div>
@@ -353,8 +353,8 @@
       <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-gray-900/90 via-gray-900/50 to-gray-950/90 backdrop-blur-xl p-6 sm:p-7 space-y-5 shadow-xl">
         <div class="flex items-center justify-between border-b border-white/10 pb-4">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-              <UIcon name="i-heroicons-lock-closed" class="w-5 h-5 text-purple-400" />
+            <div class="w-10 h-10 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0">
+              <UIcon name="i-heroicons-lock-closed" class="w-5 h-5 text-primary-400" />
             </div>
             <div>
               <h2 class="text-base font-bold text-white">Leaderboard Visibility & Privacy</h2>
@@ -372,7 +372,7 @@
             class="relative rounded-xl border p-4.5 cursor-pointer transition-all duration-200 flex flex-col justify-between"
             :class="
               settings.leaderboardVisibility === 'private'
-                ? 'border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10'
+                ? 'border-secondary-500 bg-secondary-500/10 shadow-lg shadow-secondary-500/10'
                 : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.02]'
             "
             @click="settings.leaderboardVisibility = 'private'"
@@ -380,13 +380,13 @@
             <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-heroicons-lock-closed" class="w-4 h-4 text-indigo-400" />
+                  <UIcon name="i-heroicons-lock-closed" class="w-4 h-4 text-secondary-400" />
                   <span class="text-sm font-bold text-white">Private</span>
                 </div>
                 <UBadge color="primary" variant="subtle" size="xs">Default</UBadge>
               </div>
               <p class="text-xs text-gray-400 leading-relaxed">
-                Leaderboards and ranks are only viewable inside Discord via bot commands (<code class="text-indigo-300">/rank</code>, <code class="text-indigo-300">/xp</code>). The web page is restricted and never indexed.
+                Leaderboards and ranks are only viewable inside Discord via bot commands (<code class="text-secondary-300">/rank</code>, <code class="text-secondary-300">/xp</code>). The web page is restricted and never indexed.
               </p>
             </div>
             <div class="mt-4 pt-3 border-t border-white/5 flex items-center gap-1.5 text-[11px] text-gray-500">
@@ -447,9 +447,9 @@
         </div>
 
         <div class="flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-3 text-xs text-gray-400">
-          <UIcon name="i-heroicons-information-circle" class="w-4 h-4 text-indigo-400 shrink-0" />
+          <UIcon name="i-heroicons-information-circle" class="w-4 h-4 text-secondary-400 shrink-0" />
           <span>
-            <strong>Member Anonymity:</strong> Individual members can also hide their own profile and stats from the web leaderboard at any time using the <code class="text-indigo-300 font-mono">/xp privacy hidden:true</code> command.
+            <strong>Member Anonymity:</strong> Individual members can also hide their own profile and stats from the web leaderboard at any time using the <code class="text-secondary-300 font-mono">/xp privacy hidden:true</code> command.
           </span>
         </div>
       </div>

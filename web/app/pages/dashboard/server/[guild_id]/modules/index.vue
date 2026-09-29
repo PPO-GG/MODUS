@@ -202,90 +202,23 @@
             </UBadge>
           </div>
 
-          <!-- Cards Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div
+          <!-- Cards Grid (gap leaves room for each card's offset glass ring) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-2 pt-2">
+            <DashboardModuleCard
               v-for="module in group.modules"
               :key="module.$id"
-              class="group relative rounded-xl border bg-white/[0.03] p-4 flex flex-col gap-3 transition-all duration-200 hover:bg-white/[0.06]"
-              :class="
-                isModuleEnabled(module.name)
-                  ? 'border-white/15'
-                  : 'border-white/[0.07] opacity-70'
+              :display="getModuleDisplay(module)"
+              :description="module.description"
+              :enabled="isModuleEnabled(module.name)"
+              :updating="updating === module.name"
+              :configure-to="
+                hasModuleSettings(module.name)
+                  ? `/dashboard/server/${guildId}/modules/${module.name.toLowerCase()}`
+                  : null
               "
-            >
-              <!-- Top row: Icon + Toggle -->
-              <div class="flex items-start justify-between">
-                <div
-                  class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  :class="getModuleDisplay(module).bgClass"
-                >
-                  <UIcon
-                    :name="getModuleDisplay(module).icon"
-                    class="w-5 h-5"
-                    :class="getModuleDisplay(module).iconClass"
-                  />
-                </div>
-                <USwitch
-                  :model-value="isModuleEnabled(module.name)"
-                  @update:model-value="
-                    (val: boolean) => handleToggle(module.name, val)
-                  "
-                  :loading="updating === module.name"
-                />
-              </div>
-
-              <!-- Name + Status -->
-              <div class="flex items-center gap-2">
-                <span class="font-semibold text-sm text-white">
-                  {{ getModuleDisplay(module).displayName }}
-                </span>
-                <span
-                  class="inline-block w-1.5 h-1.5 rounded-full shrink-0"
-                  :class="
-                    isModuleEnabled(module.name)
-                      ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]'
-                      : 'bg-gray-600'
-                  "
-                />
-              </div>
-
-              <!-- Description -->
-              <p class="text-xs text-gray-400 leading-relaxed line-clamp-2">
-                {{ module.description }}
-              </p>
-
-              <!-- Tags list (clickable to search) -->
-              <div class="flex flex-wrap gap-1.5 my-1">
-                <button
-                  v-for="tag in getModuleDisplay(module).tags.slice(0, 3)"
-                  :key="tag"
-                  type="button"
-                  class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-white/[0.04] hover:bg-white/[0.1] text-gray-400 hover:text-white transition-colors"
-                  @click="setTagSearch(tag)"
-                >
-                  #{{ tag }}
-                </button>
-              </div>
-
-              <!-- Configure link (bottom) -->
-              <div class="mt-auto pt-2 border-t border-white/[0.06]">
-                <NuxtLink
-                  v-if="hasModuleSettings(module.name)"
-                  :to="`/dashboard/server/${guildId}/modules/${module.name.toLowerCase()}`"
-                  class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-primary-400 transition-colors duration-150"
-                >
-                  <UIcon name="i-lucide-settings-2" class="w-3.5 h-3.5" />
-                  <span>Configure Settings</span>
-                </NuxtLink>
-                <span
-                  v-else
-                  class="text-[11px] text-gray-500 italic"
-                >
-                  No extra configuration required
-                </span>
-              </div>
-            </div>
+              @toggle="(val: boolean) => handleToggle(module.name, val)"
+              @tag="setTagSearch"
+            />
           </div>
         </section>
       </div>
@@ -348,7 +281,7 @@
         <UCard :ui="{ root: 'border border-white/10 bg-white/[0.02]' }">
           <div class="space-y-4">
             <div class="flex items-center gap-3 mb-2">
-              <div class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+              <div class="w-9 h-9 rounded-xl bg-secondary-500/10 border border-secondary-500/20 text-secondary-400 flex items-center justify-center shrink-0">
                 <UIcon name="i-lucide-users" class="w-5 h-5" />
               </div>
               <div>
@@ -365,7 +298,7 @@
             >
               <UIcon
                 name="i-lucide-loader-circle"
-                class="w-4 h-4 animate-spin text-indigo-400"
+                class="w-4 h-4 animate-spin text-secondary-400"
               />
               <span class="text-sm text-gray-400">Loading server roles from Discord...</span>
             </div>

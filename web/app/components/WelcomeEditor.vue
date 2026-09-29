@@ -949,7 +949,7 @@
                 :key="a"
                 class="we-tool-btn flex-1"
                 :class="{
-                  'bg-violet-600/30 text-violet-300':
+                  'bg-primary-600/30 text-primary-300':
                     selectedElement.align === a,
                 }"
                 @click="selectedElement!.align = a"

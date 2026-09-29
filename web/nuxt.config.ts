@@ -40,14 +40,26 @@ export default defineNuxtConfig({
       // config here only accepts a string template, but we need function
       // logic to avoid double-wrapping the default title (see app.vue).
       htmlAttrs: { lang: "en" },
-      link: [{ rel: "icon", type: "image/svg+xml", href: "/modus.svg" }],
+      link: [
+        { rel: "icon", type: "image/svg+xml", href: "/modus.svg" },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&family=DM+Mono:wght@400;500&display=swap",
+        },
+      ],
       meta: [
         {
           name: "description",
           content:
             "Free all-in-one Discord bot: music, moderation, anti-raid, AI, voice recordings, XP leaderboards and tickets — configured from a web dashboard.",
         },
-        { name: "theme-color", content: "#0a0a0f" },
+        { name: "theme-color", content: "#030712" },
         { property: "og:site_name", content: "MODUS" },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
@@ -60,6 +72,11 @@ export default defineNuxtConfig({
       scan: true,
       sizeLimitKb: 512,
     },
+  },
+  colorMode: {
+    preference: "dark",
+    storageKey: "modus-color-mode",
+    fallback: "dark",
   },
   css: ["~/assets/css/main.css", "~/assets/css/discord-md.css"],
   runtimeConfig: {

@@ -12,11 +12,11 @@
         <div>
           <div class="flex items-center gap-3">
             <div
-              class="w-10 h-10 rounded-xl bg-violet-500/10 ring-1 ring-violet-500/20 flex items-center justify-center shrink-0"
+              class="w-10 h-10 rounded-xl bg-primary-500/10 ring-1 ring-primary-500/20 flex items-center justify-center shrink-0"
             >
               <UIcon
                 name="i-heroicons-cpu-chip"
-                class="w-6 h-6 text-violet-400"
+                class="w-6 h-6 text-primary-400"
               />
             </div>
             <h1 class="text-2xl font-bold">AI Assistant</h1>
@@ -73,7 +73,7 @@
       <UCard class="xl:col-span-2">
         <template #header>
           <div class="flex items-center gap-2">
-            <UIcon name="i-heroicons-key" class="w-5 h-5 text-violet-400" />
+            <UIcon name="i-heroicons-key" class="w-5 h-5 text-primary-400" />
             <h2 class="font-semibold text-base">Provider & Model</h2>
           </div>
         </template>
@@ -153,7 +153,7 @@
             :key="link.name"
             :href="link.url"
             target="_blank"
-            class="text-xs text-violet-400 hover:text-violet-300 transition-colors underline underline-offset-2"
+            class="text-xs text-primary-400 hover:text-primary-300 transition-colors underline underline-offset-2"
           >
             {{ link.name }}
           </a>
@@ -465,7 +465,7 @@
               :style="{ width: inputRatioPct + '%' }"
             />
             <div
-              class="bg-violet-500 transition-all"
+              class="bg-primary-500 transition-all"
               :style="{ width: outputRatioPct + '%' }"
             />
           </div>

@@ -370,7 +370,7 @@
         >
           <UIcon
             name="i-heroicons-cursor-arrow-rays"
-            class="text-2xl text-indigo-400/60 mb-2"
+            class="text-2xl text-secondary-400/60 mb-2"
           />
           <p class="text-xs text-zinc-500">
             Click a tool on the left to add your first element
@@ -772,7 +772,7 @@
             <div class="flex items-center gap-1.5">
               <UIcon
                 :name="elementTypeIcon(selectedElement.type)"
-                class="text-sm text-indigo-400"
+                class="text-sm text-secondary-400"
               />
               <span class="text-xs font-medium text-zinc-200">
                 {{ elementLabel(selectedElement) }}
@@ -1062,7 +1062,7 @@
                 :key="a"
                 class="rce-tool-btn flex-1"
                 :class="{
-                  'bg-indigo-600/30 text-indigo-300':
+                  'bg-secondary-600/30 text-secondary-300':
                     selectedElement.align === a,
                 }"
                 @click="selectedElement!.align = a"
