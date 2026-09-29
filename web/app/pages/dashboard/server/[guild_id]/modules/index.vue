@@ -1,21 +1,17 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-8">
+  <div class="mx-auto max-w-7xl space-y-8">
     <!-- Top Header & Primary Tabs -->
-    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <div class="flex items-center gap-3">
-          <h1 class="text-2xl font-bold text-white tracking-tight">
-            Server Configuration
-          </h1>
-          <UBadge
-            color="primary"
-            variant="subtle"
-            class="font-semibold text-xs px-2.5 py-0.5"
+    <header class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-3">
+          <h1 class="text-lg font-semibold leading-tight text-white">Server Configuration</h1>
+          <span
+            class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 font-mono text-[11px] text-gray-300"
           >
-            {{ activeModuleCount }} / {{ totalModuleCount }} Active
-          </UBadge>
+            {{ activeModuleCount }} / {{ totalModuleCount }} ACTIVE
+          </span>
         </div>
-        <p class="text-sm text-gray-400 mt-1">
+        <p class="mt-0.5 text-sm text-gray-400">
           Manage and configure bot features, permissions, and settings for this server.
         </p>
       </div>
@@ -23,43 +19,42 @@
       <!-- Main Navigation Switcher (Modules vs Server Management) -->
       <div
         v-if="state.isServerOwnerOrAdmin"
-        class="flex items-center p-1 bg-white/[0.04] border border-white/[0.08] rounded-xl self-start sm:self-auto shrink-0"
+        class="inline-flex max-w-full shrink-0 self-start overflow-x-auto rounded-full bg-white/[0.04] p-1 ring-1 ring-inset ring-white/10 sm:self-auto"
+        role="tablist"
+        aria-label="Server configuration sections"
       >
         <button
           type="button"
-          class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150"
+          role="tab"
+          :aria-selected="activeMainTab === 'modules'"
+          class="inline-flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
           :class="
             activeMainTab === 'modules'
-              ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30 shadow-sm'
+              ? 'bg-sky-200/15 text-white ring-1 ring-inset ring-sky-100/25'
               : 'text-gray-400 hover:text-white'
           "
           @click="activeMainTab = 'modules'"
         >
-          <UIcon name="i-lucide-layout-grid" class="w-4 h-4" />
-          <span>Modules</span>
-          <span
-            class="text-[10px] px-1.5 py-0.2 rounded-full"
-            :class="
-              activeMainTab === 'modules'
-                ? 'bg-primary-500/30 text-white'
-                : 'bg-white/10 text-gray-400'
-            "
-          >
+          <UIcon name="i-lucide-layout-grid" class="h-4 w-4" />
+          Modules
+          <span class="rounded-full bg-white/[0.08] px-1.5 text-[11px] text-gray-300">
             {{ totalModuleCount }}
           </span>
         </button>
         <button
           type="button"
-          class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150"
+          role="tab"
+          :aria-selected="activeMainTab === 'settings'"
+          class="inline-flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
           :class="
             activeMainTab === 'settings'
-              ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30 shadow-sm'
+              ? 'bg-sky-200/15 text-white ring-1 ring-inset ring-sky-100/25'
               : 'text-gray-400 hover:text-white'
           "
           @click="activeMainTab = 'settings'"
         >
-          <UIcon name="i-lucide-shield-check" class="w-4 h-4" />
-          <span>Server Access & Danger Zone</span>
+          <UIcon name="i-lucide-shield-check" class="h-4 w-4" />
+          Server Access &amp; Danger Zone
         </button>
       </div>
     </header>
@@ -70,102 +65,91 @@
     <div v-if="activeMainTab === 'modules'" class="space-y-8">
       <!-- Search & Category Filters Toolbar -->
       <section class="space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <!-- Search Input -->
-          <div class="relative flex-1 max-w-md">
+          <div class="relative max-w-md flex-1">
             <UInput
               v-model="searchQuery"
               icon="i-lucide-search"
               placeholder="Search modules by name, keyword, or tag (e.g. spotify, spam, xp)..."
               class="w-full"
+              aria-label="Search modules"
             />
             <button
               v-if="searchQuery"
               type="button"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 hover:text-white focus-visible:outline-2 focus-visible:outline-teal-300"
+              aria-label="Clear search"
               @click="searchQuery = ''"
             >
-              <UIcon name="i-lucide-x" class="w-3.5 h-3.5" />
+              <UIcon name="i-lucide-x" class="h-3.5 w-3.5" />
             </button>
           </div>
 
           <!-- Status Filter -->
           <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 hidden sm:inline">Status:</span>
-            <div class="flex items-center p-0.5 bg-white/[0.03] border border-white/[0.06] rounded-lg">
+            <span class="hidden font-mono text-[11px] uppercase tracking-wider text-gray-500 sm:inline">
+              Status
+            </span>
+            <div
+              class="inline-flex rounded-full bg-white/[0.04] p-1 ring-1 ring-inset ring-white/10"
+              role="group"
+              aria-label="Filter by status"
+            >
               <button
+                v-for="opt in statusOptions"
+                :key="opt.value"
                 type="button"
-                class="px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+                :aria-pressed="statusFilter === opt.value"
+                class="rounded-full px-3.5 py-1 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
                 :class="
-                  statusFilter === 'all'
-                    ? 'bg-white/10 text-white'
+                  statusFilter === opt.value
+                    ? 'bg-sky-200/15 text-white ring-1 ring-inset ring-sky-100/25'
                     : 'text-gray-400 hover:text-white'
                 "
-                @click="statusFilter = 'all'"
+                @click="statusFilter = opt.value"
               >
-                All
-              </button>
-              <button
-                type="button"
-                class="px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
-                :class="
-                  statusFilter === 'enabled'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                    : 'text-gray-400 hover:text-white'
-                "
-                @click="statusFilter = 'enabled'"
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                class="px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
-                :class="
-                  statusFilter === 'disabled'
-                    ? 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
-                    : 'text-gray-400 hover:text-white'
-                "
-                @click="statusFilter = 'disabled'"
-              >
-                Disabled
+                {{ opt.label }}
               </button>
             </div>
           </div>
         </div>
 
         <!-- Category Filter Pills -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <div class="scrollbar-none flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter by category">
           <button
             type="button"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 border"
+            :aria-pressed="selectedCategory === 'all'"
+            class="flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm ring-1 ring-inset transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
             :class="
               selectedCategory === 'all'
-                ? 'bg-white/15 text-white border-white/20 shadow-sm'
-                : 'bg-white/[0.03] text-gray-400 border-white/[0.06] hover:bg-white/[0.07] hover:text-gray-200'
+                ? 'bg-sky-200/15 text-white ring-sky-100/25'
+                : 'bg-white/[0.03] text-gray-300 ring-white/10 hover:bg-white/[0.06] hover:text-white'
             "
             @click="selectedCategory = 'all'"
           >
-            <UIcon name="i-lucide-layout-grid" class="w-3.5 h-3.5" />
-            <span>All Categories</span>
-            <span class="text-[10px] opacity-70 ml-0.5">({{ totalModuleCount }})</span>
+            <UIcon name="i-lucide-layout-grid" class="h-4 w-4" />
+            All Categories
+            <span class="rounded-full bg-white/[0.08] px-1.5 text-[11px] text-gray-300">{{ totalModuleCount }}</span>
           </button>
 
           <button
             v-for="cat in MODULE_CATEGORIES"
             :key="cat.key"
             type="button"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 border"
+            :aria-pressed="selectedCategory === cat.key"
+            class="flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm ring-1 ring-inset transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
             :class="
               selectedCategory === cat.key
-                ? 'bg-primary-500/20 text-primary-300 border-primary-500/30 shadow-sm'
-                : 'bg-white/[0.03] text-gray-400 border-white/[0.06] hover:bg-white/[0.07] hover:text-gray-200'
+                ? 'bg-sky-200/15 text-white ring-sky-100/25'
+                : 'bg-white/[0.03] text-gray-300 ring-white/10 hover:bg-white/[0.06] hover:text-white'
             "
             @click="selectedCategory = cat.key"
           >
-            <UIcon :name="cat.icon" class="w-3.5 h-3.5" />
-            <span>{{ cat.label }}</span>
-            <span class="text-[10px] opacity-70 ml-0.5">
-              ({{ categoryCounts[cat.key]?.total || 0 }})
+            <UIcon :name="cat.icon" class="h-4 w-4" />
+            {{ cat.label }}
+            <span class="rounded-full bg-white/[0.08] px-1.5 text-[11px] text-gray-300">
+              {{ categoryCounts[cat.key]?.total || 0 }}
             </span>
           </button>
         </div>
@@ -179,31 +163,31 @@
           class="space-y-4"
         >
           <!-- Category Section Header -->
-          <div class="flex items-center justify-between border-b border-white/[0.06] pb-3">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-primary-400">
-                <UIcon :name="group.category.icon" class="w-4 h-4" />
+          <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-white/[0.06] pb-3">
+            <div class="flex min-w-0 items-center gap-3">
+              <div
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
+              >
+                <UIcon :name="group.category.icon" class="h-4 w-4 text-sky-200" />
               </div>
-              <div>
-                <h2 class="text-base font-bold text-white">
+              <div class="min-w-0">
+                <h2 class="text-base font-semibold text-white">
                   {{ group.category.label }}
                 </h2>
-                <p class="text-xs text-gray-500">
+                <p class="text-[13px] text-gray-400">
                   {{ group.category.description }}
                 </p>
               </div>
             </div>
-            <UBadge
-              variant="subtle"
-              color="neutral"
-              class="text-[11px] font-medium"
+            <span
+              class="shrink-0 whitespace-nowrap rounded-full bg-white/[0.06] px-2.5 py-0.5 font-mono text-[11px] text-gray-300"
             >
               {{ group.enabledCount }} / {{ group.modules.length }} enabled
-            </UBadge>
+            </span>
           </div>
 
           <!-- Cards Grid (gap leaves room for each card's offset glass ring) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-2 pt-2">
+          <div class="grid grid-cols-1 gap-8 px-2 pt-2 sm:grid-cols-2 lg:grid-cols-3">
             <DashboardModuleCard
               v-for="module in group.modules"
               :key="module.$id"
@@ -226,37 +210,25 @@
       <!-- Zero Results State -->
       <div
         v-else
-        class="text-center py-16 px-4 rounded-2xl border border-dashed border-white/10 bg-white/[0.02]"
+        class="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-16 text-center"
       >
         <template v-if="hasUnmetadataedModules">
-          <UIcon
-            name="i-lucide-refresh-cw"
-            class="w-12 h-12 text-gray-500 mx-auto mb-3"
-          />
-          <h3 class="text-base font-bold text-white">Module metadata isn't available yet</h3>
-          <p class="text-xs text-gray-400 max-w-sm mx-auto mt-1">
+          <UIcon name="i-lucide-refresh-cw" class="mx-auto mb-3 h-10 w-10 text-gray-500" />
+          <h3 class="text-base font-semibold text-white">Module metadata isn't available yet</h3>
+          <p class="mx-auto mt-1 max-w-sm text-[13px] text-gray-400">
             This usually means the bot needs to restart after a recent update. Try refreshing in
             a moment.
           </p>
         </template>
         <template v-else>
-          <UIcon
-            name="i-lucide-search-x"
-            class="w-12 h-12 text-gray-500 mx-auto mb-3"
-          />
-          <h3 class="text-base font-bold text-white">No modules found</h3>
-          <p class="text-xs text-gray-400 max-w-sm mx-auto mt-1">
+          <UIcon name="i-lucide-search-x" class="mx-auto mb-3 h-10 w-10 text-gray-500" />
+          <h3 class="text-base font-semibold text-white">No modules found</h3>
+          <p class="mx-auto mt-1 max-w-sm text-[13px] text-gray-400">
             No bot modules matched your query
             <span v-if="searchQuery" class="font-semibold text-white">"{{ searchQuery }}"</span>.
           </p>
-          <UButton
-            color="neutral"
-            variant="outline"
-            size="xs"
-            class="mt-4"
-            @click="resetFilters"
-          >
-            Reset Filters
+          <UButton color="neutral" variant="soft" size="sm" class="mt-4" @click="resetFilters">
+            Reset filters
           </UButton>
         </template>
       </div>
@@ -267,147 +239,108 @@
     <!-- ======================================================== -->
     <div
       v-else-if="activeMainTab === 'settings' && state.isServerOwnerOrAdmin"
-      class="space-y-8 max-w-4xl"
+      class="max-w-3xl space-y-6"
     >
       <!-- Dashboard Access Roles -->
-      <section>
-        <div class="mb-4">
-          <h2 class="text-lg font-bold text-white">Dashboard Access Roles</h2>
-          <p class="text-sm text-gray-400">
-            Grant specific Discord roles access to this server's dashboard settings without requiring Administrator permission.
-          </p>
-        </div>
-
-        <UCard :ui="{ root: 'border border-white/10 bg-white/[0.02]' }">
-          <div class="space-y-4">
-            <div class="flex items-center gap-3 mb-2">
-              <div class="w-9 h-9 rounded-xl bg-secondary-500/10 border border-secondary-500/20 text-secondary-400 flex items-center justify-center shrink-0">
-                <UIcon name="i-lucide-users" class="w-5 h-5" />
-              </div>
-              <div>
-                <h3 class="font-semibold text-white">Delegated Dashboard Roles</h3>
-                <p class="text-xs text-gray-400">
-                  Members with any of these roles can view and adjust module settings for this server.
-                </p>
-              </div>
-            </div>
-
-            <div
-              v-if="state.rolesLoading"
-              class="flex items-center gap-2 py-3"
-            >
-              <UIcon
-                name="i-lucide-loader-circle"
-                class="w-4 h-4 animate-spin text-secondary-400"
-              />
-              <span class="text-sm text-gray-400">Loading server roles from Discord...</span>
-            </div>
-
-            <USelectMenu
-              v-else-if="dashboardRoleOptions.length > 0"
-              v-model="selectedDashboardRoles"
-              :items="dashboardRoleOptions"
-              value-key="value"
-              multiple
-              placeholder="Select roles..."
-              class="w-full"
-              @update:model-value="dashboardRolesDirty = true"
-            />
-            <p v-else class="text-sm text-gray-500 py-2">
-              No roles available. Make sure the bot is in this server.
-            </p>
-
-            <div class="flex items-center justify-between pt-2 border-t border-white/[0.06]">
-              <p class="text-xs text-gray-500">
-                {{ selectedDashboardRoles.length }} role{{
-                  selectedDashboardRoles.length !== 1 ? "s" : ""
-                }} selected
-              </p>
-              <UButton
-                color="primary"
-                size="sm"
-                :loading="savingDashboardRoles"
-                :disabled="!dashboardRolesDirty"
-                @click="handleSaveDashboardRoles"
-              >
-                Save Roles
-              </UButton>
-            </div>
+      <DashboardModuleSection
+        title="Dashboard access roles"
+        description="Let specific Discord roles open this server's dashboard settings without needing the Administrator permission. Members with any of these roles can view and adjust module settings."
+      >
+        <div class="space-y-4">
+          <div v-if="state.rolesLoading" class="flex items-center gap-2 py-3 text-gray-400">
+            <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+            <span class="text-sm">Loading server roles from Discord…</span>
           </div>
-        </UCard>
-      </section>
 
-      <!-- Danger Zone -->
-      <section>
-        <div class="mb-4">
-          <h2 class="text-lg font-bold text-red-400">Danger Zone</h2>
-          <p class="text-sm text-gray-400">
-            Irreversible actions for this server's configuration and records.
+          <USelectMenu
+            v-else-if="dashboardRoleOptions.length > 0"
+            v-model="selectedDashboardRoles"
+            :items="dashboardRoleOptions"
+            value-key="value"
+            multiple
+            placeholder="Select roles…"
+            icon="i-lucide-users"
+            class="w-full"
+            @update:model-value="dashboardRolesDirty = true"
+          />
+          <p v-else class="py-2 text-sm text-gray-400">
+            No roles available. Make sure the bot is in this server.
           </p>
-        </div>
 
-        <UCard :ui="{ root: 'border border-red-500/20 bg-red-500/[0.02]' }">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 class="font-semibold text-white">Remove Server from Dashboard</h3>
-              <p class="text-xs text-gray-400 mt-0.5">
-                Remove this server from your dashboard. This deletes all module configurations and audit records stored for this server.
-              </p>
-            </div>
+          <div class="flex items-center justify-between border-t border-white/[0.06] pt-4">
+            <p class="text-[13px] text-gray-400">
+              {{ selectedDashboardRoles.length }} role{{
+                selectedDashboardRoles.length !== 1 ? "s" : ""
+              }} selected
+            </p>
             <UButton
-              color="error"
-              variant="soft"
-              icon="i-lucide-trash-2"
-              class="shrink-0"
-              @click="showRemoveConfirm = true"
-              :loading="removing"
+              color="primary"
+              size="sm"
+              icon="i-lucide-check"
+              :loading="savingDashboardRoles"
+              :disabled="!dashboardRolesDirty"
+              @click="handleSaveDashboardRoles"
             >
-              Remove Server
+              Save roles
             </UButton>
           </div>
-        </UCard>
+        </div>
+      </DashboardModuleSection>
+
+      <!-- Danger Zone (same surface as the other sections, in a red tint) -->
+      <section
+        class="min-w-0 rounded-xl bg-red-400/[0.03] p-5 ring-1 ring-inset ring-red-400/25"
+        aria-labelledby="danger-zone-title"
+      >
+        <header class="mb-4">
+          <h3 id="danger-zone-title" class="text-sm font-semibold text-red-300">Danger zone</h3>
+          <p class="mt-0.5 text-[13px] text-gray-400">
+            Irreversible actions for this server's configuration and records.
+          </p>
+        </header>
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-white">Remove server from dashboard</p>
+            <p class="mt-0.5 text-[13px] text-gray-400">
+              Removes this server from your dashboard and deletes all module configurations and
+              audit records stored for it.
+            </p>
+          </div>
+          <UButton
+            color="error"
+            variant="soft"
+            icon="i-lucide-trash-2"
+            class="shrink-0"
+            :loading="removing"
+            @click="showRemoveConfirm = true"
+          >
+            Remove server
+          </UButton>
+        </div>
       </section>
     </div>
 
     <!-- Remove Confirmation Modal -->
-    <UModal v-model:open="showRemoveConfirm">
-      <template #content>
-        <div class="p-6 space-y-4">
-          <div class="flex items-center gap-3">
-            <div
-              class="w-12 h-12 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-lucide-triangle-alert" class="w-6 h-6" />
-            </div>
-            <div>
-              <h3 class="text-lg font-bold text-white">Remove Server</h3>
-              <p class="text-xs text-gray-400">This action cannot be undone</p>
-            </div>
-          </div>
-
-          <p class="text-sm text-gray-300">
-            Are you sure you want to remove
-            <strong class="text-white">{{ state.guild?.name }}</strong> from your dashboard? All
-            module configurations and stored logs for this server will be permanently deleted.
-          </p>
-
-          <div class="flex justify-end gap-3 pt-2">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              @click="showRemoveConfirm = false"
-            >
-              Cancel
-            </UButton>
-            <UButton
-              color="error"
-              icon="i-lucide-trash-2"
-              :loading="removing"
-              @click="handleRemove"
-            >
-              Remove Server
-            </UButton>
-          </div>
+    <UModal
+      v-model:open="showRemoveConfirm"
+      title="Remove server"
+      description="This action cannot be undone."
+    >
+      <template #body>
+        <p class="text-sm text-gray-300">
+          Are you sure you want to remove
+          <strong class="text-white">{{ state.guild?.name }}</strong> from your dashboard? All
+          module configurations and stored logs for this server will be permanently deleted.
+        </p>
+      </template>
+      <template #footer>
+        <div class="flex w-full justify-end gap-3">
+          <UButton color="neutral" variant="ghost" @click="showRemoveConfirm = false">
+            Cancel
+          </UButton>
+          <UButton color="error" icon="i-lucide-trash-2" :loading="removing" @click="handleRemove">
+            Remove server
+          </UButton>
         </div>
       </template>
     </UModal>
@@ -438,6 +371,11 @@ const activeMainTab = ref<"modules" | "settings">("modules");
 const searchQuery = ref("");
 const selectedCategory = ref<"all" | ModuleCategoryKey>("all");
 const statusFilter = ref<"all" | "enabled" | "disabled">("all");
+const statusOptions = [
+  { value: "all", label: "All" },
+  { value: "enabled", label: "Active" },
+  { value: "disabled", label: "Disabled" },
+] as const;
 
 const updating = ref<string | null>(null);
 const showRemoveConfirm = ref(false);
