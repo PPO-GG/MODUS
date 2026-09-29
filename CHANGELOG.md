@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.25.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.24.2...modus-v1.25.0) (2026-09-29)
+
+
+### ✨ Features
+
+* **bot:** enforce the music DJ role and stop settings saves wiping the playlist ([4289edf](https://github.com/PPO-GG/MODUS/commit/4289edf5d14b3785a658d1c763bc13b37b1cb7f7))
+* **web:** add server overview page with moderation case and ticket tracking ([#85](https://github.com/PPO-GG/MODUS/issues/85)) ([9ba4023](https://github.com/PPO-GG/MODUS/commit/9ba402345ce5c90ed983741cb69e4daa415f1869))
+* **web:** add shared components for module config pages ([d563a41](https://github.com/PPO-GG/MODUS/commit/d563a41dda059739ed61022c49e2a2b5ecdb6991))
+* **web:** move the Welcome image editor into a tab ([6e9569b](https://github.com/PPO-GG/MODUS/commit/6e9569b3b214a5ee2940ded6f5ca162d974b9cd3))
+* **web:** redesign Bot Identity and Server Logs, plus XP leave prompt and calmer module cards ([107f838](https://github.com/PPO-GG/MODUS/commit/107f838e7817f2f3177d63702fd50927b0db3241))
+* **web:** redesign dashboard on the Glide visual system ([#82](https://github.com/PPO-GG/MODUS/issues/82)) ([83fd175](https://github.com/PPO-GG/MODUS/commit/83fd1757e73b2db4327666705dbec3ae14a26f87))
+* **web:** redesign landing page on the Glide visual system ([#81](https://github.com/PPO-GG/MODUS/issues/81)) ([48a14d8](https://github.com/PPO-GG/MODUS/commit/48a14d8fd9e31e7541528f7812b21d34ac07525a))
+* **web:** redesign the AI Assistant config page ([f287f69](https://github.com/PPO-GG/MODUS/commit/f287f6914f2d26686cec99e1d1ba9588fc07e2ca))
+* **web:** redesign the Anti-Raid config page ([1150112](https://github.com/PPO-GG/MODUS/commit/1150112f5a815c03b18abc707f3ed5ea5e74298d))
+* **web:** redesign the Audit Logging config page ([3fb34bc](https://github.com/PPO-GG/MODUS/commit/3fb34bcfb3755174e4877b091a38f83cb7f6709a))
+* **web:** redesign the AutoMod page and rule editor ([dc9618e](https://github.com/PPO-GG/MODUS/commit/dc9618e93b34fdbff773e87975a2456cfa33d91a))
+* **web:** redesign the Bot Identity page ([285486c](https://github.com/PPO-GG/MODUS/commit/285486c093845bf6e995fca8801e6ca8a53f255d))
+* **web:** redesign the Button Roles config page ([f87f789](https://github.com/PPO-GG/MODUS/commit/f87f7890d2fd2a5209a3a0346a52b37f55ca3ed2))
+* **web:** redesign the Embed Builder page ([3f12c46](https://github.com/PPO-GG/MODUS/commit/3f12c46ee89c5c57fa671d2906ac33704a3908bd))
+* **web:** redesign the Giveaways config page ([a6a25f2](https://github.com/PPO-GG/MODUS/commit/a6a25f29dd7e6ea7b5327b24a15b1bbd3c4611f5))
+* **web:** redesign the Moderation config page ([77b0512](https://github.com/PPO-GG/MODUS/commit/77b0512b75526374f5d7df5bd1a691ef5c9cb7f6))
+* **web:** redesign the module config pages and unify the canvas editors ([e897aef](https://github.com/PPO-GG/MODUS/commit/e897aef5ea1cd65bb0518a826c5c4e79dc23a726))
+* **web:** redesign the Music config page ([2fef2e3](https://github.com/PPO-GG/MODUS/commit/2fef2e3be5cf5a3c4bdaa958bb152973deef9ddd))
+* **web:** redesign the Polls config page ([58fc5c2](https://github.com/PPO-GG/MODUS/commit/58fc5c25c0bb29cfce8e9a22801c582b025a1b92))
+* **web:** redesign the Recording config page ([befdde5](https://github.com/PPO-GG/MODUS/commit/befdde51544145357f199afeaf2a18b298070eaf))
+* **web:** redesign the Server Events config page ([5bbdfcf](https://github.com/PPO-GG/MODUS/commit/5bbdfcfea74f9963bb9f671ff5b38ea01fb0fba0))
+* **web:** redesign the Server Logs page ([2caf17e](https://github.com/PPO-GG/MODUS/commit/2caf17e162d498e885f728b3fe19c234ef16e0bd))
+* **web:** redesign the Social Alerts config page ([e253ee9](https://github.com/PPO-GG/MODUS/commit/e253ee95f1100dd0d1a04512e436557dbedf9327))
+* **web:** redesign the Tags config page ([cad02c0](https://github.com/PPO-GG/MODUS/commit/cad02c091f91b712377f6bf3875cb56b33fa18e5))
+* **web:** redesign the Temp Voice config page ([46647a5](https://github.com/PPO-GG/MODUS/commit/46647a58e0d1b6de5e677eb33ed9c638382e8ef3))
+* **web:** redesign the Ticket System config page ([f992384](https://github.com/PPO-GG/MODUS/commit/f992384b3ac8b15cc794a3d14e34ece9de3645ae))
+* **web:** redesign the Verification config page ([05566c5](https://github.com/PPO-GG/MODUS/commit/05566c5431f712b0d322d23ca1fb7dacdef4d037))
+* **web:** redesign the Webhooks page and embed editor ([7704f24](https://github.com/PPO-GG/MODUS/commit/7704f245b99f7d931f1e405ac816ac3ba20fea47))
+* **web:** redesign the Welcome config page ([5221123](https://github.com/PPO-GG/MODUS/commit/5221123d1448b3487f23b59b8ab67b7ce4a8391d))
+* **web:** redesign the XP config page ([6b28449](https://github.com/PPO-GG/MODUS/commit/6b28449cb89240de41c1942c1635a34cc708b247))
+* **web:** restyle and reorganise the canvas editors on the Glide system ([134f175](https://github.com/PPO-GG/MODUS/commit/134f175409cf1b9d0f7b1b81bfa440cb509cefaa))
+* **web:** run the welcome and rank card designers on one canvas editor ([2ad5254](https://github.com/PPO-GG/MODUS/commit/2ad5254d92129e4bd191611dccffcdbe8d359bed))
+* **web:** warn before leaving XP settings with unsaved changes ([96336cd](https://github.com/PPO-GG/MODUS/commit/96336cdf4d77a32e60c22e5074f52034f530aff1))
+
+
+### 🐛 Bug Fixes
+
+* **db:** load .env in the moderation-case backfill script ([#87](https://github.com/PPO-GG/MODUS/issues/87)) ([91f72ce](https://github.com/PPO-GG/MODUS/commit/91f72ce8671c66d5d62b7766bf4c590921a7ee23))
+* **web:** wait for Google Font stylesheet before loading faces ([#83](https://github.com/PPO-GG/MODUS/issues/83)) ([3ff53bc](https://github.com/PPO-GG/MODUS/commit/3ff53bc3d6c614422d68924220876051b876f0d4))
+
+
+### ♻️ Refactors
+
+* **bot:** remove the legacy Milestones module ([e1925c1](https://github.com/PPO-GG/MODUS/commit/e1925c10cb46ef0e65dd68bf1b0a3052fabc1011))
+* **bot:** rename the Triggers module to Webhooks in the UI ([c418853](https://github.com/PPO-GG/MODUS/commit/c41885352889564003eaec9eac101fb4f01c3829))
+* **web:** restyle the shared embed editor sections ([a1d07b5](https://github.com/PPO-GG/MODUS/commit/a1d07b5bb0f386730721a423c7a80bd31d7f9f0e))
+* **web:** split the canvas editor into composables and panel components ([4233a60](https://github.com/PPO-GG/MODUS/commit/4233a60225e9dbfc96b54b2d89216549eaabcac9))
+
 ## [1.24.2](https://github.com/PPO-GG/MODUS/compare/modus-v1.24.1...modus-v1.24.2) (2026-09-28)
 
 
