@@ -1,102 +1,96 @@
 <template>
-  <div class="relative pl-2">
-    <div class="absolute left-[15px] top-8 bottom-8 w-px bg-white/10" />
+  <div class="relative">
+    <div class="absolute bottom-6 left-[15px] top-6 w-px bg-white/10" aria-hidden="true" />
 
-    <div class="space-y-4">
-      <!-- Trigger node -->
+    <div class="space-y-5">
+      <!-- When -->
       <div class="relative flex items-start gap-3">
-        <button
-          type="button"
-          class="w-8 h-8 rounded-full bg-orange-500/15 border-2 border-orange-500/40 flex items-center justify-center shrink-0 z-10"
-          @click="triggerCollapsed = !triggerCollapsed"
+        <span
+          class="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-200/10 ring-1 ring-inset ring-sky-100/25"
         >
-          <UIcon name="i-heroicons-bolt" class="text-orange-400 text-sm" />
-        </button>
-        <div class="flex-1 pt-1">
+          <UIcon name="i-lucide-zap" class="h-4 w-4 text-sky-200" />
+        </span>
+        <div class="min-w-0 flex-1">
           <button
             type="button"
-            class="text-xs text-gray-400 hover:text-gray-200 flex items-center gap-1"
+            class="flex h-8 items-center gap-1.5 text-sm text-white"
+            :aria-expanded="!triggerCollapsed"
             @click="triggerCollapsed = !triggerCollapsed"
           >
             <UIcon
-              :name="
-                triggerCollapsed
-                  ? 'i-heroicons-chevron-right'
-                  : 'i-heroicons-chevron-down'
-              "
-              class="text-[10px]"
+              :name="triggerCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-down'"
+              class="h-3.5 w-3.5 text-gray-500"
             />
-            {{ triggerCollapsed ? triggerLabel(trigger) : "Trigger" }}
+            <span class="font-semibold">When</span>
+            <span v-if="triggerCollapsed" class="text-gray-400">{{
+              triggerLabel(trigger).toLowerCase()
+            }}</span>
           </button>
           <TriggerNode
             v-if="!triggerCollapsed"
             :model-value="trigger"
             :groups="triggerGroups"
-            class="mt-2"
+            class="mt-1"
             @update:model-value="$emit('update:trigger', $event)"
           />
         </div>
       </div>
 
-      <!-- Conditions node -->
+      <!-- If -->
       <div class="relative flex items-start gap-3">
-        <button
-          type="button"
-          class="w-8 h-8 rounded-full bg-blue-500/15 border-2 border-blue-500/40 flex items-center justify-center shrink-0 z-10"
-          @click="conditionsCollapsed = !conditionsCollapsed"
+        <span
+          class="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-200/10 ring-1 ring-inset ring-sky-100/25"
         >
-          <UIcon name="i-heroicons-funnel" class="text-blue-400 text-sm" />
-        </button>
-        <div class="flex-1 pt-1">
+          <UIcon name="i-lucide-funnel" class="h-4 w-4 text-sky-200" />
+        </span>
+        <div class="min-w-0 flex-1">
           <button
             type="button"
-            class="text-xs text-gray-400 hover:text-gray-200 flex items-center gap-1"
+            class="flex h-8 items-center gap-1.5 text-sm text-white"
+            :aria-expanded="!conditionsCollapsed"
             @click="conditionsCollapsed = !conditionsCollapsed"
           >
             <UIcon
-              :name="
-                conditionsCollapsed
-                  ? 'i-heroicons-chevron-right'
-                  : 'i-heroicons-chevron-down'
-              "
-              class="text-[10px]"
+              :name="conditionsCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-down'"
+              class="h-3.5 w-3.5 text-gray-500"
             />
-            {{ conditionCount }} condition{{ conditionCount !== 1 ? "s" : "" }}
+            <span class="font-semibold">If</span>
+            <span v-if="conditionsCollapsed" class="text-gray-400">
+              {{ conditionCount }} condition{{ conditionCount !== 1 ? "s" : "" }}
+            </span>
           </button>
           <ConditionGroupEditor
             v-if="!conditionsCollapsed"
             :model-value="conditions"
             :depth="0"
-            class="mt-2"
+            class="mt-1"
             @update:model-value="$emit('update:conditions', $event)"
           />
         </div>
       </div>
 
-      <!-- Actions node -->
+      <!-- Then -->
       <div class="relative flex items-start gap-3">
-        <button
-          type="button"
-          class="w-8 h-8 rounded-full bg-orange-500/15 border-2 border-orange-500/40 flex items-center justify-center shrink-0 z-10"
-          @click="actionsCollapsed = !actionsCollapsed"
+        <span
+          class="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-300/10 ring-1 ring-inset ring-teal-300/30"
         >
-          <UIcon name="i-heroicons-play" class="text-orange-400 text-sm" />
-        </button>
-        <div class="flex-1 pt-1">
+          <UIcon name="i-lucide-play" class="h-4 w-4 text-teal-300" />
+        </span>
+        <div class="min-w-0 flex-1">
           <button
             type="button"
-            class="text-xs text-gray-400 hover:text-gray-200 flex items-center gap-1"
+            class="flex h-8 items-center gap-1.5 text-sm text-white"
+            :aria-expanded="!actionsCollapsed"
             @click="actionsCollapsed = !actionsCollapsed"
           >
             <UIcon
-              :name="
-                actionsCollapsed
-                  ? 'i-heroicons-chevron-right'
-                  : 'i-heroicons-chevron-down'
-              "
-              class="text-[10px]"
+              :name="actionsCollapsed ? 'i-lucide-chevron-right' : 'i-lucide-chevron-down'"
+              class="h-3.5 w-3.5 text-gray-500"
             />
-            {{ actions.length }} action{{ actions.length !== 1 ? "s" : "" }}
+            <span class="font-semibold">Then</span>
+            <span v-if="actionsCollapsed" class="text-gray-400">
+              {{ actions.length }} action{{ actions.length !== 1 ? "s" : "" }}
+            </span>
           </button>
           <ActionsNode
             v-if="!actionsCollapsed"
@@ -104,7 +98,7 @@
             :action-options="actionOptions"
             :channel-options="channelOptions"
             :role-options="roleOptions"
-            class="mt-2"
+            class="mt-1"
             @update:model-value="$emit('update:actions', $event)"
           />
         </div>
@@ -141,10 +135,10 @@ interface ActionForm {
 
 const props = defineProps<{
   trigger: string;
-  triggerGroups: { label: string; items: { label: string; value: string }[] }[];
+  triggerGroups: { label: string; items: { label: string; value: string; icon?: string }[] }[];
   conditions: ConditionGroup;
   actions: ActionForm[];
-  actionOptions: { label: string; value: string }[];
+  actionOptions: { label: string; value: string; icon?: string }[];
   channelOptions: { label: string; value: string }[];
   roleOptions: { label: string; value: string }[];
   triggerLabel: (trigger: string) => string;
