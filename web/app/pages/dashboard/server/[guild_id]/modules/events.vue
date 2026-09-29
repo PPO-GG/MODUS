@@ -1,289 +1,335 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
-      >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"
-        >
-          <UIcon name="i-heroicons-calendar-days" class="w-5 h-5 text-teal-400" />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-white">Server Events</h2>
-          <p class="text-xs text-gray-500">
-            Schedule and manage Discord native events
-          </p>
-        </div>
-      </div>
-      <UBadge
-        :color="isModuleEnabled('events') ? 'success' : 'neutral'"
-        variant="soft"
-        class="ml-auto"
-      >
-        {{ isModuleEnabled("events") ? "Module Active" : "Module Disabled" }}
-      </UBadge>
-    </div>
+  <div class="mx-auto max-w-4xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-calendar-days"
+      title="Server Events"
+      description="Schedule and manage Discord scheduled events."
+      :enabled="isModuleEnabled('events')"
+    />
 
-    <!-- Settings -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
+    <!-- ── Calendar ── -->
+    <DashboardModuleSection
+      title="Calendar"
+      :description="`${eventsThisMonth.length} event${eventsThisMonth.length !== 1 ? 's' : ''} in ${monthLabel}.`"
     >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative space-y-5">
-        <div class="flex items-center gap-2 mb-1">
-          <div
-            class="w-7 h-7 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"
-          >
-            <UIcon name="i-heroicons-cog-6-tooth" class="text-teal-400" />
-          </div>
-          <h3 class="font-semibold text-white">General</h3>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <UFormField
-            label="Announcement Channel"
-            hint="Where new events are announced. Leave empty to skip announcements."
-          >
-            <USelectMenu
-              v-model="settings.announcementChannelId"
-              :items="channelOptions"
-              value-key="value"
-              placeholder="No announcement channel"
-              :loading="state.channelsLoading"
-              :clear="{ ariaLabel: 'Clear channel selection' }"
-              class="w-full"
-            />
-          </UFormField>
-
-          <UFormField
-            label="Notify Roles"
-            hint="Roles pinged when an event is announced."
-          >
-            <USelectMenu
-              v-model="settings.notifyRoleIds"
-              :items="roleOptions"
-              value-key="value"
-              multiple
-              placeholder="No roles"
-              :loading="state.rolesLoading"
-              class="w-full"
-            />
-          </UFormField>
-        </div>
-
-        <div class="flex justify-end">
+      <template #actions>
+        <div class="flex items-center gap-1">
+          <UButton
+            icon="i-lucide-chevron-left"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            aria-label="Previous month"
+            @click="prevMonth"
+          />
+          <UButton color="neutral" variant="ghost" size="sm" @click="goToday">Today</UButton>
+          <UButton
+            icon="i-lucide-chevron-right"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            aria-label="Next month"
+            @click="nextMonth"
+          />
           <UButton
             color="primary"
-            icon="i-heroicons-check"
-            :loading="savingSettings"
-            @click="saveSettings"
+            size="sm"
+            icon="i-lucide-calendar-plus"
+            class="ml-1"
+            @click="openDayModal(new Date())"
           >
-            Save Settings
+            New event
           </UButton>
         </div>
-      </div>
-    </div>
+      </template>
 
-    <!-- Calendar -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative flex flex-col lg:flex-row gap-5">
+      <div class="flex flex-col gap-6 lg:flex-row">
         <!-- Month grid -->
-        <div class="flex-[2] min-w-0">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-white">{{ monthLabel }}</h3>
-            <div class="flex items-center gap-1">
-              <UButton
-                icon="i-heroicons-chevron-left"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                @click="prevMonth"
-              />
-              <UButton color="neutral" variant="ghost" size="xs" @click="goToday">
-                Today
-              </UButton>
-              <UButton
-                icon="i-heroicons-chevron-right"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                @click="nextMonth"
-              />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-7 gap-1 mb-1">
+        <div class="min-w-0 flex-[2]">
+          <p class="mb-2 text-sm font-medium text-white">{{ monthLabel }}</p>
+          <div class="mb-1 grid grid-cols-7 gap-1">
             <div
-              v-for="d in ['S', 'M', 'T', 'W', 'T', 'F', 'S']"
-              :key="d"
-              class="text-center text-[10px] text-gray-500 uppercase tracking-wider py-1"
+              v-for="(d, i) in ['S', 'M', 'T', 'W', 'T', 'F', 'S']"
+              :key="i"
+              class="py-1 text-center text-[11px] uppercase tracking-wider text-gray-400"
             >
               {{ d }}
             </div>
           </div>
           <div class="grid grid-cols-7 gap-1">
-            <div
+            <button
               v-for="cell in calendarCells"
               :key="cell.date.toISOString()"
-              class="aspect-square rounded-lg border p-1 text-[11px] cursor-pointer transition-colors overflow-hidden"
+              type="button"
+              class="flex min-h-12 flex-col items-start overflow-hidden rounded-lg p-1 text-left transition-colors focus-visible:outline-2 focus-visible:outline-teal-300 sm:min-h-[4.75rem] sm:p-1.5"
               :class="[
                 cell.inCurrentMonth
-                  ? 'bg-white/[0.02] border-white/10 hover:border-teal-500/40'
-                  : 'bg-transparent border-white/5 opacity-40',
-                cell.isToday ? 'border-teal-500 border-2' : '',
+                  ? 'bg-white/[0.03] ring-1 ring-inset ring-white/10 hover:bg-white/[0.06] hover:ring-sky-200/30'
+                  : 'opacity-40 ring-1 ring-inset ring-white/5 hover:opacity-70',
+                cell.isToday ? '!ring-2 !ring-teal-300' : '',
               ]"
+              :aria-label="`${cell.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}${
+                cell.events.length ? `, ${cell.events.length} event${cell.events.length !== 1 ? 's' : ''}` : ''
+              }`"
               @click="openDayModal(cell.date)"
             >
-              <div class="font-semibold text-gray-300">{{ cell.date.getDate() }}</div>
-              <div class="space-y-0.5 mt-0.5">
-                <div
+              <span
+                class="text-xs font-semibold"
+                :class="cell.isToday ? 'text-teal-300' : 'text-gray-300'"
+              >
+                {{ cell.date.getDate() }}
+              </span>
+              <span class="mt-0.5 hidden w-full space-y-0.5 sm:block">
+                <span
                   v-for="ev in cell.events.slice(0, 2)"
                   :key="ev.id"
-                  class="truncate rounded bg-teal-500/80 text-white px-1 text-[9px] leading-tight"
+                  class="block truncate rounded bg-sky-200/15 px-1 text-[10px] leading-tight text-sky-100"
                 >
                   {{ ev.name }}
-                </div>
-                <div v-if="cell.events.length > 2" class="text-[9px] text-gray-500">
+                </span>
+                <span v-if="cell.events.length > 2" class="block text-[10px] text-gray-400">
                   +{{ cell.events.length - 2 }} more
-                </div>
-              </div>
-            </div>
+                </span>
+              </span>
+              <span v-if="cell.events.length" class="mt-1 flex gap-0.5 sm:hidden" aria-hidden="true">
+                <span
+                  v-for="n in Math.min(cell.events.length, 3)"
+                  :key="n"
+                  class="h-1.5 w-1.5 rounded-full bg-sky-300"
+                />
+              </span>
+            </button>
           </div>
         </div>
 
         <!-- This month's events -->
-        <div class="flex-1 min-w-0 lg:border-l lg:border-white/10 lg:pl-5">
-          <div class="label mb-2 text-[10px] text-gray-500 uppercase tracking-wider">
-            Events this month
+        <div class="min-w-0 flex-1 lg:border-l lg:border-white/10 lg:pl-6">
+          <p class="mb-2 text-sm font-medium text-white">This month</p>
+          <div v-if="loading" class="space-y-2" aria-busy="true">
+            <div v-for="i in 3" :key="i" class="h-14 animate-pulse rounded-lg bg-white/[0.04]" />
           </div>
-          <div v-if="loading" class="text-xs text-gray-500 py-4 text-center">
-            Loading…
-          </div>
-          <div v-else-if="eventsThisMonth.length === 0" class="text-xs text-gray-500 py-4 text-center">
-            No events scheduled this month
-          </div>
-          <div v-else class="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-            <div
-              v-for="ev in eventsThisMonth"
-              :key="ev.id"
-              class="flex items-start gap-3 rounded-lg bg-white/[0.03] border border-white/[0.06] p-2.5 cursor-pointer hover:border-teal-500/30"
-              @click="openDayModal(new Date(ev.scheduledStartTime))"
-            >
-              <div class="w-9 text-center shrink-0">
-                <div class="text-sm font-bold text-teal-400 leading-none">
-                  {{ new Date(ev.scheduledStartTime).getDate() }}
-                </div>
-                <div class="text-[9px] text-gray-500 uppercase">
-                  {{ new Date(ev.scheduledStartTime).toLocaleDateString("en-US", { month: "short" }) }}
-                </div>
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs font-semibold text-white truncate">{{ ev.name }}</div>
-                <div class="text-[10px] text-gray-500">
-                  {{ new Date(ev.scheduledStartTime).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) }}
-                  · {{ ev.userCount }} interested
-                </div>
-              </div>
-            </div>
-          </div>
+          <p v-else-if="eventsThisMonth.length === 0" class="py-4 text-[13px] text-gray-400">
+            No events scheduled this month.
+          </p>
+          <ul v-else class="max-h-[26rem] space-y-2 overflow-y-auto pr-1">
+            <li v-for="ev in eventsThisMonth" :key="ev.id">
+              <button
+                type="button"
+                class="flex w-full items-start gap-3 rounded-lg bg-white/[0.03] p-2.5 text-left ring-1 ring-inset ring-white/10 transition-colors hover:ring-sky-200/30 focus-visible:outline-2 focus-visible:outline-teal-300"
+                @click="openDayModal(new Date(ev.scheduledStartTime))"
+              >
+                <span class="w-9 shrink-0 text-center">
+                  <span class="block text-sm font-bold leading-none text-sky-200">
+                    {{ new Date(ev.scheduledStartTime).getDate() }}
+                  </span>
+                  <span class="block text-[10px] uppercase text-gray-400">
+                    {{ new Date(ev.scheduledStartTime).toLocaleDateString("en-US", { month: "short" }) }}
+                  </span>
+                </span>
+                <span class="min-w-0">
+                  <span class="block truncate text-sm font-medium text-white">{{ ev.name }}</span>
+                  <span class="block text-[13px] text-gray-400">
+                    {{ timeLabel(ev.scheduledStartTime) }} · {{ ev.userCount }} interested
+                  </span>
+                </span>
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
-    </div>
+    </DashboardModuleSection>
+
+    <!-- ── Announcements ── -->
+    <DashboardModuleSection
+      title="Announcements"
+      description="Where new events are announced, and who gets pinged."
+    >
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <UFormField
+          label="Announcement channel"
+          hint="Optional"
+          description="Leave empty to skip announcements."
+          class="w-full"
+        >
+          <USelectMenu
+            v-model="settings.announcementChannelId"
+            :items="channelOptions"
+            value-key="value"
+            placeholder="No announcement channel"
+            searchable
+            icon="i-lucide-hash"
+            :loading="state.channelsLoading"
+            :clear="{ ariaLabel: 'Clear channel selection' }"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField
+          label="Notify roles"
+          hint="Optional"
+          description="Pinged when an event is announced."
+          class="w-full"
+        >
+          <USelectMenu
+            v-model="settings.notifyRoleIds"
+            :items="roleOptions"
+            value-key="value"
+            multiple
+            placeholder="No roles"
+            icon="i-lucide-users"
+            :loading="state.rolesLoading"
+            class="w-full"
+          />
+        </UFormField>
+      </div>
+    </DashboardModuleSection>
 
     <DashboardModuleAccessSection :guild-id="guildId" module-name="events" />
 
-    <!-- Day detail / create / edit modal -->
-    <UModal v-model:open="showDayModal" :title="selectedDateLabel">
+    <DashboardModuleSaveBar
+      :dirty="settingsDirty"
+      :saving="savingSettings"
+      @save="saveSettings"
+      @discard="discardSettings"
+    />
+
+    <!-- ── Day detail / create / edit modal ── -->
+    <UModal
+      v-model:open="showDayModal"
+      :title="selectedDateLabel"
+      description="Events on this day, and a form to add or edit one."
+    >
       <template #body>
-        <div class="space-y-4 p-1">
-          <div v-if="selectedDayEvents.length > 0" class="space-y-2">
-            <div class="text-[10px] text-gray-500 uppercase tracking-wider">
-              Events on this day
-            </div>
-            <div
-              v-for="ev in selectedDayEvents"
-              :key="ev.id"
-              class="flex items-center justify-between gap-2 rounded-lg bg-white/[0.03] border border-white/[0.06] p-2.5"
-            >
-              <div class="min-w-0">
-                <div class="text-xs font-semibold text-white truncate">{{ ev.name }}</div>
-                <div class="text-[10px] text-gray-500">
-                  {{ new Date(ev.scheduledStartTime).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) }}
-                  · {{ ev.userCount }} interested
+        <div class="space-y-5">
+          <div v-if="selectedDayEvents.length > 0">
+            <p class="mb-2 text-sm font-medium text-white">Events on this day</p>
+            <ul class="space-y-2">
+              <li
+                v-for="ev in selectedDayEvents"
+                :key="ev.id"
+                class="flex items-center gap-2 rounded-lg bg-white/[0.03] p-2.5 ring-1 ring-inset ring-white/10"
+                :class="editingEventId === ev.id ? '!ring-2 !ring-teal-300/60' : ''"
+              >
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-sm font-medium text-white">{{ ev.name }}</p>
+                  <p class="text-[13px] text-gray-400">
+                    {{ timeLabel(ev.scheduledStartTime) }} · {{ ev.userCount }} interested
+                  </p>
                 </div>
-              </div>
-              <div class="flex items-center gap-1 shrink-0">
+                <span
+                  v-if="ev.entityType !== 3"
+                  class="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] text-gray-300"
+                  title="This event isn't managed by this calendar, so it can't be edited here."
+                >
+                  Managed in Discord
+                </span>
                 <UButton
-                  v-if="ev.entityType === 3"
-                  icon="i-heroicons-pencil"
+                  v-else
+                  icon="i-lucide-pencil"
                   color="neutral"
                   variant="ghost"
-                  size="xs"
+                  size="sm"
+                  :aria-label="`Edit ${ev.name}`"
                   @click="startEdit(ev)"
                 />
                 <UButton
-                  v-else
-                  icon="i-heroicons-pencil"
-                  color="neutral"
-                  variant="ghost"
-                  size="xs"
-                  disabled
-                  title="This event isn't managed by this calendar."
-                />
-                <UButton
-                  icon="i-heroicons-trash"
+                  icon="i-lucide-trash-2"
                   color="error"
                   variant="ghost"
-                  size="xs"
-                  @click="removeEvent(ev)"
+                  size="sm"
+                  :aria-label="`Delete ${ev.name}`"
+                  @click="deleteTarget = ev"
                 />
-              </div>
-            </div>
+              </li>
+            </ul>
           </div>
 
-          <div class="text-[10px] text-gray-500 uppercase tracking-wider">
-            {{ editingEventId ? "Edit event" : "Add an event" }}
+          <div
+            class="space-y-4"
+            :class="selectedDayEvents.length > 0 ? 'border-t border-white/[0.06] pt-5' : ''"
+          >
+            <p class="text-sm font-medium text-white">
+              {{ editingEventId ? "Edit event" : "Add an event" }}
+            </p>
+            <UFormField label="Name" class="w-full">
+              <UInput
+                v-model="form.name"
+                placeholder="e.g. Community game night"
+                icon="i-lucide-calendar-days"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="Date and time" hint="Your local timezone" class="w-full">
+              <UInput v-model="form.datetime" type="datetime-local" class="w-full" />
+            </UFormField>
+            <p class="-mt-2 text-[13px] text-gray-400">
+              {{
+                editingEventId
+                  ? "Keeps its original length."
+                  : "Ends 1 hour after it starts."
+              }}
+            </p>
+            <UFormField label="Location" class="w-full">
+              <UInput
+                v-model="form.location"
+                placeholder="Voice channel, URL or text"
+                icon="i-lucide-map-pin"
+                class="w-full"
+              />
+            </UFormField>
+            <UFormField label="Description" hint="Optional" class="w-full">
+              <UTextarea v-model="form.description" :rows="2" autoresize class="w-full" />
+            </UFormField>
           </div>
-          <UFormField label="Name">
-            <UInput v-model="form.name" placeholder="e.g. Community Game Night" class="w-full" />
-          </UFormField>
-          <UFormField label="Date & Time" hint="In your local timezone.">
-            <UInput v-model="form.datetime" type="datetime-local" class="w-full" />
-          </UFormField>
-          <UFormField label="Location">
-            <UInput v-model="form.location" placeholder="Voice channel, URL, or text" class="w-full" />
-          </UFormField>
-          <UFormField label="Description (optional)">
-            <UTextarea v-model="form.description" :rows="2" class="w-full" />
-          </UFormField>
         </div>
       </template>
       <template #footer>
-        <div class="flex gap-2 justify-end w-full">
+        <div class="flex w-full justify-end gap-2">
           <UButton v-if="editingEventId" variant="ghost" color="neutral" @click="cancelEdit">
-            Cancel Edit
+            Cancel edit
+          </UButton>
+          <UButton v-else variant="ghost" color="neutral" @click="showDayModal = false">
+            Close
           </UButton>
           <UButton
             color="primary"
-            :icon="editingEventId ? 'i-heroicons-check' : 'i-heroicons-plus'"
+            :icon="editingEventId ? 'i-lucide-check' : 'i-lucide-plus'"
             :loading="actionLoading"
+            :disabled="!canSubmit"
             @click="submitForm"
           >
-            {{ editingEventId ? "Save Changes" : "Add Event" }}
+            {{ editingEventId ? "Save changes" : "Add event" }}
           </UButton>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- ── Delete confirmation ── -->
+    <UModal :open="!!deleteTarget" @update:open="(v: boolean) => !v && (deleteTarget = null)">
+      <template #content>
+        <div class="space-y-4 p-6">
+          <div class="flex items-center gap-3">
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 ring-1 ring-inset ring-red-400/30"
+            >
+              <UIcon name="i-lucide-triangle-alert" class="h-5 w-5 text-red-300" />
+            </span>
+            <div>
+              <h3 class="text-base font-semibold text-white">Delete event</h3>
+              <p class="text-[13px] text-gray-400">This can't be undone.</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-300">
+            Delete <strong class="text-white">{{ deleteTarget?.name }}</strong> from the server's
+            events?
+          </p>
+          <div class="flex justify-end gap-2 pt-1">
+            <UButton color="neutral" variant="ghost" @click="deleteTarget = null">Cancel</UButton>
+            <UButton color="error" icon="i-lucide-trash-2" :loading="actionLoading" @click="confirmDelete">
+              Delete event
+            </UButton>
+          </div>
         </div>
       </template>
     </UModal>
@@ -292,6 +338,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import type { CalendarEvent } from "~/composables/useEvents";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
@@ -315,13 +362,32 @@ const settings = ref({
 });
 const savingSettings = ref(false);
 
+// Cleared selects can come back as null/undefined, so compare a normalised copy.
+const snapshot = () =>
+  JSON.stringify({
+    announcementChannelId: settings.value.announcementChannelId || "",
+    notifyRoleIds: [...(settings.value.notifyRoleIds ?? [])],
+  });
+const settingsBaseline = ref(snapshot());
+const settingsDirty = computed(() => snapshot() !== settingsBaseline.value);
+
 const saveSettings = async () => {
   savingSettings.value = true;
-  await saveModuleSettings("events", {
+  const ok = await saveModuleSettings("events", {
     announcementChannelId: settings.value.announcementChannelId || undefined,
     notifyRoleIds: settings.value.notifyRoleIds,
   });
+  // A failed save keeps the form dirty so the bar stays and Save can retry.
+  if (ok) settingsBaseline.value = snapshot();
   savingSettings.value = false;
+};
+
+const discardSettings = () => {
+  const b = JSON.parse(settingsBaseline.value);
+  settings.value = {
+    announcementChannelId: b.announcementChannelId,
+    notifyRoleIds: [...b.notifyRoleIds],
+  };
 };
 
 // ── Calendar ──
@@ -331,11 +397,14 @@ const monthLabel = computed(() =>
   viewDate.value.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
 );
 
+const timeLabel = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+
 interface CalendarCell {
   date: Date;
   inCurrentMonth: boolean;
   isToday: boolean;
-  events: import("~/composables/useEvents").CalendarEvent[];
+  events: CalendarEvent[];
 }
 
 const calendarCells = computed<CalendarCell[]>(() => {
@@ -411,6 +480,10 @@ const form = ref({
   description: "",
 });
 
+const canSubmit = computed(
+  () => !!form.value.name.trim() && !!form.value.datetime && !!form.value.location.trim(),
+);
+
 /** Format an ISO timestamp as a `datetime-local` input value, in the browser's local time. */
 function toDatetimeLocalValue(iso: string): string {
   const d = new Date(iso);
@@ -435,7 +508,7 @@ function openDayModal(date: Date) {
   showDayModal.value = true;
 }
 
-function startEdit(ev: import("~/composables/useEvents").CalendarEvent) {
+function startEdit(ev: CalendarEvent) {
   editingEventId.value = ev.id;
   form.value = {
     name: ev.name,
@@ -469,7 +542,7 @@ function computeEndDate(startDate: Date): Date {
 }
 
 async function submitForm() {
-  if (!form.value.name.trim() || !form.value.datetime || !form.value.location.trim()) {
+  if (!canSubmit.value) {
     toast.add({
       title: "Missing fields",
       description: "Name, date/time, and location are required.",
@@ -507,12 +580,17 @@ async function submitForm() {
   }
 }
 
-async function removeEvent(ev: import("~/composables/useEvents").CalendarEvent) {
-  if (!confirm(`Delete "${ev.name}"? This cannot be undone.`)) return;
+// ── Delete ──
+const deleteTarget = ref<CalendarEvent | null>(null);
+
+async function confirmDelete() {
+  const ev = deleteTarget.value;
+  if (!ev) return;
   try {
     await deleteEvent(ev.id);
     toast.add({ title: "Event deleted", color: "success" });
     if (editingEventId.value === ev.id && selectedDate.value) resetForm(selectedDate.value);
+    deleteTarget.value = null;
   } catch {
     // Error toast already shown by useEvents.
   }
@@ -526,6 +604,7 @@ onMounted(() => {
       notifyRoleIds: saved.notifyRoleIds ?? [],
     };
   }
+  settingsBaseline.value = snapshot();
   loadChannels();
   loadRoles();
   fetchEvents();
