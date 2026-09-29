@@ -139,6 +139,7 @@ async function runSweep(client: Client, moduleManager: ModuleManager): Promise<v
           // Lock and archive
           await (thread as ThreadChannel).setLocked(true, "Auto-closed: inactivity").catch(() => {});
           await (thread as ThreadChannel).setArchived(true, "Auto-closed: inactivity").catch(() => {});
+          await moduleManager.databaseService.markTicketClosed(thread.id);
         }
       }
     } catch (err) {

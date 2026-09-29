@@ -138,6 +138,22 @@ export class LogRepository {
     return rows.map(toDoc);
   }
 
+  async listByGuildFiltered(
+    guildId: string,
+    opts: { limit: number; levels?: Array<"info" | "warn" | "error">; since?: Date },
+  ): Promise<LogDoc[]> {
+    const conditions = [eq(logs.guildId, guildId)];
+    if (opts.levels?.length) conditions.push(inArray(logs.level, opts.levels));
+    if (opts.since) conditions.push(gte(logs.timestamp, opts.since));
+    const rows = await this.db
+      .select()
+      .from(logs)
+      .where(and(...conditions))
+      .orderBy(desc(logs.timestamp))
+      .limit(opts.limit);
+    return rows.map(toDoc);
+  }
+
   async listAll(limit = 200): Promise<LogDoc[]> {
     const rows = await this.db
       .select()

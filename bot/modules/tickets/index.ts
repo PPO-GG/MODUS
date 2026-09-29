@@ -15,6 +15,7 @@ import {
   ChannelType,
   TextChannel,
   MessageFlags,
+  Events,
 } from "discord.js";
 import type { BotModule, ModuleManager } from "../../ModuleManager";
 import {
@@ -35,6 +36,7 @@ import {
   handleTranscript,
 } from "./handlers/manage";
 import { startInactivitySweep } from "./lib/inactivity";
+import { scanOpenTickets } from "./lib/sync";
 
 // ── Slash commands ─────────────────────────────────────────────────────────────
 
@@ -327,6 +329,11 @@ const ticketsModule: BotModule = {
 
 export function registerTicketsEvents(moduleManager: ModuleManager): void {
   startInactivitySweep(moduleManager.client, moduleManager);
+  void scanOpenTickets(moduleManager);
+  // Staff-deleted ticket threads close too (no-op for non-ticket threads).
+  moduleManager.client.on(Events.ThreadDelete, (thread) => {
+    void moduleManager.databaseService.markTicketClosed(thread.id);
+  });
 }
 
 export default ticketsModule;
