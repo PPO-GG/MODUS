@@ -69,10 +69,10 @@
                 class="hero-shot-img"
                 src="/screenshots/herodash.webp"
                 width="1920"
-                height="953"
+                height="985"
                 fetchpriority="high"
                 decoding="async"
-                alt="The MODUS dashboard's server configuration page, listing modules by category with an on/off toggle for each"
+                alt="The MODUS dashboard's server Overview page: setup items that need attention, open tickets, recent moderation, a community snapshot and bot-flagged issues"
               />
             </div>
           </div>
@@ -308,11 +308,11 @@
             <div class="showcase-image is-narrow">
               <img
                 src="/screenshots/automod.webp"
-                width="895"
-                height="889"
+                width="899"
+                height="1105"
                 loading="lazy"
                 decoding="async"
-                alt="The AutoMod rule builder with a Message Created trigger, a message-content condition, and a Delete Message action"
+                alt="The AutoMod rule editor with a Message Created trigger, a message-content condition, and a Send Channel Message action"
               />
             </div>
           </div>
