@@ -37,6 +37,11 @@ import {
   GiveawayEntryRepository,
   XpUserRepository,
   SystemFlagsRepository,
+  ModerationCaseRepository,
+  TicketRepository,
+  type CreateModerationCaseInput,
+  type TicketUpsertInput,
+  type ModerationCaseRow,
 } from "@modus/db";
 import {
   StorageService,
@@ -79,6 +84,8 @@ export class DatabaseService {
   public readonly giveaways: GiveawayRepository;
   public readonly giveawayEntries: GiveawayEntryRepository;
   public readonly systemFlags: SystemFlagsRepository;
+  public readonly moderationCases: ModerationCaseRepository;
+  public readonly tickets: TicketRepository;
 
   /** TTL cache for guild config + tag lookups. Shared-shard aware via EventBus. */
   private configCache: CacheService<any>;
@@ -154,6 +161,8 @@ export class DatabaseService {
     this.giveaways = new GiveawayRepository(db);
     this.giveawayEntries = new GiveawayEntryRepository(db);
     this.systemFlags = new SystemFlagsRepository(db);
+    this.moderationCases = new ModerationCaseRepository(db);
+    this.tickets = new TicketRepository(db);
 
     // Periodic log flush. unref() so a pending timer never holds the
     // process open during shutdown — gracefulShutdown calls flushLogs().
@@ -931,6 +940,36 @@ export class DatabaseService {
         error,
       );
       return [];
+    }
+  }
+
+  // ── Moderation Cases ───────────────────────────────────────────────
+
+  async createModerationCase(input: CreateModerationCaseInput): Promise<ModerationCaseRow> {
+    return await this.moderationCases.create(input);
+  }
+
+  async upsertTicket(input: TicketUpsertInput): Promise<void> {
+    try {
+      await this.tickets.upsert(input);
+    } catch (error) {
+      console.error("[DatabaseService] upsertTicket failed:", error);
+    }
+  }
+
+  async markTicketClosed(threadId: string): Promise<void> {
+    try {
+      await this.tickets.markClosed(threadId);
+    } catch (error) {
+      console.error("[DatabaseService] markTicketClosed failed:", error);
+    }
+  }
+
+  async closeMissingTickets(guildId: string, activeThreadIds: string[], olderThan?: Date): Promise<void> {
+    try {
+      await this.tickets.closeMissing(guildId, activeThreadIds, olderThan);
+    } catch (error) {
+      console.error("[DatabaseService] closeMissingTickets failed:", error);
     }
   }
 

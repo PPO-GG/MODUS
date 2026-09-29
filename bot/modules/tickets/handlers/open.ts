@@ -24,6 +24,7 @@ import {
 import { parseSettings } from "../../../lib/validateSettings";
 import { formatTicketName, buildMetaFooter } from "../lib/utils";
 import { PRIORITY_CONFIG, type TicketMeta } from "../lib/types";
+import { ticketUpsertFromMeta } from "../lib/sync";
 
 // ── Per-guild settings cache ──────────────────────────────────────────────────
 // Avoids extra Appwrite round-trips during button clicks that must respond within
@@ -270,6 +271,9 @@ async function createTicketThread(
   const infoEmbed = buildInfoEmbed(meta, { tag: interaction.user.tag }, ticketType, settings);
   const infoMsg = await thread.send({ embeds: [infoEmbed.toJSON()] });
   await infoMsg.pin().catch(() => {});
+  await moduleManager.databaseService.upsertTicket(
+    ticketUpsertFromMeta(guildId, thread.id, meta, { ownerTag: interaction.user.tag }),
+  );
 
   // ── Post pre-open modal answers (if any) ───────────────────────────────────
   const effectiveQuestions = ticketType?.questions?.length

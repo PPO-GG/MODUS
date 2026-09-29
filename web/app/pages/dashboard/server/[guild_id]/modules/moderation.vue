@@ -413,6 +413,8 @@ const save = async () => {
           .filter(Boolean);
 
   await saveModuleSettings("moderation", {
+    // Keep bot-owned keys (botCanViewAuditLog, lastCaseId, warnings) the form doesn't know about.
+    ...getModuleConfig("moderation"),
     ...moderationSettings.value,
     modLogChannelId:
       moderationSettings.value.modLogChannelId === "none"

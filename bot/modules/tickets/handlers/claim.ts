@@ -12,6 +12,7 @@ import { parseSettings } from "../../../lib/validateSettings";
 import { getThreadMeta, buildMetaFooter } from "../lib/utils";
 import { isStaff } from "../lib/permissions";
 import { PRIORITY_CONFIG } from "../lib/types";
+import { ticketUpsertFromMeta } from "../lib/sync";
 
 // ── Claim handler ────────────────────────────────────────────────────────────
 
@@ -104,6 +105,12 @@ export async function handleClaim(
   } catch {
     // If we can't edit the pinned message, still post the status update
   }
+
+  await moduleManager.databaseService.upsertTicket(
+    ticketUpsertFromMeta(guildId, thread.id, updatedMeta, {
+      claimedByTag: updatedMeta.claimedById ? interaction.user.tag : null,
+    }),
+  );
 
   const statusText = isClaiming
     ? `🙋 Ticket claimed by <@${interaction.user.id}>`

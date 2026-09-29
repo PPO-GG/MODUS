@@ -23,4 +23,6 @@ export * from "./repositories/module-access";
 export * from "./repositories/music";
 export * from "./repositories/xp";
 export * from "./repositories/system-flags";
+export * from "./repositories/moderation-cases";
+export * from "./repositories/tickets";
 export * from "./rank-cards";

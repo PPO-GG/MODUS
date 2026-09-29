@@ -9,6 +9,8 @@ import {
   User,
   AutocompleteInteraction,
   MessageFlags,
+  Events,
+  Guild,
 } from "discord.js";
 import { BotModule, ModuleManager } from "../ModuleManager";
 import { buildV2Layout } from "../lib/components-v2";
@@ -17,6 +19,7 @@ import {
   type ModerationSettingsType,
 } from "../lib/schemas";
 import { parseSettings } from "../lib/validateSettings";
+import { auditEntryToCase } from "../lib/auditCases";
 import { getChannelLockOverwrites } from "./lib/channelLock";
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -192,10 +195,146 @@ async function getNextCaseId(
   const currentCase = (settings as any).lastCaseId || 0;
   const nextCase = currentCase + 1;
   await moduleManager.databaseService.setModuleSettings(guildId, "moderation", {
-    ...settings,
+    ...(await getRawSettings(moduleManager, guildId)),
     lastCaseId: nextCase,
   });
   return nextCase;
+}
+
+/**
+ * Raw stored settings blob. Writes must spread this (not the Zod-parsed
+ * getSettings result), which strips unknown keys such as `warnings`.
+ */
+async function getRawSettings(
+  moduleManager: ModuleManager,
+  guildId: string,
+): Promise<Record<string, unknown>> {
+  return ((await moduleManager.databaseService.getModuleSettings(
+    guildId,
+    "moderation",
+  )) ?? {}) as Record<string, unknown>;
+}
+
+interface RecordCaseInput {
+  action: ModerationCase["action"];
+  targetId: string;
+  targetTag: string;
+  moderatorId: string | null;
+  moderatorTag: string | null;
+  reason: string | null;
+  durationMinutes: number | null;
+  source?: "command" | "discord";
+  createdAt?: Date;
+}
+
+/**
+ * Persist a moderation case and return its number. Numbers are assigned by
+ * the DB insert (continuing the legacy settings.lastCaseId); if the DB is
+ * unavailable, command cases fall back to the settings counter so
+ * moderation never breaks. Native (source "discord") cases are just logged.
+ */
+async function recordModerationCase(
+  moduleManager: ModuleManager,
+  guildId: string,
+  input: RecordCaseInput,
+): Promise<number> {
+  const source = input.source ?? "command";
+  const settings = await getSettings(moduleManager, guildId);
+  const seed = (settings as any).lastCaseId || 0;
+  try {
+    const row = await moduleManager.databaseService.createModerationCase({
+      guildId,
+      action: input.action,
+      targetId: input.targetId,
+      targetTag: input.targetTag,
+      moderatorId: input.moderatorId,
+      moderatorTag: input.moderatorTag,
+      reason: input.reason,
+      durationMinutes: input.durationMinutes,
+      source,
+      createdAt: input.createdAt,
+      seed,
+    });
+    if (row.caseNumber > seed) {
+      await moduleManager.databaseService.setModuleSettings(guildId, "moderation", {
+        ...(await getRawSettings(moduleManager, guildId)),
+        lastCaseId: row.caseNumber,
+      });
+    }
+    return row.caseNumber;
+  } catch (err) {
+    moduleManager.logger.warn(`Failed to record moderation case: ${err}`, guildId, "moderation");
+    if (source === "discord") return seed;
+    return getNextCaseId(moduleManager, guildId);
+  }
+}
+
+/** Record whether the bot can read the audit log (required for native bans/kicks). */
+async function refreshAuditLogFlag(moduleManager: ModuleManager, guild: Guild): Promise<void> {
+  if (!(await moduleManager.databaseService.isModuleEnabled(guild.id, "moderation"))) return;
+  const me = guild.members.me;
+  if (!me) return;
+  const can = me.permissions.has(PermissionFlagsBits.ViewAuditLog);
+  const settings = await getSettings(moduleManager, guild.id);
+  const stored = (settings as any).botCanViewAuditLog;
+  // Only write on a real transition; the web rule fires solely on `=== false`.
+  if (can && stored !== false) return;
+  if (!can && stored === false) return;
+  await moduleManager.databaseService.setModuleSettings(guild.id, "moderation", {
+    ...(await getRawSettings(moduleManager, guild.id)),
+    botCanViewAuditLog: can,
+  });
+}
+
+export function registerModerationEvents(moduleManager: ModuleManager): void {
+  const client = moduleManager.client;
+  const refresh = (guild: Guild) =>
+    refreshAuditLogFlag(moduleManager, guild).catch((err) =>
+      moduleManager.logger.warn(`Audit-log permission check failed: ${err}`, guild.id, "moderation"),
+    );
+
+  // registerEvents runs after the shard is ready, so the guild cache is populated.
+  void (async () => {
+    for (const guild of client.guilds.cache.values()) await refresh(guild);
+  })();
+
+  client.on(Events.GuildRoleUpdate, (_old, role) => {
+    if (role.guild.members.me?.roles.cache.has(role.id)) void refresh(role.guild);
+  });
+  client.on(Events.GuildMemberUpdate, (_old, member) => {
+    if (member.id === client.user?.id) void refresh(member.guild);
+  });
+
+  client.on(Events.GuildAuditLogEntryCreate, async (entry, guild) => {
+    try {
+      if (!client.user) return;
+      if (!(await moduleManager.databaseService.isModuleEnabled(guild.id, "moderation"))) return;
+      const input = auditEntryToCase(
+        {
+          action: entry.action,
+          targetId: entry.targetId,
+          executorId: entry.executorId,
+          reason: entry.reason,
+          createdTimestamp: entry.createdTimestamp,
+          changes: entry.changes.map((c) => ({ key: c.key, old: c.old, new: c.new })),
+        },
+        client.user.id,
+      );
+      if (!input) return;
+      const target = await client.users.fetch(input.targetId).catch(() => null);
+      const moderator = input.moderatorId
+        ? await client.users.fetch(input.moderatorId).catch(() => null)
+        : null;
+      await recordModerationCase(moduleManager, guild.id, {
+        ...input,
+        targetTag: target?.tag ?? input.targetId,
+        moderatorTag: moderator?.tag ?? null,
+        source: "discord",
+      });
+    } catch (err) {
+      moduleManager.logger.warn(`Failed to record native moderation action: ${err}`, guild.id, "moderation");
+    }
+  });
 }
 
 async function sendModLog(
@@ -546,6 +685,7 @@ const modlogCommand = new SlashCommandBuilder()
 
 const moderationModule: BotModule = {
   name: "moderation",
+  registerEvents: registerModerationEvents,
   description:
     "Comprehensive moderation toolkit: kick, ban, timeout, warn, purge, slowmode, lock/unlock",
   meta: {
@@ -631,7 +771,15 @@ const moderationModule: BotModule = {
 
         await target.kick(reason);
 
-        const caseId = await getNextCaseId(moduleManager, guildId);
+        const caseId = await recordModerationCase(moduleManager, guildId, {
+          action: "kick",
+          targetId: target.id,
+          targetTag: target.user.tag,
+          moderatorId: moderator.id,
+          moderatorTag: moderator.user.tag,
+          reason: reason,
+          durationMinutes: null,
+        });
         const modCase: ModerationCase = {
           caseId,
           guildId,
@@ -701,7 +849,15 @@ const moderationModule: BotModule = {
           return;
         }
 
-        const caseId = await getNextCaseId(moduleManager, guildId);
+        const caseId = await recordModerationCase(moduleManager, guildId, {
+          action: "ban",
+          targetId: targetUser.id,
+          targetTag: targetUser.tag,
+          moderatorId: moderator.id,
+          moderatorTag: moderator.user.tag,
+          reason: reason,
+          durationMinutes: null,
+        });
         const modCase: ModerationCase = {
           caseId,
           guildId,
@@ -737,7 +893,15 @@ const moderationModule: BotModule = {
           const ban = await guild.bans.fetch(userId);
           await guild.members.unban(userId, reason);
 
-          const caseId = await getNextCaseId(moduleManager, guildId);
+          const caseId = await recordModerationCase(moduleManager, guildId, {
+            action: "unban",
+            targetId: ban.user.id,
+            targetTag: ban.user.tag,
+            moderatorId: moderator.id,
+            moderatorTag: moderator.user.tag,
+            reason: reason,
+            durationMinutes: null,
+          });
           const modCase: ModerationCase = {
             caseId,
             guildId,
@@ -818,7 +982,15 @@ const moderationModule: BotModule = {
 
         await target.timeout(durationMs, reason);
 
-        const caseId = await getNextCaseId(moduleManager, guildId);
+        const caseId = await recordModerationCase(moduleManager, guildId, {
+          action: "timeout",
+          targetId: target.id,
+          targetTag: target.user.tag,
+          moderatorId: moderator.id,
+          moderatorTag: moderator.user.tag,
+          reason: reason,
+          durationMinutes: minutes,
+        });
         const modCase: ModerationCase = {
           caseId,
           guildId,
@@ -867,7 +1039,15 @@ const moderationModule: BotModule = {
 
         await target.timeout(null, reason);
 
-        const caseId = await getNextCaseId(moduleManager, guildId);
+        const caseId = await recordModerationCase(moduleManager, guildId, {
+          action: "untimeout",
+          targetId: target.id,
+          targetTag: target.user.tag,
+          moderatorId: moderator.id,
+          moderatorTag: moderator.user.tag,
+          reason: reason,
+          durationMinutes: null,
+        });
         const modCase: ModerationCase = {
           caseId,
           guildId,
@@ -919,7 +1099,15 @@ const moderationModule: BotModule = {
           );
         const warnings: ModerationCase[] = currentSettings.warnings || [];
 
-        const caseId = await getNextCaseId(moduleManager, guildId);
+        const caseId = await recordModerationCase(moduleManager, guildId, {
+          action: "warn",
+          targetId: target.id,
+          targetTag: target.user.tag,
+          moderatorId: moderator.id,
+          moderatorTag: moderator.user.tag,
+          reason: reason,
+          durationMinutes: null,
+        });
         const modCase: ModerationCase = {
           caseId,
           guildId,
@@ -970,11 +1158,26 @@ const moderationModule: BotModule = {
         ) {
           const thresholdReason = `Auto-action: Reached ${settings.warnThreshold} warnings`;
 
+          const recordAutoAction = (
+            action: "kick" | "ban" | "timeout",
+            durationMinutes: number | null,
+          ) =>
+            recordModerationCase(moduleManager, guildId, {
+              action,
+              targetId: target.id,
+              targetTag: target.user.tag,
+              moderatorId: moduleManager.client.user?.id ?? null,
+              moderatorTag: moduleManager.client.user?.tag ?? null,
+              reason: thresholdReason,
+              durationMinutes,
+            });
+
           try {
             switch (settings.warnAction) {
               case "timeout": {
                 const duration = settings.autoTimeoutDuration * 60 * 1000;
                 await target.timeout(duration, thresholdReason);
+                await recordAutoAction("timeout", settings.autoTimeoutDuration);
                 autoActionMsg = `\n⚡ **Auto-action:** Timed out for ${formatDuration(settings.autoTimeoutDuration)} (threshold reached).`;
                 break;
               }
@@ -984,6 +1187,7 @@ const moderationModule: BotModule = {
                     await dmUser(target, "kick", guild.name, thresholdReason);
                   }
                   await target.kick(thresholdReason);
+                  await recordAutoAction("kick", null);
                   autoActionMsg =
                     "\n⚡ **Auto-action:** Kicked from server (threshold reached).";
                 }
@@ -995,6 +1199,7 @@ const moderationModule: BotModule = {
                     await dmUser(target, "ban", guild.name, thresholdReason);
                   }
                   await guild.members.ban(target, { reason: thresholdReason });
+                  await recordAutoAction("ban", null);
                   autoActionMsg =
                     "\n⚡ **Auto-action:** Banned from server (threshold reached).";
                 }
@@ -1120,7 +1325,17 @@ const moderationModule: BotModule = {
 
           const deleted = await channel.bulkDelete(messages, true);
 
-          const caseId = await getNextCaseId(moduleManager, guildId);
+          const caseId = await recordModerationCase(moduleManager, guildId, {
+            action: "purge",
+            targetId: targetUser?.id || "all",
+            targetTag: targetUser?.tag || "All Users",
+            moderatorId: moderator.id,
+            moderatorTag: moderator.user.tag,
+            reason: targetUser
+              ? `Bulk deleted ${deleted.size} message(s) from ${targetUser.tag}`
+              : `Bulk deleted ${deleted.size} message(s)`,
+            durationMinutes: null,
+          });
           const modCase: ModerationCase = {
             caseId,
             guildId,

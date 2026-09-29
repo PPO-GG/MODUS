@@ -188,6 +188,8 @@ export const ModerationSettingsSchema = z.object({
   commandPermissions: CommandPermissionsSchema.optional(),
   /** Tracked internally — not user-facing in the dashboard */
   lastCaseId: z.number().optional(),
+  /** Set by the bot: whether it holds View Audit Log (needed to record native bans/kicks). */
+  botCanViewAuditLog: z.boolean().optional(),
 });
 
 export type ModerationSettingsType = z.infer<typeof ModerationSettingsSchema>;

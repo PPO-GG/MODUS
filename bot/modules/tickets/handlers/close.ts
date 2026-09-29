@@ -100,6 +100,8 @@ export async function handleClose(
       );
     }
 
+    await moduleManager.databaseService.markTicketClosed(thread.id);
+
     // ── Post transcript to log channel ────────────────────────────────────
     if (settings.transcriptChannelId) {
       const logChannel = guild.channels.cache.get(settings.transcriptChannelId) as

@@ -12,6 +12,7 @@ import { parseSettings } from "../../../lib/validateSettings";
 import { getThreadMeta, buildMetaFooter, applyPriorityPrefix } from "../lib/utils";
 import { isStaff } from "../lib/permissions";
 import { PRIORITY_CONFIG, type TicketPriority } from "../lib/types";
+import { ticketUpsertFromMeta } from "../lib/sync";
 
 // ── /ticket add ──────────────────────────────────────────────────────────────
 
@@ -229,6 +230,8 @@ export async function handlePriority(
   } catch {
     /* ignore if message was deleted */
   }
+
+  await moduleManager.databaseService.upsertTicket(ticketUpsertFromMeta(guildId, thread.id, updatedMeta));
 
   await interaction.editReply(
     `${conf.emoji} Priority set to **${conf.label}**.`,

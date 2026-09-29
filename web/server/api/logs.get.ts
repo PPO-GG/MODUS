@@ -33,7 +33,19 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    return await repos.logs.listByGuild(guildId, limit);
+    const levels = String(query.level ?? "")
+      .split(",")
+      .map((l) => l.trim())
+      .filter((l): l is "info" | "warn" | "error" => l === "info" || l === "warn" || l === "error");
+    const since = query.since ? new Date(String(query.since)) : undefined;
+    if (levels.length === 0 && !since) {
+      return await repos.logs.listByGuild(guildId, limit);
+    }
+    return await repos.logs.listByGuildFiltered(guildId, {
+      limit,
+      levels,
+      since: since && !Number.isNaN(since.getTime()) ? since : undefined,
+    });
   } catch (error: any) {
     console.error(
       `[Logs API] listByGuild(${guildId}) failed:`,

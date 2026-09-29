@@ -24,7 +24,7 @@
         :content="{ side: 'right' }"
       >
         <NuxtLink
-          :to="`/dashboard/server/${server.$id}/modules`"
+          :to="`/dashboard/server/${server.$id}`"
           class="rail-item"
           :class="{ 'is-active': isServerActive(server.$id) }"
           :aria-label="server.name"

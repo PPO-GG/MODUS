@@ -1097,3 +1097,60 @@ export const musicOperations = pgTable(
 
 export type MusicOperation = typeof musicOperations.$inferSelect;
 export type NewMusicOperation = typeof musicOperations.$inferInsert;
+
+// ── Moderation cases ─────────────────────────────────────────────────
+// One row per moderation action — from MODUS commands (source "command")
+// and native Discord actions picked up from the audit log ("discord").
+// case_number is per guild, continuing the legacy settings.lastCaseId.
+export const moderationCases = pgTable(
+  "moderation_cases",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    guildId: text("guild_id").notNull(),
+    caseNumber: integer("case_number").notNull(),
+    action: text("action").notNull(),
+    targetId: text("target_id").notNull(),
+    targetTag: text("target_tag").notNull(),
+    moderatorId: text("moderator_id"),
+    moderatorTag: text("moderator_tag"),
+    reason: text("reason"),
+    durationMinutes: integer("duration_minutes"),
+    source: text("source").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byGuildCase: uniqueIndex("moderation_cases_guild_case_idx").on(t.guildId, t.caseNumber),
+    byGuildCreated: index("moderation_cases_guild_created_idx").on(t.guildId, t.createdAt.desc()),
+  }),
+);
+export type ModerationCaseRow = typeof moderationCases.$inferSelect;
+export type NewModerationCaseRow = typeof moderationCases.$inferInsert;
+
+// ── Tickets ──────────────────────────────────────────────────────────
+// One row per ticket thread, mirrored from the TicketMeta embed the bot
+// pins in each private thread. Written on open/claim/priority/close and
+// by a startup scan of active threads.
+export const ticketRecords = pgTable(
+  "tickets",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    guildId: text("guild_id").notNull(),
+    ticketNumber: integer("ticket_number").notNull(),
+    threadId: text("thread_id").notNull(),
+    ownerId: text("owner_id").notNull(),
+    ownerTag: text("owner_tag"),
+    typeId: text("type_id"),
+    priority: text("priority").notNull(),
+    status: text("status").notNull(),
+    claimedBy: text("claimed_by"),
+    claimedByTag: text("claimed_by_tag"),
+    openedAt: timestamp("opened_at", { withTimezone: true }).notNull(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byThread: uniqueIndex("tickets_thread_idx").on(t.threadId),
+    byGuildStatus: index("tickets_guild_status_idx").on(t.guildId, t.status),
+  }),
+);
+export type TicketRow = typeof ticketRecords.$inferSelect;
