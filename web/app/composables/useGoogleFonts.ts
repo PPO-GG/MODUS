@@ -18,6 +18,72 @@ import {
 
 const loadedFonts = new Set<string>();
 const loadingFonts = ref(new Set<string>());
+// In-flight loads, so concurrent callers for the same family share one attempt.
+const pendingLoads = new Map<string, Promise<void>>();
+
+const STYLESHEET_TIMEOUT_MS = 10_000;
+
+/**
+ * Resolve once the <link> stylesheet has loaded and its @font-face rules
+ * are registered. Rejects on network error or timeout.
+ */
+function waitForStylesheet(link: HTMLLinkElement): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      clearTimeout(timer);
+      link.removeEventListener("load", onLoad);
+      link.removeEventListener("error", onError);
+    };
+    const onLoad = () => {
+      cleanup();
+      resolve();
+    };
+    const onError = () => {
+      cleanup();
+      reject(new Error("stylesheet failed to load"));
+    };
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("stylesheet load timed out"));
+    }, STYLESHEET_TIMEOUT_MS);
+    link.addEventListener("load", onLoad);
+    link.addEventListener("error", onError);
+  });
+}
+
+async function fetchFont(family: string): Promise<void> {
+  const fontDef = GOOGLE_FONTS.find((f) => f.family === family);
+  const weights = fontDef?.weights ?? [400, 700];
+
+  // A fresh <link> per attempt: a link whose load event already fired can't
+  // be awaited, and a failed one should be retried from scratch.
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = googleFontsCssUrl(family, weights);
+  link.dataset.googleFont = family;
+  const stylesheetReady = waitForStylesheet(link);
+  document.head.appendChild(link);
+
+  try {
+    await stylesheetReady;
+    // document.fonts.load resolves with [] (not an error) when no matching
+    // @font-face exists, so an empty result means the font isn't usable.
+    const faces = await Promise.all(
+      weights.map((weight) =>
+        document.fonts.load(`${weight} 16px "${family}"`),
+      ),
+    );
+    if (faces.some((f) => f.length > 0)) {
+      loadedFonts.add(family);
+    } else {
+      link.remove();
+      console.warn(`[GoogleFonts] No font faces found for: ${family}`);
+    }
+  } catch (err) {
+    link.remove();
+    console.warn(`[GoogleFonts] Failed to load font: ${family}`, err);
+  }
+}
 
 // ── Font Groups for the picker ───────────────────────────────────
 
@@ -63,37 +129,24 @@ export function useGoogleFonts() {
   /**
    * Load a Google Font and resolve once the browser confirms it is
    * actually usable — not just that the stylesheet request completed.
-   * No-op for system fonts or already-loaded fonts. Never rejects.
+   * No-op for system fonts or already-loaded fonts. Concurrent calls for
+   * the same family share one in-flight load. Never rejects; a failed
+   * load is not cached, so a later call retries.
    */
-  async function loadFont(family: string): Promise<void> {
-    if (isSystemFont(family)) return;
-    if (loadedFonts.has(family)) return;
+  function loadFont(family: string): Promise<void> {
+    if (isSystemFont(family)) return Promise.resolve();
+    if (loadedFonts.has(family)) return Promise.resolve();
 
-    const fontDef = GOOGLE_FONTS.find((f) => f.family === family);
-    const weights = fontDef?.weights ?? [400, 700];
+    const pending = pendingLoads.get(family);
+    if (pending) return pending;
 
-    if (!loadingFonts.value.has(family)) {
-      loadingFonts.value.add(family);
-
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = googleFontsCssUrl(family, weights);
-      link.dataset.googleFont = family;
-      document.head.appendChild(link);
-    }
-
-    try {
-      await Promise.all(
-        weights.map((weight) =>
-          document.fonts.load(`${weight} 16px "${family}"`),
-        ),
-      );
-      loadedFonts.add(family);
-    } catch (err) {
-      console.warn(`[GoogleFonts] Failed to load font: ${family}`, err);
-    } finally {
+    loadingFonts.value.add(family);
+    const load = fetchFont(family).finally(() => {
+      pendingLoads.delete(family);
       loadingFonts.value.delete(family);
-    }
+    });
+    pendingLoads.set(family, load);
+    return load;
   }
 
   /**
