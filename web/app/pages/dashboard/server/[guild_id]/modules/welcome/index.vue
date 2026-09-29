@@ -1,283 +1,296 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
-      >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
-        >
-          <UIcon name="i-lucide-party-popper" class="w-5 h-5 text-primary-400" />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-white">Welcome</h2>
-          <p class="text-xs text-gray-500">
-            Greet new members with a custom image, text, or both
-          </p>
-        </div>
-      </div>
-      <UBadge
-        :color="isModuleEnabled('welcome') ? 'success' : 'neutral'"
-        variant="soft"
-        class="ml-auto"
-      >
-        {{ isModuleEnabled("welcome") ? "Module Active" : "Module Disabled" }}
-      </UBadge>
-    </div>
+  <div class="mx-auto max-w-6xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-party-popper"
+      title="Welcome"
+      description="Greet new members with a custom image, a message, or both."
+      :enabled="isModuleEnabled('welcome')"
+    />
 
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-      <!-- Settings -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-5">
-          <div class="flex items-center gap-2 mb-1">
-            <div
-              class="w-7 h-7 rounded-lg bg-primary-500/10 border border-primary-500/20 flex items-center justify-center shrink-0"
+    <div class="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
+      <!-- ══════════════ Settings ══════════════ -->
+      <div class="min-w-0 space-y-6">
+        <div v-if="loading" class="space-y-6" aria-busy="true">
+          <div v-for="n in 3" :key="n" class="h-40 animate-pulse rounded-xl bg-white/[0.04]" />
+        </div>
+
+        <template v-else>
+          <DashboardModuleSection title="Channel" description="Where welcome messages are posted.">
+            <USelectMenu
+              v-model="channelId"
+              :items="channelOptions"
+              value-key="value"
+              placeholder="Select a channel"
+              icon="i-lucide-hash"
+              :loading="state.channelsLoading"
+              class="w-full"
+              aria-label="Welcome channel"
+            />
+            <p
+              v-if="channelProblem"
+              class="mt-3 flex items-start gap-2 rounded-lg bg-amber-400/[0.06] px-3 py-2 text-[13px] text-amber-200 ring-1 ring-inset ring-amber-400/25"
+              role="status"
             >
-              <UIcon name="i-heroicons-adjustments-horizontal" class="text-primary-400" />
+              <UIcon name="i-lucide-triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+              {{ channelProblem }}
+            </p>
+          </DashboardModuleSection>
+
+          <DashboardModuleSection title="What to send" description="Members get a picture, a message, or both.">
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="What to send">
+                <label v-for="opt in modeCards" :key="opt.value" class="block cursor-pointer">
+                  <input
+                    v-model="message.mode"
+                    type="radio"
+                    name="welcome-mode"
+                    :value="opt.value"
+                    class="peer sr-only"
+                  />
+                  <div
+                    class="flex h-full items-start gap-3 rounded-xl p-3.5 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
+                  >
+                    <span
+                      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
+                    >
+                      <UIcon :name="opt.icon" class="h-4 w-4" />
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="flex items-center justify-between gap-2">
+                        <span class="text-sm font-semibold text-white">{{ opt.label }}</span>
+                        <UIcon
+                          v-if="message.mode === opt.value"
+                          name="i-lucide-circle-check"
+                          class="h-4 w-4 shrink-0 text-teal-300"
+                        />
+                      </span>
+                      <span class="block text-[13px] text-gray-400">{{ opt.description }}</span>
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              <div v-if="message.mode === 'both'">
+                <p class="mb-2 text-sm font-medium text-white">Order</p>
+                <div class="flex flex-wrap gap-2" role="radiogroup" aria-label="Order">
+                  <label v-for="opt in WELCOME_MESSAGE_ORDERS" :key="opt.value" class="cursor-pointer">
+                    <input
+                      v-model="message.order"
+                      type="radio"
+                      name="welcome-order"
+                      :value="opt.value"
+                      class="peer sr-only"
+                    />
+                    <span
+                      class="flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm text-gray-300 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:text-white peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
+                    >
+                      <UIcon :name="opt.lucide" class="h-4 w-4" />
+                      {{ opt.label }}
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 class="font-semibold text-white">Message</h3>
-              <p class="text-[10px] text-gray-500">
-                Where the welcome goes and what it contains
-              </p>
-            </div>
-          </div>
+          </DashboardModuleSection>
 
-          <div v-if="loading" class="space-y-4">
-            <USkeleton v-for="n in 4" :key="n" class="h-10 w-full" />
-          </div>
-
-          <div v-else class="space-y-4">
-            <UFormField label="Channel" description="Where welcome messages are posted.">
-              <USelectMenu
-                v-model="channelId"
-                :items="channelOptions"
-                value-key="value"
-                placeholder="Select a channel"
-                icon="i-heroicons-hashtag"
-                :loading="state.channelsLoading"
-                class="w-full"
-              />
-            </UFormField>
-
-            <UFormField label="Send">
-              <UFieldGroup class="w-full">
-                <UButton
-                  v-for="opt in WELCOME_MESSAGE_MODES"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :color="message.mode === opt.value ? 'primary' : 'neutral'"
-                  :variant="message.mode === opt.value ? 'solid' : 'outline'"
-                  class="flex-1 justify-center"
-                  @click="message.mode = opt.value"
-                />
-              </UFieldGroup>
-            </UFormField>
-
-            <UFormField v-if="message.mode === 'both'" label="Order">
-              <UFieldGroup class="w-full">
-                <UButton
-                  v-for="opt in WELCOME_MESSAGE_ORDERS"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :icon="opt.icon"
-                  :color="message.order === opt.value ? 'primary' : 'neutral'"
-                  :variant="message.order === opt.value ? 'solid' : 'outline'"
-                  class="flex-1 justify-center"
-                  @click="message.order = opt.value"
-                />
-              </UFieldGroup>
-            </UFormField>
-
-            <template v-if="message.mode !== 'image'">
-              <UFormField label="Title">
-                <UInput
-                  v-model="message.title"
-                  :maxlength="256"
-                  placeholder="Optional heading"
-                  class="w-full"
-                />
+          <DashboardModuleSection
+            v-if="message.mode !== 'image'"
+            title="Message"
+            description="The text posted for each new member."
+          >
+            <div class="space-y-4">
+              <UFormField label="Title" hint="Optional" class="w-full">
+                <UInput v-model="message.title" :maxlength="256" placeholder="Welcome!" class="w-full" />
               </UFormField>
 
-              <UFormField label="Text">
+              <div>
+                <label for="welcome-body" class="mb-1.5 block text-sm font-medium text-white">Text</label>
                 <MarkdownToolbar v-model="message.body" :target="bodyRef" />
                 <textarea
+                  id="welcome-body"
                   ref="bodyRef"
                   v-model="message.body"
                   :maxlength="2000"
                   rows="6"
                   placeholder="Welcome to **{server_name}**, {user}! 🎉"
-                  class="block w-full rounded-b-xl border border-white/10 bg-gray-950/60 px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-primary-500/60 resize-y"
+                  class="block w-full resize-y rounded-b-xl border border-white/10 bg-gray-950/60 px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:border-teal-300/60 focus:outline-none"
                 />
-                <div class="flex items-start justify-between gap-2 mt-1.5">
-                  <div class="flex flex-wrap gap-1">
-                    <button
-                      v-for="ph in WELCOME_PLACEHOLDERS"
-                      :key="ph"
-                      type="button"
-                      class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/10 text-[11px] font-mono text-gray-400 hover:text-gray-200 transition-colors"
-                      @click="insertPlaceholder(ph)"
-                    >
-                      {{ ph }}
-                    </button>
-                  </div>
-                  <span class="text-[11px] text-gray-600 tabular-nums shrink-0">
-                    {{ message.body.length }}/2000
-                  </span>
+                <div class="mt-1.5 text-right text-xs tabular-nums text-gray-400">
+                  {{ message.body.length }}/2000
                 </div>
-              </UFormField>
-            </template>
+              </div>
 
-            <UFormField label="Accent color">
-              <div class="flex items-center gap-3">
+              <div>
+                <p class="mb-2 text-sm font-medium text-white">Insert a placeholder</p>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <button
+                    v-for="ph in placeholderInfo"
+                    :key="ph.token"
+                    type="button"
+                    class="flex items-center gap-3 rounded-lg px-3 py-2 text-left ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-teal-300"
+                    @click="insertPlaceholder(ph.token)"
+                  >
+                    <code class="shrink-0 font-mono text-xs text-teal-300">{{ ph.token }}</code>
+                    <span class="min-w-0 text-[13px] text-gray-400">{{ ph.meaning }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </DashboardModuleSection>
+
+          <DashboardModuleSection
+            title="Accent color"
+            description="The stripe down the side of the message. Leave it off for the default gray."
+          >
+            <div class="flex flex-wrap items-center gap-3">
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-white">
                 <USwitch
                   :model-value="message.accentColor !== null"
-                  @update:model-value="message.accentColor = $event ? '#a78bfa' : null"
+                  aria-label="Use an accent color"
+                  @update:model-value="message.accentColor = $event ? ACCENT_PRESETS[0]! : null"
                 />
-                <template v-if="message.accentColor !== null">
-                  <UPopover>
-                    <button
-                      type="button"
-                      class="w-7 h-7 rounded-md border border-white/20"
-                      :style="{ backgroundColor: message.accentColor }"
-                      aria-label="Pick accent color"
-                    />
-                    <template #content>
-                      <div class="p-3">
-                        <UColorPicker v-model="message.accentColor" size="sm" />
-                      </div>
-                    </template>
-                  </UPopover>
-                  <UInput
-                    v-model="message.accentColor"
-                    size="sm"
-                    class="font-mono w-28"
-                  />
-                </template>
-              </div>
-            </UFormField>
-          </div>
+                {{ message.accentColor !== null ? "On" : "Off" }}
+              </label>
 
-          <div class="flex items-center justify-end gap-3 pt-2 border-t border-white/5">
-            <span v-if="dirty" class="text-xs text-amber-400/80">Unsaved changes</span>
-            <UButton
-              icon="i-heroicons-cloud-arrow-up"
-              label="Save"
-              color="primary"
-              :loading="saving"
-              :disabled="loading || saving || !dirty"
-              @click="save"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5 xl:sticky xl:top-6"
-      >
-        <div class="relative space-y-4">
-          <div class="flex items-center gap-2">
-            <div
-              class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-heroicons-eye" class="text-secondary-400" />
-            </div>
-            <div>
-              <h3 class="font-semibold text-white">Preview</h3>
-              <p class="text-[10px] text-gray-500">
-                How it looks when you join. The image shows the last saved design.
-              </p>
-            </div>
-          </div>
-
-          <div class="bg-[#313338] rounded-lg p-4 flex gap-3">
-            <div
-              class="w-10 h-10 rounded-full bg-secondary-500 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-lucide-bot" class="w-5 h-5 text-white" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-1.5 mb-1">
-                <span class="text-sm font-medium text-white">MODUS</span>
-                <span
-                  class="px-1 rounded bg-secondary-500 text-[10px] font-semibold text-white leading-4"
-                  >APP</span
-                >
-                <span class="text-[11px] text-gray-400">Today at {{ previewTime }}</span>
-              </div>
-
-              <div v-if="!hasText && !showImage" class="text-sm italic text-gray-500">
-                Nothing will be sent — add some text or switch to Image or Both.
-              </div>
-
-              <template v-else>
-                <!-- Mentions inside embeds don't notify, so the bot pings above it -->
-                <div
-                  v-if="parts.pingsMember"
-                  class="discord-md text-sm text-[#dbdee1] mb-1"
-                  v-html="renderMd(`<@${previewUserId}>`)"
-                />
-
-                <!-- Image first (or image only): a plain attachment above the embed -->
-                <DashboardWelcomePreviewImage
-                  v-if="showImage && (!hasText || message.order === 'image-first')"
-                  :src="imageUrl"
-                  :edit-to="editorPath"
-                  class="max-w-[520px] mb-2"
-                />
-
-                <div
-                  v-if="hasText"
-                  class="rounded bg-[#2b2d31] border-l-4 px-4 py-3 max-w-[432px] space-y-2"
-                  :style="{ borderLeftColor: message.accentColor ?? '#1e1f22' }"
-                >
-                  <div
-                    v-if="parts.title"
-                    class="discord-md text-base font-semibold text-white break-words"
-                    v-html="renderMd(parts.title)"
-                  />
-                  <div
-                    v-if="parts.body"
-                    class="discord-md text-sm text-[#dbdee1] whitespace-pre-wrap break-words"
-                    v-html="renderMd(parts.body)"
-                  />
-                  <!-- Text first: the image sits inside the embed, at the bottom -->
-                  <DashboardWelcomePreviewImage
-                    v-if="showImage && message.order === 'text-first'"
-                    :src="imageUrl"
-                    :edit-to="editorPath"
-                    class="!mt-3"
+              <template v-if="message.accentColor !== null">
+                <div class="flex items-center gap-1.5" role="group" aria-label="Accent color presets">
+                  <button
+                    v-for="color in ACCENT_PRESETS"
+                    :key="color"
+                    type="button"
+                    class="h-7 w-7 rounded-full ring-1 ring-inset ring-white/20 transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300"
+                    :class="
+                      message.accentColor?.toLowerCase() === color ? '!ring-2 !ring-white' : ''
+                    "
+                    :style="{ backgroundColor: color }"
+                    :aria-label="`Use ${color}`"
+                    :aria-pressed="message.accentColor?.toLowerCase() === color"
+                    @click="message.accentColor = color"
                   />
                 </div>
+                <UPopover>
+                  <UButton
+                    color="neutral"
+                    variant="outline"
+                    size="sm"
+                    icon="i-lucide-pipette"
+                    aria-label="Pick a custom color"
+                  >
+                    Custom
+                  </UButton>
+                  <template #content>
+                    <div class="p-3">
+                      <UColorPicker v-model="message.accentColor" size="sm" />
+                    </div>
+                  </template>
+                </UPopover>
+                <UInput
+                  v-model="message.accentColor"
+                  size="sm"
+                  class="w-28 font-mono"
+                  aria-label="Accent color hex code"
+                  :color="accentValid ? undefined : 'error'"
+                />
               </template>
             </div>
-          </div>
+            <p v-if="!accentValid" class="mt-2 text-[13px] text-red-300" role="alert">
+              Use a full hex color like #a78bfa.
+            </p>
+          </DashboardModuleSection>
 
-          <UButton
-            v-if="message.mode === 'text'"
-            :to="editorPath"
-            icon="i-heroicons-pencil-square"
-            label="Edit welcome image"
-            color="neutral"
-            variant="outline"
-            size="sm"
-          />
-        </div>
+          <DashboardModuleSection
+            title="Welcome image"
+            :description="
+              message.mode === 'text'
+                ? 'Text only is selected, so no image is sent. You can still design one and switch back later.'
+                : 'The picture members get: background, their avatar, text and other layers.'
+            "
+          >
+            <UButton
+              :to="editorPath"
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-pencil-ruler"
+            >
+              Open image editor
+            </UButton>
+            <p v-if="dirty" class="mt-2 text-[13px] text-amber-200">
+              Save your changes here first. Leaving this page asks before discarding them.
+            </p>
+          </DashboardModuleSection>
+
+          <DashboardModuleAccessSection :guild-id="guildId" module-name="welcome" />
+
+          <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
+        </template>
       </div>
-    </div>
 
-    <DashboardModuleAccessSection :guild-id="guildId" module-name="welcome" />
+      <!-- ══════════════ Preview ══════════════ -->
+      <DashboardModuleSection
+        title="Preview"
+        description="How it looks when someone joins. The image shows the last saved design."
+        class="xl:sticky xl:top-6"
+      >
+        <div class="flex gap-3 rounded-lg bg-[#313338] p-4">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500">
+            <UIcon name="i-lucide-bot" class="h-5 w-5 text-white" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="mb-1 flex flex-wrap items-center gap-x-1.5">
+              <span class="text-sm font-medium text-white">MODUS</span>
+              <span class="rounded bg-indigo-500 px-1 text-[10px] font-semibold leading-4 text-white">APP</span>
+              <span class="text-[11px] text-gray-400">Today at {{ previewTime }}</span>
+            </div>
+
+            <div v-if="!hasText && !showImage" class="text-sm italic text-gray-400">
+              Nothing will be sent. Add some text, or switch to Image or Both.
+            </div>
+
+            <template v-else>
+              <!-- Mentions inside embeds don't notify, so the bot pings above it -->
+              <div
+                v-if="parts.pingsMember"
+                class="discord-md mb-1 text-sm text-[#dbdee1]"
+                v-html="renderMd(`<@${previewUserId}>`)"
+              />
+
+              <!-- Image first (or image only): a plain attachment above the embed -->
+              <DashboardWelcomePreviewImage
+                v-if="showImage && (!hasText || message.order === 'image-first')"
+                :src="imageUrl"
+                :edit-to="editorPath"
+                class="mb-2 max-w-[520px]"
+              />
+
+              <div
+                v-if="hasText"
+                class="max-w-[432px] space-y-2 rounded border-l-4 bg-[#2b2d31] px-4 py-3"
+                :style="{ borderLeftColor: previewAccent }"
+              >
+                <div
+                  v-if="parts.title"
+                  class="discord-md break-words text-base font-semibold text-white"
+                  v-html="renderMd(parts.title)"
+                />
+                <div
+                  v-if="parts.body"
+                  class="discord-md whitespace-pre-wrap break-words text-sm text-[#dbdee1]"
+                  v-html="renderMd(parts.body)"
+                />
+                <!-- Text first: the image sits inside the embed, at the bottom -->
+                <DashboardWelcomePreviewImage
+                  v-if="showImage && message.order === 'text-first'"
+                  :src="imageUrl"
+                  :edit-to="editorPath"
+                  class="!mt-3"
+                />
+              </div>
+            </template>
+          </div>
+        </div>
+      </DashboardModuleSection>
+    </div>
   </div>
 </template>
 
@@ -285,9 +298,7 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 import { renderDiscordMarkdown } from "~/utils/discord-markdown";
 import {
-  WELCOME_MESSAGE_MODES,
-  WELCOME_MESSAGE_ORDERS,
-  WELCOME_PLACEHOLDERS,
+  WELCOME_MESSAGE_ORDERS as ORDERS,
   normalizeWelcomeMessage,
   welcomeMessageParts,
   type WelcomeMessage,
@@ -297,7 +308,7 @@ const route = useRoute();
 const guildId = route.params.guild_id as string;
 const toast = useToast();
 const { user } = useUserSession();
-const { state, isModuleEnabled, loadChannels, loadRoles, channelOptions } =
+const { state, isModuleEnabled, saveModuleSettings, loadChannels, loadRoles, channelOptions } =
   useServerSettings(guildId);
 
 const settingsUrl = `/api/guild-configs/${encodeURIComponent(guildId)}/welcome`;
@@ -309,9 +320,53 @@ const message = ref<WelcomeMessage>(normalizeWelcomeMessage(undefined));
 const savedSnapshot = ref("");
 const bodyRef = ref<HTMLTextAreaElement | null>(null);
 
+// ── Static option data ──
+const modeCards = [
+  { value: "image", label: "Image", icon: "i-lucide-image", description: "Just the picture." },
+  { value: "text", label: "Text", icon: "i-lucide-message-square-text", description: "Just the message." },
+  { value: "both", label: "Image and text", icon: "i-lucide-layout-list", description: "Both, in the order you pick." },
+] as const;
+
+// Same options as the shared util, with lucide icons.
+const WELCOME_MESSAGE_ORDERS = ORDERS.map((o) => ({
+  ...o,
+  lucide: o.value === "text-first" ? "i-lucide-align-left" : "i-lucide-image",
+}));
+
+const placeholderInfo = [
+  { token: "{user}", meaning: "Mentions the new member" },
+  { token: "{username}", meaning: "Their Discord username" },
+  { token: "{displayname}", meaning: "Their display name" },
+  { token: "{server_name}", meaning: "This server's name" },
+  { token: "{member_count}", meaning: "Members in the server" },
+];
+
+const ACCENT_PRESETS = ["#a78bfa", "#5eead4", "#7dd3fc", "#f472b6", "#fbbf24", "#34d399", "#f87171"];
+
+// ── Dirty tracking ──
 const snapshot = () =>
   JSON.stringify({ channelId: channelId.value ?? null, message: message.value });
 const dirty = computed(() => !loading.value && snapshot() !== savedSnapshot.value);
+
+// The bot only accepts a full #rrggbb value here.
+const accentValid = computed(
+  () => message.value.accentColor === null || /^#[0-9a-fA-F]{6}$/.test(message.value.accentColor),
+);
+const previewAccent = computed(() =>
+  message.value.accentColor && accentValid.value ? message.value.accentColor : "#1e1f22",
+);
+
+const channelProblem = computed(() => {
+  if (!channelId.value) {
+    return isModuleEnabled("welcome")
+      ? "No channel is selected, so nothing is posted when someone joins."
+      : "";
+  }
+  if (state.value.channelsLoading || state.value.channels.length === 0) return "";
+  return channelOptions.value.some((c) => c.value === channelId.value)
+    ? ""
+    : "The saved channel no longer exists. Pick another one.";
+});
 
 async function fetchSettings() {
   const cfg = await $fetch<{ settings: Record<string, any> | null }>(settingsUrl);
@@ -334,25 +389,38 @@ async function load() {
 }
 
 async function save() {
+  if (!accentValid.value) {
+    toast.add({
+      title: "Check the accent color",
+      description: "Use a full hex color like #a78bfa.",
+      color: "error",
+    });
+    return;
+  }
   saving.value = true;
   try {
-    // PUT replaces the whole settings blob, so merge over the latest saved
+    // Saving replaces the whole settings row, so merge over the latest saved
     // settings to keep the image design the editor page owns.
     const current = await fetchSettings();
-    await $fetch(settingsUrl, {
-      method: "PUT",
-      body: {
-        settings: { ...current, channelId: channelId.value, message: message.value },
-      },
+    const ok = await saveModuleSettings("welcome", {
+      ...current,
+      channelId: channelId.value,
+      message: message.value,
     });
-    savedSnapshot.value = snapshot();
-    toast.add({ title: "Saved!", description: "Welcome settings saved.", color: "success" });
+    // A failed save keeps the form dirty so the bar stays and Save can retry.
+    if (ok) savedSnapshot.value = snapshot();
   } catch (err) {
     console.error("[Welcome] save error:", err);
     toast.add({ title: "Error", description: "Failed to save.", color: "error" });
   } finally {
     saving.value = false;
   }
+}
+
+function discard() {
+  const saved = JSON.parse(savedSnapshot.value);
+  channelId.value = saved.channelId ?? undefined;
+  message.value = saved.message;
 }
 
 function insertPlaceholder(placeholder: string) {
@@ -368,7 +436,6 @@ function insertPlaceholder(placeholder: string) {
 }
 
 // ── Preview ──
-
 const displayName = computed(
   () => user.value?.globalName || user.value?.username || "New Member",
 );
