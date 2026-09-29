@@ -44,17 +44,17 @@ export function elementLabel(el: CanvasElement): string {
 
 export function elementTypeIcon(type: string): string {
   const map: Record<string, string> = {
-    text: "i-heroicons-bars-3-bottom-left",
-    progressbar: "i-heroicons-chart-bar",
-    rect: "i-heroicons-stop",
-    circle: "i-heroicons-sun",
-    avatar: "i-heroicons-user-circle",
-    image: "i-heroicons-photo",
-    triangle: "i-heroicons-play",
-    star: "i-heroicons-star",
-    line: "i-heroicons-minus",
+    text: "i-lucide-type",
+    progressbar: "i-lucide-chart-bar",
+    rect: "i-lucide-square",
+    circle: "i-lucide-circle",
+    avatar: "i-lucide-circle-user",
+    image: "i-lucide-image",
+    triangle: "i-lucide-triangle",
+    star: "i-lucide-star",
+    line: "i-lucide-minus",
   };
-  return map[type] || "i-heroicons-square-3-stack-3d";
+  return map[type] || "i-lucide-layers";
 }
 
 export function previewText(text: string, profile: CanvasProfile): string {

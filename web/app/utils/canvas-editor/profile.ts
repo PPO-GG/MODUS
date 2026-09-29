@@ -19,12 +19,12 @@ export interface CanvasProfile {
   id: "welcome" | "rank-card";
   /** Used in limit toasts, e.g. "welcome template". */
   noun: string;
-  /** Prefix for console warnings, e.g. "[WelcomeEditor]". */
+  /** Prefix for console warnings, e.g. "[Welcome image editor]". */
   logPrefix: string;
   tools: CanvasTool[];
   presets: CanvasPreset[];
   defaultTemplate: () => CanvasTemplate;
-  /** Placeholder chips shown under a text layer's field. */
+  /** Variables offered in the text layer's "Insert variable" menu. */
   placeholders: string[];
   /** Placeholder text of the text layer's field. */
   textHint: string;

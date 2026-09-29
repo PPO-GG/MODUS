@@ -1,11 +1,12 @@
 <template>
-  <div class="rce-prop-section">
-    <p class="rce-prop-title">Stroke</p>
+  <div class="ce-prop-section">
+    <p class="ce-prop-title">Stroke</p>
     <div class="flex items-center gap-2">
       <UPopover>
         <button
           type="button"
-          class="rce-color-chip-lg cursor-pointer"
+          class="ce-color-chip-lg cursor-pointer"
+          aria-label="Stroke color"
           :style="{ background: swatchPreview(selectedElement.stroke) }"
         />
         <template #content>
@@ -27,7 +28,8 @@
       <input
         v-model.number="selectedElement.strokeWidth"
         type="number"
-        class="rce-num-input w-14"
+        aria-label="Stroke width"
+        class="ce-num-input w-14"
         min="0"
         placeholder="0"
       />

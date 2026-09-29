@@ -1,13 +1,14 @@
 <template>
-  <div class="rce-prop-section">
-    <p class="rce-prop-title">Progress Track</p>
+  <div class="ce-prop-section">
+    <p class="ce-prop-title">Progress Track</p>
     <div class="space-y-2">
       <div class="flex items-center justify-between">
-        <span class="rce-prop-label">Track Color</span>
+        <span class="ce-prop-label">Track Color</span>
         <UPopover>
           <button
             type="button"
-            class="rce-color-chip-lg cursor-pointer"
+            class="ce-color-chip-lg cursor-pointer"
+            aria-label="Track color"
             :style="{
               background: swatchPreview(
                 selectedElement.trackColor || 'rgba(255,255,255,0.08)',

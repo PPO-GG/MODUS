@@ -1,5 +1,5 @@
 <template>
-  <div class="w-72 shrink-0 rce-glass-panel rounded-2xl overflow-y-auto">
+  <div class="w-72 shrink-0 ce-sidebar-right overflow-y-auto">
     <!-- Single Selection Properties -->
     <div v-if="selectedElement" class="flex flex-col">
       <!-- Header -->
@@ -9,28 +9,28 @@
         <div class="flex items-center gap-1.5">
           <UIcon
             :name="elementTypeIcon(selectedElement.type)"
-            class="text-sm text-secondary-400"
+            class="text-sm text-sky-200"
           />
-          <span class="text-xs font-medium text-zinc-200">
+          <span class="text-xs font-medium text-gray-200">
             {{ elementLabel(selectedElement) }}
           </span>
         </div>
         <UTooltip text="Delete element">
           <button
-            class="rce-tool-btn text-red-400 hover:text-red-300"
+            class="ce-tool-btn text-red-400 hover:text-red-300"
             aria-label="Delete element"
             @click="deleteSelectedElement"
           >
-            <UIcon name="i-heroicons-trash" class="text-sm" />
+            <UIcon name="i-lucide-trash-2" class="text-sm" />
           </button>
         </UTooltip>
       </div>
 
-      <!-- Alignment Suite -->
-      <InspectorAlign />
-
-      <!-- Transform (Position & Sizing) -->
-      <InspectorTransform />
+      <!-- Position & size (alignment floats over the canvas). The storage key
+           keeps its old name so a viewer's remembered open state carries over. -->
+      <InspectorGroup title="Position & size" storage-key="layout">
+        <InspectorTransform />
+      </InspectorGroup>
 
       <!-- Typography / Text Section -->
       <InspectorTypography v-if="selectedElement.type === 'text'" />
@@ -46,37 +46,47 @@
       <!-- Custom Image -->
       <InspectorImage v-if="selectedElement.type === 'image'" />
 
-      <!-- Shadow / Glow -->
-      <InspectorShadow
-        v-if="profile.shadow === 'all' || selectedElement.type === 'image'"
-      />
-
-      <!-- Fill & Gradient Picker -->
-      <InspectorFill
-        v-if="
-          selectedElement.type !== 'avatar' &&
-          (selectedElement.type !== 'image' ||
-            profile.images.isTintableSvg(selectedElement.src)) &&
-          selectedElement.type !== 'line'
-        "
-      />
-
-      <!-- Stroke & Gradient Picker -->
-      <InspectorStroke
-        v-if="
-          selectedElement.type !== 'avatar' &&
-          selectedElement.type !== 'image' &&
-          selectedElement.type !== 'progressbar'
-        "
-      />
-
       <!-- Avatar Shape & Border -->
       <InspectorAvatarShape v-if="selectedElement.type === 'avatar'" />
 
       <InspectorAvatarBorder v-if="selectedElement.type === 'avatar'" />
 
-      <!-- Opacity Slider -->
-      <InspectorOpacity />
+      <!-- Appearance: Fill, Stroke, Opacity, Shadow -->
+      <InspectorGroup title="Appearance" storage-key="appearance">
+        <template #summary>
+          <span
+            v-if="hasFillSection && selectedElement.fill"
+            class="ce-group-swatch"
+            :style="{ background: swatchPreview(selectedElement.fill) }"
+          />
+          <span>{{ selectedElementOpacityPct }}%</span>
+        </template>
+
+        <!-- Fill & Gradient Picker -->
+        <InspectorFill v-if="hasFillSection" />
+
+        <!-- Stroke & Gradient Picker -->
+        <InspectorStroke
+          v-if="
+            selectedElement.type !== 'avatar' &&
+            selectedElement.type !== 'image' &&
+            selectedElement.type !== 'progressbar'
+          "
+        />
+
+        <!-- Opacity Slider -->
+        <InspectorOpacity />
+
+        <!-- Shadow / Glow -->
+        <InspectorGroup
+          v-if="profile.shadow === 'all' || selectedElement.type === 'image'"
+          title="Shadow"
+          storage-key="shadow"
+          :default-open="false"
+        >
+          <InspectorShadow />
+        </InspectorGroup>
+      </InspectorGroup>
     </div>
 
     <!-- Multi-Selection Properties -->
@@ -85,58 +95,48 @@
       <div
         class="flex items-center justify-between p-2 border-b border-white/10"
       >
-        <span class="text-xs font-medium text-zinc-300">
+        <span class="text-xs font-medium text-gray-300">
           {{ selectedElementIds.size }} layers selected
         </span>
         <div class="flex items-center gap-1">
           <UTooltip text="Duplicate selection">
             <button
-              class="rce-tool-btn"
+              class="ce-tool-btn"
               aria-label="Duplicate selection"
               @click="duplicateSelectedElement"
             >
               <UIcon
-                name="i-heroicons-document-duplicate"
+                name="i-lucide-copy"
                 class="text-sm"
               />
             </button>
           </UTooltip>
           <UTooltip text="Delete selection">
             <button
-              class="rce-tool-btn text-red-400 hover:text-red-300"
+              class="ce-tool-btn text-red-400 hover:text-red-300"
               aria-label="Delete selection"
               @click="deleteSelectedElement"
             >
-              <UIcon name="i-heroicons-trash" class="text-sm" />
+              <UIcon name="i-lucide-trash-2" class="text-sm" />
             </button>
           </UTooltip>
         </div>
       </div>
 
-      <!-- Align Suite for Multi-Selection -->
-      <InspectorAlign />
-
-      <!-- Group Transform -->
-      <InspectorGroupTransform />
+      <!-- Position & size: Group Transform for Multi-Selection -->
+      <InspectorGroup title="Position & size" storage-key="layout">
+        <InspectorGroupTransform />
+      </InspectorGroup>
     </div>
 
-    <!-- No Selection Empty State -->
-    <div
-      v-else
-      class="flex flex-col items-center justify-center h-full text-center py-12"
-    >
-      <UIcon
-        name="i-heroicons-cursor-arrow-rays"
-        class="text-2xl text-zinc-600 mb-2"
-      />
-      <p class="text-xs text-zinc-500">Select an element on canvas</p>
-    </div>
+    <!-- No Selection: Canvas Settings -->
+    <InspectorCanvas v-else />
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useCanvasEditorContext } from "~/composables/canvas-editor/useCanvasEditorContext";
-import InspectorAlign from "~/components/canvas-editor/inspector/InspectorAlign.vue";
 import InspectorTransform from "~/components/canvas-editor/inspector/InspectorTransform.vue";
 import InspectorTypography from "~/components/canvas-editor/inspector/InspectorTypography.vue";
 import InspectorProgressBar from "~/components/canvas-editor/inspector/InspectorProgressBar.vue";
@@ -148,14 +148,29 @@ import InspectorAvatarShape from "~/components/canvas-editor/inspector/Inspector
 import InspectorAvatarBorder from "~/components/canvas-editor/inspector/InspectorAvatarBorder.vue";
 import InspectorOpacity from "~/components/canvas-editor/inspector/InspectorOpacity.vue";
 import InspectorGroupTransform from "~/components/canvas-editor/inspector/InspectorGroupTransform.vue";
+import InspectorCanvas from "~/components/canvas-editor/inspector/InspectorCanvas.vue";
+import InspectorGroup from "~/components/canvas-editor/inspector/InspectorGroup.vue";
 
 const {
   profile,
   selectedElementIds,
   selectedElement,
+  selectedElementOpacityPct,
   deleteSelectedElement,
   duplicateSelectedElement,
   elementLabel,
   elementTypeIcon,
+  swatchPreview,
 } = useCanvasEditorContext();
+
+/** Whether the Fill section shows; the Appearance summary previews the fill only then. */
+const hasFillSection = computed(() => {
+  const el = selectedElement.value;
+  return (
+    !!el &&
+    el.type !== "avatar" &&
+    (el.type !== "image" || profile.value.images.isTintableSvg(el.src)) &&
+    el.type !== "line"
+  );
+});
 </script>

@@ -1,29 +1,32 @@
 <template>
-  <div class="rce-prop-section">
-    <p class="rce-prop-title">Transform</p>
+  <div class="ce-prop-section">
+    <p class="ce-prop-title">Transform</p>
     <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">X</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">X</span>
         <input
+          aria-label="X"
           v-model.number="selectedElement.x"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
         />
       </div>
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">Y</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">Y</span>
         <input
+          aria-label="Y"
           v-model.number="selectedElement.y"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
         />
       </div>
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">Rotation</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">Rotation</span>
         <input
+          aria-label="Rotation"
           v-model.number="selectedElement.rotation"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
         />
       </div>
       <template
@@ -33,20 +36,22 @@
           selectedElement.type === 'image'
         "
       >
-        <div class="rce-prop-row">
-          <span class="rce-prop-label">W</span>
+        <div class="ce-prop-row">
+          <span class="ce-prop-label">W</span>
           <input
+            aria-label="Width"
             v-model.number="selectedElement.width"
             type="number"
-            class="rce-num-input w-full"
+            class="ce-num-input w-full"
           />
         </div>
-        <div class="rce-prop-row">
-          <span class="rce-prop-label">H</span>
+        <div class="ce-prop-row">
+          <span class="ce-prop-label">H</span>
           <input
+            aria-label="Height"
             v-model.number="selectedElement.height"
             type="number"
-            class="rce-num-input w-full"
+            class="ce-num-input w-full"
           />
         </div>
       </template>
@@ -57,38 +62,42 @@
           selectedElement.type === 'triangle'
         "
       >
-        <div class="rce-prop-row">
-          <span class="rce-prop-label">R</span>
+        <div class="ce-prop-row">
+          <span class="ce-prop-label">R</span>
           <input
+            aria-label="Radius"
             v-model.number="selectedElement.radius"
             type="number"
-            class="rce-num-input w-full"
+            class="ce-num-input w-full"
           />
         </div>
       </template>
       <template v-if="selectedElement.type === 'star'">
-        <div class="rce-prop-row">
-          <span class="rce-prop-label">Outer</span>
+        <div class="ce-prop-row">
+          <span class="ce-prop-label">Outer</span>
           <input
+            aria-label="Outer"
             v-model.number="selectedElement.outerRadius"
             type="number"
-            class="rce-num-input w-full"
+            class="ce-num-input w-full"
           />
         </div>
-        <div class="rce-prop-row">
-          <span class="rce-prop-label">Inner</span>
+        <div class="ce-prop-row">
+          <span class="ce-prop-label">Inner</span>
           <input
+            aria-label="Inner"
             v-model.number="selectedElement.innerRadius"
             type="number"
-            class="rce-num-input w-full"
+            class="ce-num-input w-full"
           />
         </div>
-        <div class="rce-prop-row">
-          <span class="rce-prop-label">Points</span>
+        <div class="ce-prop-row">
+          <span class="ce-prop-label">Points</span>
           <input
+            aria-label="Points"
             v-model.number="selectedElement.numPoints"
             type="number"
-            class="rce-num-input w-full"
+            class="ce-num-input w-full"
             min="3"
             max="12"
           />
@@ -99,13 +108,14 @@
           selectedElement.type === 'rect' ||
           selectedElement.type === 'progressbar'
         "
-        class="rce-prop-row col-span-2"
+        class="ce-prop-row col-span-2"
       >
-        <span class="rce-prop-label">Corner Radius</span>
+        <span class="ce-prop-label">Corner Radius</span>
         <input
+          aria-label="Corner Radius"
           v-model.number="selectedElement.cornerRadius"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
           min="0"
         />
       </div>

@@ -515,20 +515,31 @@ async function save() {
     });
     return;
   }
+  // Read before any await so these reflect what the user changed, and so an
+  // edit made while the save is in flight stays dirty instead of being marked saved.
+  const sendImage = imageDirty.value;
+  const sendMessage = messageDirty.value;
+  const sent = JSON.parse(snapshot());
+  const previous = savedParts.value ?? sent;
   saving.value = true;
   try {
     // Saving replaces the whole settings row, so merge over the latest saved
-    // settings to keep any keys this page doesn't know about.
+    // settings to keep any keys this page doesn't know about. Only the parts
+    // changed here are overlaid: another session may have changed the other
+    // part (e.g. uploaded a new background), and a stale copy must not clobber it.
     const current = await fetchSettings();
     const ok = await saveModuleSettings("welcome", {
       ...current,
-      ...canvasPatch(template.value),
-      channelId: channelId.value,
-      message: message.value,
+      ...(sendImage ? canvasPatch(template.value) : {}),
+      ...(sendMessage ? { channelId: channelId.value, message: message.value } : {}),
     });
     // A failed save keeps the form dirty so the bar stays and Save can retry.
     if (ok) {
-      savedSnapshot.value = snapshot();
+      savedSnapshot.value = JSON.stringify({
+        channelId: sendMessage ? sent.channelId : previous.channelId,
+        message: sendMessage ? sent.message : previous.message,
+        canvas: sendImage ? sent.canvas : previous.canvas,
+      });
       onImageSaved();
     }
   } catch (err) {

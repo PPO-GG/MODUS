@@ -556,6 +556,8 @@ const save = async () => {
     });
     return;
   }
+  // Captured before the await so an edit made while saving stays dirty.
+  const sent = snapshot();
   saving.value = true;
 
   const ok = await saveModuleSettings("xp", {
@@ -574,7 +576,7 @@ const save = async () => {
     excludedRoleIds: settings.value.excludedRoleIds,
   });
   // A failed save keeps the form dirty so the bar stays and Save can retry.
-  if (ok) baseline.value = snapshot();
+  if (ok) baseline.value = sent;
 
   saving.value = false;
 };

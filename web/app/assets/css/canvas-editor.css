@@ -1,0 +1,436 @@
+/*
+ * Canvas editor (CanvasEditor.vue and components/canvas-editor/**).
+ * Imported by CanvasEditor.vue, so it only loads with the editor. Every
+ * selector is anchored on the `.ce` root or a `.ce-*` class.
+ *
+ * Styled on the Glide system used by the dashboard sections (ModuleSection,
+ * the Music and XP settings): ground surfaces with a hairline ring, pill
+ * controls, sky-200 accents, the teal radio-card selected state and teal
+ * focus outlines.
+ *
+ * The rules live in Tailwind's `components` layer so utility classes in the
+ * templates (text-red-400 on delete buttons, w-14 on inputs...) still win.
+ * The order statement matches Tailwind's own and only matters if this sheet
+ * ever loads before main.css.
+ */
+@layer theme, base, components, utilities;
+
+@layer components {
+  /* ── Foundation ── */
+  .ce {
+    font-family: inherit;
+    color: #d1d5db;
+    border-radius: 0.75rem;
+  }
+
+  /* Section surface (the .module-section recipe). */
+  .ce-panel {
+    background: rgba(3, 7, 18, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(243, 244, 246, 0.1);
+    border-radius: 0.75rem;
+  }
+
+  /* Side columns inside the main panel, split from the stage by a hairline. */
+  .ce-sidebar-left {
+    box-shadow: inset -1px 0 0 rgba(243, 244, 246, 0.1);
+  }
+  .ce-sidebar-right {
+    box-shadow: inset 1px 0 0 rgba(243, 244, 246, 0.1);
+  }
+
+  /* Stage backdrop: the grained ground under the checkerboard. */
+  .ce-stage {
+    background-color: #030712;
+    background-image: url("/assets/noise-texture.svg");
+    background-repeat: repeat;
+  }
+
+  /* Centre column: holds the scrolling stage and the overlays pinned over it. */
+  .ce-canvas-area {
+    position: relative;
+    flex: 1 1 0%;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+  }
+  /* A collapsed side panel leaves the stage on the panel's rounded edge. */
+  .ce-canvas-area-left-edge .ce-stage {
+    border-top-left-radius: 0.75rem;
+    border-bottom-left-radius: 0.75rem;
+  }
+  .ce-canvas-area-right-edge .ce-stage {
+    border-top-right-radius: 0.75rem;
+    border-bottom-right-radius: 0.75rem;
+  }
+
+  /* Floating pills over the canvas: the section surface, more opaque and blurred. */
+  .ce-floating {
+    position: absolute;
+    left: 50%;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 9999px;
+    background: rgba(3, 7, 18, 0.75);
+    box-shadow:
+      inset 0 0 0 1px rgba(243, 244, 246, 0.1),
+      0 4px 16px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    transform: translateX(-50%);
+  }
+  /* Sits in the stage's 40px fit margin, so it stays off the design. */
+  .ce-selection-bar {
+    top: 4px;
+  }
+  .ce-selection-bar .ce-toolbar-sep {
+    margin: 0 3px;
+  }
+  .ce-zoom-pill {
+    bottom: 4px;
+    padding-left: 10px;
+  }
+  .ce-zoom-readout {
+    min-width: 2.5rem;
+    font-size: 12px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: #bae6fd;
+  }
+
+  /* Keyboard focus: the dashboard's teal outline on every editor control. */
+  .ce :is(button, [role="button"], a, input[type="color"]):focus-visible {
+    outline: 2px solid rgb(94 234 212) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* ── Toolbar ── */
+  .ce-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px 6px 12px;
+    height: 44px;
+    margin-bottom: 0.5rem;
+    border-radius: 9999px;
+  }
+  .ce-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ce-toolbar-sep {
+    width: 1px;
+    height: 18px;
+    background: rgba(243, 244, 246, 0.1);
+    margin: 0 4px;
+  }
+
+  /* ── Labels ── */
+  /* Small mono uppercase label (the Music settings group labels). */
+  .ce-panel-label,
+  .ce-prop-title {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+  .ce-prop-title {
+    margin-bottom: 6px;
+  }
+  .ce-prop-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9ca3af;
+  }
+
+  /* ── Inputs ── */
+  .ce-num-input,
+  .ce-textarea,
+  .ce-select {
+    background: #030712;
+    border: 1px solid rgba(243, 244, 246, 0.16);
+    border-radius: 0.375rem;
+    color: #f9fafb;
+    font-size: 13px;
+    padding: 5px 8px;
+    outline: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .ce-num-input {
+    font-variant-numeric: tabular-nums;
+  }
+  .ce-textarea {
+    padding: 6px 8px;
+    width: 100%;
+    resize: vertical;
+  }
+  .ce-num-input:hover,
+  .ce-textarea:hover,
+  .ce-select:hover {
+    border-color: rgba(243, 244, 246, 0.24);
+  }
+  .ce-num-input:focus,
+  .ce-textarea:focus,
+  .ce-select:focus {
+    border-color: #5eead4;
+    box-shadow: 0 0 0 1px #5eead4;
+  }
+  .ce-textarea::placeholder,
+  .ce-num-input::placeholder {
+    color: #6b7280;
+  }
+  .ce-select option {
+    background: #0b1120;
+    color: #f9fafb;
+  }
+
+  /* Hide number input spinners */
+  .ce-num-input::-webkit-inner-spin-button,
+  .ce-num-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .ce-num-input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* ── Icon buttons (pills) ── */
+  .ce-tool-btn,
+  .ce-tool-btn-sm {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    color: #9ca3af;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      color 0.15s,
+      box-shadow 0.15s;
+  }
+  .ce-tool-btn {
+    width: 28px;
+    height: 28px;
+  }
+  .ce-tool-btn-sm {
+    width: 26px;
+    height: 26px;
+  }
+  .ce-tool-btn:hover,
+  .ce-tool-btn-sm:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f9fafb;
+  }
+  .ce-tool-btn-sm[aria-disabled="true"] {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .ce-tool-btn-sm[aria-disabled="true"]:hover {
+    background: transparent;
+    color: #9ca3af;
+  }
+  /* Toggle buttons (text alignment, avatar shape): the radio-card selected state. */
+  .ce-tool-btn[aria-pressed="true"],
+  .ce-tool-btn-sm[aria-pressed="true"] {
+    background: rgba(186, 230, 253, 0.06);
+    box-shadow: inset 0 0 0 2px rgba(94, 234, 212, 0.6);
+    color: #ffffff;
+  }
+
+  /* ── Tool palette ── */
+  /* Square icon tiles: hairline ring, the radio-card sky/teal on hover and focus. */
+  .ce-tool-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 0.5rem;
+    background: transparent;
+    border: none;
+    box-shadow: inset 0 0 0 1px rgba(243, 244, 246, 0.1);
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .ce-tool-tile:hover,
+  .ce-tool-tile:focus-visible {
+    background: rgba(186, 230, 253, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.6);
+  }
+
+  /* ── Color Chips ── */
+  .ce-color-chip-lg {
+    width: 28px;
+    height: 28px;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(243, 244, 246, 0.2);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+      transform 0.1s,
+      border-color 0.15s;
+  }
+  .ce-color-chip-lg:hover {
+    transform: scale(1.05);
+    border-color: rgba(243, 244, 246, 0.4);
+  }
+  /* Native colour inputs used as chips: show the swatch edge to edge. */
+  input.ce-color-chip-lg {
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+  }
+  input.ce-color-chip-lg::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  input.ce-color-chip-lg::-webkit-color-swatch {
+    border: none;
+    border-radius: 0;
+  }
+  input.ce-color-chip-lg::-moz-color-swatch {
+    border: none;
+    border-radius: 0;
+  }
+
+  /* ── Layers ── */
+  .ce-layer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 0.5rem;
+    font-size: 12px;
+    color: #9ca3af;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition:
+      background-color 0.1s,
+      color 0.1s;
+  }
+  .ce-layer:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #f3f4f6;
+  }
+  .ce-layer-active {
+    background: rgba(186, 230, 253, 0.06) !important;
+    box-shadow: inset 0 0 0 2px rgba(94, 234, 212, 0.6);
+    color: #ffffff !important;
+    font-weight: 500;
+  }
+
+  /* ── Collapsible Inspector Groups ── */
+  /* Header row: the mono label look, a faint band so it reads above the sections. */
+  .ce-group-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 8px 10px;
+    text-align: left;
+    color: #9ca3af;
+    background: rgba(255, 255, 255, 0.02);
+    border: none;
+    border-bottom: 1px solid rgba(243, 244, 246, 0.07);
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+  .ce-group-header:hover {
+    background: rgba(186, 230, 253, 0.06);
+    color: #f3f4f6;
+  }
+  /* The inspector scrolls, so keep the focus ring inside the full-width row. */
+  .ce .ce-group-header:focus-visible {
+    outline-offset: -2px !important;
+  }
+  /* A group inside a group (Shadow in Appearance) reads like a section title. */
+  .ce-group .ce-group .ce-group-header {
+    background: transparent;
+    color: #6b7280;
+  }
+  .ce-group .ce-group .ce-group-header:hover {
+    background: rgba(186, 230, 253, 0.06);
+    color: #f3f4f6;
+  }
+  .ce-group-title {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  /* Shown in the header while the group is collapsed. */
+  .ce-group-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: 10px;
+    color: #6b7280;
+    font-variant-numeric: tabular-nums;
+  }
+  .ce-group-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px rgba(243, 244, 246, 0.2);
+  }
+
+  /* ── Property Sections ── */
+  .ce-prop-section {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(243, 244, 246, 0.07);
+  }
+  .ce-prop-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* ── Konva Overrides ── */
+  .ce .konvajs-content {
+    border-radius: 0 !important;
+  }
+
+  /* ── Preset Buttons ── */
+  .ce-preset-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px;
+    border-radius: 0.5rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+    color: #9ca3af;
+  }
+  .ce-preset-btn:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(186, 230, 253, 0.3);
+    color: #f3f4f6;
+  }
+  .ce-preset-swatch {
+    width: 100%;
+    height: 28px;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

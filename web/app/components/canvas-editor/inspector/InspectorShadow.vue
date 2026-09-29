@@ -1,13 +1,14 @@
 <template>
-  <div class="rce-prop-section">
-    <p class="rce-prop-title">Shadow</p>
+  <div class="ce-prop-section">
+    <!-- Titled by the "Shadow" group header in CanvasInspector. -->
     <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">Color</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">Color</span>
         <input
+          aria-label="Shadow color"
           :value="selectedElement.shadowColor || '#000000'"
           type="color"
-          class="rce-color-chip-lg cursor-pointer"
+          class="ce-color-chip-lg cursor-pointer"
           @input="
             selectedElement.shadowColor = (
               $event.target as HTMLInputElement
@@ -15,29 +16,32 @@
           "
         />
       </div>
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">Blur</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">Blur</span>
         <input
+          aria-label="Shadow blur"
           v-model.number="selectedElement.shadowBlur"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
           min="0"
         />
       </div>
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">X offset</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">X offset</span>
         <input
+          aria-label="Shadow X offset"
           v-model.number="selectedElement.shadowOffsetX"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
         />
       </div>
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">Y offset</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">Y offset</span>
         <input
+          aria-label="Shadow Y offset"
           v-model.number="selectedElement.shadowOffsetY"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
         />
       </div>
     </div>

@@ -1,13 +1,14 @@
 <template>
-  <div class="rce-prop-section">
-    <p class="rce-prop-title">Group Transform</p>
+  <div class="ce-prop-section">
+    <p class="ce-prop-title">Group Transform</p>
     <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">X</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">X</span>
         <input
+          aria-label="Group X"
           :value="Math.round(groupBounds?.x ?? 0)"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
           @change="
             (e: any) =>
               applyGroupMove(
@@ -17,12 +18,13 @@
           "
         />
       </div>
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">Y</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">Y</span>
         <input
+          aria-label="Group Y"
           :value="Math.round(groupBounds?.y ?? 0)"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
           @change="
             (e: any) =>
               applyGroupMove(
@@ -32,13 +34,14 @@
           "
         />
       </div>
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">W</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">W</span>
         <input
+          aria-label="Group width"
           :value="Math.round(groupBounds?.width ?? 0)"
           type="number"
           min="1"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
           @change="
             (e: any) =>
               applyGroupScale(
@@ -48,13 +51,14 @@
           "
         />
       </div>
-      <div class="rce-prop-row">
-        <span class="rce-prop-label">H</span>
+      <div class="ce-prop-row">
+        <span class="ce-prop-label">H</span>
         <input
+          aria-label="Group height"
           :value="Math.round(groupBounds?.height ?? 0)"
           type="number"
           min="1"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
           @change="
             (e: any) =>
               applyGroupScale(
@@ -64,12 +68,13 @@
           "
         />
       </div>
-      <div class="rce-prop-row col-span-2">
-        <span class="rce-prop-label">Rotation</span>
+      <div class="ce-prop-row col-span-2">
+        <span class="ce-prop-label">Rotation</span>
         <input
+          aria-label="Group rotation"
           v-model.number.lazy="groupRotationDelta"
           type="number"
-          class="rce-num-input w-full"
+          class="ce-num-input w-full"
         />
       </div>
     </div>

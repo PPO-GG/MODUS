@@ -1,6 +1,6 @@
 <template>
-  <div class="rce-prop-section">
-    <p class="rce-prop-title">Image</p>
+  <div class="ce-prop-section">
+    <p class="ce-prop-title">Image</p>
     <UButton
       label="Replace image"
       color="neutral"

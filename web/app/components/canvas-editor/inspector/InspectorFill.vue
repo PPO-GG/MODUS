@@ -1,10 +1,11 @@
 <template>
-  <div class="rce-prop-section">
-    <p class="rce-prop-title">Fill</p>
+  <div class="ce-prop-section">
+    <p class="ce-prop-title">Fill</p>
     <UPopover>
       <button
         type="button"
-        class="rce-color-chip-lg cursor-pointer"
+        class="ce-color-chip-lg cursor-pointer"
+        aria-label="Fill color"
         :style="{ background: swatchPreview(selectedElement.fill) }"
       />
       <template #content>

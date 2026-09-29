@@ -70,7 +70,7 @@ describe("elementLabel / elementTypeIcon", () => {
   });
 
   it("falls back to a generic icon for unknown kinds", () => {
-    expect(elementTypeIcon("nope")).toBe("i-heroicons-square-3-stack-3d");
+    expect(elementTypeIcon("nope")).toBe("i-lucide-layers");
   });
 });
 

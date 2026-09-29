@@ -25,10 +25,16 @@ export function useCanvasShortcuts(opts: {
   } = opts;
 
   function handleKeyDown(e: KeyboardEvent) {
+    // Shift is a pure modifier with no side effects when typing (unlike Space,
+    // which must reach text inputs), so track it before the input-focus guard:
+    // rotation-snap should still work even if a properties-panel input happens
+    // to still have focus.
     if (e.key === "Shift" && !isShiftHeld.value) {
       isShiftHeld.value = true;
     }
 
+    // Don't intercept native text-editing (including the browser's own
+    // undo/redo) while the user is typing in a field.
     const target = e.target as HTMLElement;
     const isTextEntry =
       target.tagName === "INPUT" ||
@@ -37,6 +43,9 @@ export function useCanvasShortcuts(opts: {
       target.isContentEditable;
     if (isTextEntry) return;
 
+    // Undo/redo should fire even when a toolbar button (e.g. the Undo/Redo
+    // buttons themselves) holds focus, so check it before the button-focus
+    // guard below: only text entry should suppress it.
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
       e.preventDefault();
       if (e.shiftKey) redo();
@@ -44,6 +53,8 @@ export function useCanvasShortcuts(opts: {
       return;
     }
 
+    // Don't intercept when a focused control needs Space for its own native
+    // activation (buttons, [role="button"]).
     if (target.closest("button, [role='button']")) return;
 
     if (e.key === "Delete" || e.key === "Backspace") {

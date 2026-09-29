@@ -1,5 +1,30 @@
-import { computed, ref, type Ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, type Ref } from "vue";
 import type { CanvasTemplate } from "~/utils/canvas-editor/types";
+
+/** The stage area's client size, in CSS pixels. */
+export interface WrapSize {
+  width: number;
+  height: number;
+}
+
+/**
+ * Display scale for the canvas: shrinks it to fit the stage area with 40px of
+ * margin on every side (never enlarges it), then applies the user's zoom.
+ * Before the area has been measured it fits a 700x500 box.
+ */
+export function computeScale(
+  wrap: WrapSize | null,
+  canvasWidth: number,
+  canvasHeight: number,
+  zoom: number,
+): number {
+  const maxW = wrap ? wrap.width - 80 : 700;
+  const maxH = wrap ? wrap.height - 80 : 500;
+  const sw = canvasWidth > maxW ? maxW / canvasWidth : 1;
+  const sh = canvasHeight > maxH ? maxH / canvasHeight : 1;
+  const baseScale = Math.min(sw, sh, 1);
+  return baseScale * zoom;
+}
 
 /**
  * Zoom and Space-drag panning for the editor's scrollable canvas area. The
@@ -15,16 +40,48 @@ export function useCanvasViewport(opts: {
 
   const zoomMultiplier = ref(1);
 
-  const scaleFactor = computed(() => {
-    const maxW = canvasWrap.value ? canvasWrap.value.clientWidth - 80 : 700;
-    const maxH = canvasWrap.value ? canvasWrap.value.clientHeight - 80 : 500;
-    const sw =
-      template.value.canvasWidth > maxW ? maxW / template.value.canvasWidth : 1;
-    const sh =
-      template.value.canvasHeight > maxH ? maxH / template.value.canvasHeight : 1;
-    const baseScale = Math.min(sw, sh, 1);
-    return baseScale * zoomMultiplier.value;
+  // offsetWidth/offsetHeight aren't reactive, so a ResizeObserver mirrors
+  // them here: the canvas refits when a side panel collapses or the window
+  // resizes, not only when the zoom or the design changes.
+  const wrapSize = ref<WrapSize | null>(null);
+  let resizeObserver: ResizeObserver | null = null;
+
+  // Offset size (border box) rather than client size: the wrapper is
+  // overflow-auto, and on classic space-taking scrollbars a scrollbar
+  // appearing shrinks clientWidth/clientHeight, which changes the fit scale,
+  // which changes the overflow, and can flicker in a narrow zoom band. The
+  // stage has no border, so on overlay-scrollbar systems the two are
+  // identical.
+  function measureWrap() {
+    const el = canvasWrap.value;
+    if (!el) return;
+    const width = el.offsetWidth;
+    const height = el.offsetHeight;
+    if (wrapSize.value?.width === width && wrapSize.value?.height === height)
+      return;
+    wrapSize.value = { width, height };
+  }
+
+  onMounted(() => {
+    measureWrap();
+    if (!canvasWrap.value || typeof ResizeObserver === "undefined") return;
+    resizeObserver = new ResizeObserver(measureWrap);
+    resizeObserver.observe(canvasWrap.value);
   });
+
+  onUnmounted(() => {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+  });
+
+  const scaleFactor = computed(() =>
+    computeScale(
+      wrapSize.value,
+      template.value.canvasWidth,
+      template.value.canvasHeight,
+      zoomMultiplier.value,
+    ),
+  );
 
   let panStart = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 };
 

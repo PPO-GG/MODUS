@@ -1,9 +1,11 @@
 <template>
-  <div class="rce-prop-section">
-    <p class="rce-prop-title">Avatar Border</p>
+  <div class="ce-prop-section">
+    <p class="ce-prop-title">Avatar Border</p>
     <div class="flex items-center gap-2">
-      <div
-        class="rce-color-chip-lg"
+      <button
+        type="button"
+        class="ce-color-chip-lg"
+        aria-label="Border color"
         :style="{
           background: selectedElement.borderColor || profile.fallback.avatarBorder,
         }"
@@ -14,11 +16,14 @@
         type="color"
         v-model="selectedElement.borderColor"
         class="sr-only"
+        tabindex="-1"
+        aria-hidden="true"
       />
       <input
         v-model.number="selectedElement.borderWidth"
         type="number"
-        class="rce-num-input w-14"
+        aria-label="Border width"
+        class="ce-num-input w-14"
         min="0"
         placeholder="0"
       />

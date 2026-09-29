@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex-1 flex [align-items:safe_center] [justify-content:safe_center] bg-[#131722] overflow-auto relative"
+    class="flex-1 flex [align-items:safe_center] [justify-content:safe_center] ce-stage overflow-auto relative"
     ref="canvasWrap"
     :class="{
       'cursor-grab': isSpaceHeld && !isPanning,
@@ -36,10 +36,10 @@
       class="absolute inset-0 z-20 flex flex-col items-center justify-center text-center pointer-events-none"
     >
       <UIcon
-        name="i-heroicons-cursor-arrow-rays"
-        class="text-2xl text-secondary-400/60 mb-2"
+        name="i-lucide-mouse-pointer-click"
+        class="text-2xl text-sky-200/60 mb-2"
       />
-      <p class="text-xs text-zinc-500">
+      <p class="text-xs text-gray-500">
         Click a tool on the left to add your first element
       </p>
     </div>
@@ -215,8 +215,8 @@
                       x: el.x + (el.points?.[0] ?? -60),
                       y: el.y + (el.points?.[1] ?? 0),
                       radius: 6,
-                      fill: '#6366f1',
-                      stroke: '#0f172a',
+                      fill: '#5eead4',
+                      stroke: '#030712',
                       strokeWidth: 1.5,
                       draggable: true,
                     }"
@@ -227,8 +227,8 @@
                       x: el.x + (el.points?.[2] ?? 60),
                       y: el.y + (el.points?.[3] ?? 0),
                       radius: 6,
-                      fill: '#6366f1',
-                      stroke: '#0f172a',
+                      fill: '#5eead4',
+                      stroke: '#030712',
                       strokeWidth: 1.5,
                       draggable: true,
                     }"
@@ -383,11 +383,11 @@
                       345,
                     ]
                   : [],
-                borderStroke: '#6366f1',
+                borderStroke: '#5eead4',
                 borderStrokeWidth: 2,
-                anchorStroke: '#6366f1',
+                anchorStroke: '#5eead4',
                 anchorStrokeWidth: 2,
-                anchorFill: '#0f172a',
+                anchorFill: '#030712',
                 anchorSize: 8,
                 anchorCornerRadius: 2,
                 rotateAnchorOffset: 20,
@@ -403,7 +403,7 @@
                 y: hoveredElementRect.y,
                 width: hoveredElementRect.width,
                 height: hoveredElementRect.height,
-                stroke: 'rgba(99, 102, 241, 0.65)',
+                stroke: 'rgba(94, 234, 212, 0.65)',
                 strokeWidth: 1.5,
                 dash: [4, 4],
                 listening: false,
@@ -414,10 +414,10 @@
       </div>
       <template #fallback>
         <div
-          class="flex items-center justify-center py-20 text-zinc-500 text-sm"
+          class="flex items-center justify-center py-20 text-gray-500 text-sm"
         >
           <UIcon
-            name="i-heroicons-arrow-path"
+            name="i-lucide-loader-circle"
             class="w-5 h-5 animate-spin mr-2"
           />
           Loading Canvas…

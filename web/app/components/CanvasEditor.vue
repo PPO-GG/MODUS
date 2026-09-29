@@ -1,18 +1,29 @@
 <template>
-  <div class="rce font-sans flex flex-col h-full select-none">
+  <div class="ce font-sans flex flex-col h-full select-none">
     <!-- TOP TOOLBAR -->
     <CanvasToolbar />
 
     <!-- MAIN EDITOR AREA -->
-    <div class="flex-1 flex min-h-0 gap-px rce-glass-panel">
-      <!-- LEFT PANEL: Presets, Tools + Layers -->
-      <CanvasLeftPanel />
+    <div class="flex-1 flex min-h-0 gap-px ce-panel">
+      <!-- LEFT PANEL: Tools + Layers. Hidden rather than unmounted when
+           collapsed: it owns the file input the inspector's image Replace uses. -->
+      <CanvasLeftPanel v-show="leftPanelOpen" :id="leftPanelId" />
 
-      <!-- CENTER: Interactive Konva Canvas -->
-      <CanvasStage />
+      <!-- CENTER: Interactive Konva Canvas, with overlays that stay put while it scrolls -->
+      <div
+        class="ce-canvas-area"
+        :class="{
+          'ce-canvas-area-left-edge': !leftPanelOpen,
+          'ce-canvas-area-right-edge': !rightPanelOpen,
+        }"
+      >
+        <CanvasStage />
+        <CanvasSelectionBar />
+        <CanvasZoomPill />
+      </div>
 
       <!-- RIGHT PANEL: Property Inspector -->
-      <CanvasInspector />
+      <CanvasInspector v-show="rightPanelOpen" :id="rightPanelId" />
     </div>
   </div>
 </template>
@@ -26,6 +37,7 @@ import {
   onMounted,
   onUnmounted,
   toRef,
+  useId,
 } from "vue";
 import type {
   CanvasElement,
@@ -64,7 +76,10 @@ import { provideCanvasEditor } from "~/composables/canvas-editor/useCanvasEditor
 import CanvasToolbar from "~/components/canvas-editor/CanvasToolbar.vue";
 import CanvasLeftPanel from "~/components/canvas-editor/CanvasLeftPanel.vue";
 import CanvasStage from "~/components/canvas-editor/CanvasStage.vue";
+import CanvasSelectionBar from "~/components/canvas-editor/CanvasSelectionBar.vue";
+import CanvasZoomPill from "~/components/canvas-editor/CanvasZoomPill.vue";
 import CanvasInspector from "~/components/canvas-editor/CanvasInspector.vue";
+import "~/assets/css/canvas-editor.css";
 
 const { loadFont, loadTemplateFonts } = useGoogleFonts();
 
@@ -87,7 +102,7 @@ function replaceTemplate(next: CanvasTemplate) {
   t.canvasWidth = next.canvasWidth;
   t.canvasHeight = next.canvasHeight;
   t.backgroundColor = next.backgroundColor;
-  if (next.backgroundImage) t.backgroundImage = next.backgroundImage;
+  if ("backgroundImage" in next) t.backgroundImage = next.backgroundImage;
   else delete t.backgroundImage;
   t.elements = next.elements;
 }
@@ -115,6 +130,42 @@ const {
   handlePanEnd,
   handleWheelZoom,
 } = useCanvasViewport({ canvasWrap, template, isSpaceHeld, isPanning });
+
+// ── Side Panels ────────────────────────────────────────────────────────
+
+const PANEL_STORAGE_PREFIX = "ce-panel:";
+
+/** Whether a side panel was left open; open when nothing is stored or storage is unavailable. */
+function readPanelOpen(side: "left" | "right"): boolean {
+  try {
+    return localStorage.getItem(PANEL_STORAGE_PREFIX + side) !== "0";
+  } catch {
+    return true;
+  }
+}
+
+function storePanelOpen(side: "left" | "right", open: boolean) {
+  try {
+    localStorage.setItem(PANEL_STORAGE_PREFIX + side, open ? "1" : "0");
+  } catch {
+    /* storage blocked: the state lasts until the editor unmounts */
+  }
+}
+
+const leftPanelOpen = ref(readPanelOpen("left"));
+const rightPanelOpen = ref(readPanelOpen("right"));
+const leftPanelId = useId();
+const rightPanelId = useId();
+
+function toggleLeftPanel() {
+  leftPanelOpen.value = !leftPanelOpen.value;
+  storePanelOpen("left", leftPanelOpen.value);
+}
+
+function toggleRightPanel() {
+  rightPanelOpen.value = !rightPanelOpen.value;
+  storePanelOpen("right", rightPanelOpen.value);
+}
 
 // ── Undo/Redo History ──────────────────────────────────────────────────
 
@@ -799,7 +850,6 @@ function resetTemplate() {
 provideCanvasEditor({
   // Props and template
   profile: toRef(props, "profile"),
-  guildId: toRef(props, "guildId"),
   template,
   reversedElements,
   // Selection and hover
@@ -826,6 +876,13 @@ provideCanvasEditor({
   handlePanMove,
   handlePanEnd,
   handleWheelZoom,
+  // Side panels
+  leftPanelOpen,
+  rightPanelOpen,
+  leftPanelId,
+  rightPanelId,
+  toggleLeftPanel,
+  toggleRightPanel,
   // History
   canUndo,
   canRedo,
@@ -873,6 +930,7 @@ provideCanvasEditor({
   handleLineHandleDrag,
   handleTransformEnd,
   // Display helpers
+  previewText,
   elementLabel,
   elementTypeIcon,
   swatchPreview,
@@ -890,288 +948,3 @@ onUnmounted(() => {
   history.dispose();
 });
 </script>
-
-<style>
-/* ── Foundation & Dark Glass Surface ── */
-.rce {
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    sans-serif;
-  color: #cbd5e1;
-  border-radius: 16px;
-}
-
-.rce-glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-  border-radius: 16px;
-}
-
-/* ── Toolbar ── */
-.rce-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  height: 44px;
-}
-.rce-toolbar-group {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.rce-toolbar-sep {
-  width: 1px;
-  height: 18px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 0 2px;
-}
-
-/* ── Labels ── */
-.rce-label {
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  min-width: 14px;
-  text-align: right;
-}
-.rce-panel-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.rce-prop-label {
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 600;
-}
-
-/* ── Inputs ── */
-.rce-num-input {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: #e2e8f0;
-  font-size: 13px;
-  padding: 5px 8px;
-  font-variant-numeric: tabular-nums;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.rce-num-input:focus {
-  border-color: #6366f1;
-}
-.rce-textarea {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: #e2e8f0;
-  font-size: 13px;
-  padding: 6px 8px;
-  width: 100%;
-  resize: vertical;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.rce-textarea:focus {
-  border-color: #6366f1;
-}
-.rce-select {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: #e2e8f0;
-  font-size: 13px;
-  padding: 5px 8px;
-  outline: none;
-}
-
-/* ── Buttons ── */
-.rce-tool-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  color: #94a3b8;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.rce-tool-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-}
-.rce-tool-btn-sm {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  color: #64748b;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.rce-tool-btn-sm:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-}
-.rce-tool-btn-sm[aria-disabled="true"] {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-.rce-tool-btn-sm[aria-disabled="true"]:hover {
-  background: transparent;
-  color: #64748b;
-}
-.rce-tool-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  transition: all 0.15s;
-  color: #cbd5e1;
-}
-.rce-tool-row:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: rgba(99, 102, 241, 0.3);
-  color: #ffffff;
-}
-
-/* ── Color Chips ── */
-.rce-color-chip-lg {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: transform 0.1s;
-}
-.rce-color-chip-lg:hover {
-  transform: scale(1.05);
-}
-
-/* ── Layers ── */
-.rce-layer {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  padding: 6px 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #94a3b8;
-  background: transparent;
-  border: 1px solid transparent;
-  border-left-width: 3px;
-  cursor: pointer;
-  transition: all 0.1s;
-}
-.rce-layer:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
-}
-.rce-layer-active {
-  background: rgba(99, 102, 241, 0.18) !important;
-  border-color: rgba(99, 102, 241, 0.4) !important;
-  border-left-color: #6366f1 !important;
-  color: #818cf8 !important;
-  font-weight: 500;
-}
-
-/* ── Property Sections ── */
-.rce-prop-section {
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-.rce-prop-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
-.rce-prop-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.rce-placeholder-chip {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 10px;
-  padding: 3px 6px;
-  border-radius: 6px;
-  background: rgba(99, 102, 241, 0.1);
-  color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.rce-placeholder-chip:hover {
-  background: rgba(99, 102, 241, 0.25);
-  border-color: rgba(99, 102, 241, 0.5);
-  color: #ffffff;
-}
-
-/* ── Konva Overrides ── */
-.rce .konvajs-content {
-  border-radius: 0 !important;
-}
-
-/* Hide number input spinners */
-.rce-num-input::-webkit-inner-spin-button,
-.rce-num-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.rce-num-input {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-
-/* ── Preset Buttons ── */
-.rce-preset-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 4px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  transition: all 0.15s;
-  color: #94a3b8;
-}
-.rce-preset-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(99, 102, 241, 0.3);
-  color: #e2e8f0;
-}
-.rce-preset-swatch {
-  width: 100%;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-</style>
