@@ -16,20 +16,23 @@
       <h2 class="text-lg font-semibold text-white leading-tight">{{ title }}</h2>
       <p class="mt-0.5 text-sm text-gray-400">{{ description }}</p>
     </div>
-    <span
-      class="hidden shrink-0 items-center gap-2 rounded-full border px-3 py-1 font-mono text-[11px] sm:inline-flex"
-      :class="
-        enabled
-          ? 'border-emerald-400/30 bg-emerald-400/5 text-emerald-300'
-          : 'border-white/10 bg-white/[0.03] text-gray-400'
-      "
-    >
+    <!-- Pages can replace the status pill (the AI page shows its enable switch here). -->
+    <slot name="status">
       <span
-        class="h-1.5 w-1.5 rounded-full"
-        :class="enabled ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]' : 'bg-gray-500'"
-      />
-      {{ enabled ? "ACTIVE" : "DISABLED" }}
-    </span>
+        class="hidden shrink-0 items-center gap-2 rounded-full border px-3 py-1 font-mono text-[11px] sm:inline-flex"
+        :class="
+          enabled
+            ? 'border-emerald-400/30 bg-emerald-400/5 text-emerald-300'
+            : 'border-white/10 bg-white/[0.03] text-gray-400'
+        "
+      >
+        <span
+          class="h-1.5 w-1.5 rounded-full"
+          :class="enabled ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]' : 'bg-gray-500'"
+        />
+        {{ enabled ? "ACTIVE" : "DISABLED" }}
+      </span>
+    </slot>
   </header>
 </template>
 

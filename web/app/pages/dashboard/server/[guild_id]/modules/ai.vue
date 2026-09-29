@@ -1,558 +1,473 @@
 <template>
-  <div class="space-y-8">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <NuxtLink
-          :to="`/dashboard/server/${guildId}/modules`"
-          class="w-9 h-9 rounded-lg hover:bg-white/5 transition-colors flex items-center justify-center shrink-0"
-        >
-          <UIcon name="i-heroicons-arrow-left" class="w-5 h-5" />
-        </NuxtLink>
-        <div>
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-xl bg-primary-500/10 ring-1 ring-primary-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon
-                name="i-heroicons-cpu-chip"
-                class="w-6 h-6 text-primary-400"
-              />
-            </div>
-            <h1 class="text-2xl font-bold">AI Assistant</h1>
-            <UBadge
-              v-if="isPremium"
-              color="warning"
-              variant="soft"
-              size="sm"
-              class="gap-1"
-            >
-              <UIcon name="i-heroicons-star-solid" class="w-3 h-3" />
-              Premium
-            </UBadge>
-          </div>
-          <p class="text-sm text-gray-500 mt-0.5 ml-[52px]">
-            @mention the bot to chat. Powered by your choice of LLM provider.
-          </p>
+  <div class="mx-auto max-w-3xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-cpu"
+      title="AI Assistant"
+      description="@mention the bot to chat. Powered by the LLM provider you choose."
+      :enabled="moduleEnabled"
+    >
+      <template #status>
+        <div class="flex shrink-0 items-center gap-3">
+          <span
+            v-if="isPremium"
+            class="hidden items-center gap-1 rounded-full bg-amber-400/10 px-2.5 py-1 text-[11px] text-amber-300 ring-1 ring-inset ring-amber-400/25 sm:inline-flex"
+          >
+            <UIcon name="i-lucide-star" class="h-3 w-3" />
+            Premium
+          </span>
+          <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-300">
+            <span class="hidden sm:inline">{{ moduleEnabled ? "Active" : "Disabled" }}</span>
+            <USwitch
+              v-model="moduleEnabled"
+              :loading="savingEnabled"
+              aria-label="Enable the AI module"
+              @update:model-value="toggleModule"
+            />
+          </label>
         </div>
-      </div>
+      </template>
+    </DashboardModuleHeader>
 
-      <!-- Module enable toggle -->
-      <div class="flex items-center gap-3">
-        <span class="text-sm font-medium text-gray-400">Module Active</span>
-        <USwitch
-          v-model="moduleEnabled"
-          @update:model-value="toggleModule"
-          :loading="savingEnabled"
-          color="primary"
-        />
-      </div>
-    </div>
-
-    <!-- Premium notice banner (when using shared key) -->
-    <UAlert
+    <!-- ── Key status ── -->
+    <p
       v-if="!settings.aiApiKey && !isPremium"
-      color="warning"
-      variant="soft"
-      icon="i-heroicons-star"
-      title="Hosted AI requires Premium"
-      description="This server doesn't have a premium subscription and no guild API key is configured. Add your own API key below to use the AI module, or contact the bot owner to enable Premium for this server."
-    />
-
-    <UAlert
+      class="flex items-start gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2.5 text-[13px] text-amber-200"
+    >
+      <UIcon name="i-lucide-star" class="mt-0.5 h-4 w-4 shrink-0" />
+      <span>
+        <strong class="font-semibold">Hosted AI requires Premium.</strong>
+        This server has no premium subscription and no API key. Add your own key below to use the
+        AI module, or ask the bot owner to enable Premium for this server.
+      </span>
+    </p>
+    <p
       v-else-if="!settings.aiApiKey && isPremium"
-      color="success"
-      variant="soft"
-      icon="i-heroicons-check-circle"
-      title="Using Modus Hosted AI"
-      description="This server is premium — it's using the bot's shared API key. Configure your own key below to use a different provider or lift rate limits."
-    />
+      class="flex items-start gap-2 rounded-lg bg-emerald-400/[0.08] px-3 py-2.5 text-[13px] text-emerald-300"
+    >
+      <UIcon name="i-lucide-circle-check" class="mt-0.5 h-4 w-4 shrink-0" />
+      <span>
+        <strong class="font-semibold">Using Modus Hosted AI.</strong>
+        This server is premium and uses the bot's shared key. Add your own key below to use a
+        different provider or lift the rate limits.
+      </span>
+    </p>
 
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      <!-- ── Card 1: Provider & Model ─────────────────────────────── -->
-      <UCard class="xl:col-span-2">
-        <template #header>
-          <div class="flex items-center gap-2">
-            <UIcon name="i-heroicons-key" class="w-5 h-5 text-primary-400" />
-            <h2 class="font-semibold text-base">Provider & Model</h2>
-          </div>
-        </template>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Provider Selector -->
-          <UFormField label="AI Provider" required>
+    <!-- ── Provider & model ── -->
+    <DashboardModuleSection
+      title="Provider & model"
+      description="Which LLM answers, and the key it uses."
+    >
+      <div class="space-y-5">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <UFormField label="Provider" required class="w-full">
             <USelectMenu
               v-model="settings.aiProvider"
               :items="providerOptions"
               value-key="value"
               :search-input="false"
-              placeholder="Select provider..."
+              placeholder="Select a provider…"
+              icon="i-lucide-cpu"
+              class="w-full"
               @update:model-value="(v) => onProviderChange(String(v ?? ''))"
             />
           </UFormField>
 
-          <!-- API Key -->
           <UFormField
-            label="API Key"
-            hint="Leave empty to use Modus hosted key (Premium only)"
+            label="API key"
+            hint="Optional with Premium"
+            description="Leave empty to use the hosted key."
+            class="w-full"
           >
             <UInput
               v-model="settings.aiApiKey"
-              type="password"
-              placeholder="sk-... or your provider key"
-              icon="i-heroicons-lock-closed"
+              :type="showKey ? 'text' : 'password'"
+              placeholder="sk-… or your provider's key"
+              icon="i-lucide-key-round"
               autocomplete="off"
-            />
-          </UFormField>
-
-          <!-- Model Selector -->
-          <UFormField label="Model" required>
-            <div class="flex gap-2">
-              <USelectMenu
-                v-model="settings.aiModel"
-                :items="availableModels"
-                :loading="modelsLoading"
-                :disabled="modelsLoading"
-                :search-input="{ placeholder: 'Search models...' }"
-                placeholder="Select a model..."
-                class="flex-1"
-              />
-              <UButton
-                icon="i-heroicons-arrow-path"
-                variant="ghost"
-                :loading="modelsLoading"
-                title="Fetch available models"
-                @click="fetchModels"
-              />
-            </div>
-            <p v-if="modelsWarning" class="text-xs text-amber-400 mt-1">
-              {{ modelsWarning }}
-            </p>
-          </UFormField>
-
-          <!-- Custom Base URL (OpenAI Compatible only) -->
-          <UFormField
-            v-if="settings.aiProvider === 'OpenAI Compatible'"
-            label="Base URL"
-            required
-            hint="Ollama: http://localhost:11434/v1 · LM Studio: http://localhost:1234/v1"
-          >
-            <UInput
-              v-model="settings.aiBaseUrl"
-              placeholder="http://localhost:11434/v1"
-              icon="i-heroicons-globe-alt"
-            />
+              class="w-full"
+              :ui="{ trailing: 'pe-1' }"
+            >
+              <template #trailing>
+                <UButton
+                  color="neutral"
+                  variant="link"
+                  size="sm"
+                  :icon="showKey ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  :aria-label="showKey ? 'Hide API key' : 'Show API key'"
+                  @click="showKey = !showKey"
+                />
+              </template>
+            </UInput>
           </UFormField>
         </div>
 
-        <!-- Provider quick-links -->
-        <div class="mt-4 pt-4 border-t border-gray-800 flex flex-wrap gap-2">
-          <span class="text-xs text-gray-500 self-center">Get an API key:</span>
+        <UFormField label="Model" required class="w-full">
+          <div class="flex gap-2">
+            <USelectMenu
+              v-model="settings.aiModel"
+              :items="availableModels"
+              :loading="modelsLoading"
+              :disabled="modelsLoading"
+              :search-input="{ placeholder: 'Search models…' }"
+              placeholder="Select a model…"
+              icon="i-lucide-brain"
+              class="min-w-0 flex-1"
+            />
+            <UButton
+              icon="i-lucide-rotate-cw"
+              color="neutral"
+              variant="soft"
+              :loading="modelsLoading"
+              aria-label="Fetch available models"
+              @click="fetchModels"
+            />
+          </div>
+          <p v-if="modelsWarning" class="mt-2 text-[13px] text-amber-300">{{ modelsWarning }}</p>
+        </UFormField>
+
+        <UFormField
+          v-if="settings.aiProvider === 'OpenAI Compatible'"
+          label="Base URL"
+          required
+          hint="Ollama: http://localhost:11434/v1 · LM Studio: http://localhost:1234/v1"
+          class="w-full"
+        >
+          <UInput
+            v-model="settings.aiBaseUrl"
+            placeholder="http://localhost:11434/v1"
+            icon="i-lucide-globe"
+            class="w-full"
+          />
+        </UFormField>
+
+        <p class="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/[0.06] pt-4 text-[13px] text-gray-400">
+          <span>Get an API key:</span>
           <a
             v-for="link in providerLinks"
             :key="link.name"
             :href="link.url"
             target="_blank"
-            class="text-xs text-primary-400 hover:text-primary-300 transition-colors underline underline-offset-2"
+            rel="noopener"
+            class="inline-flex items-center gap-1 text-sky-200 underline underline-offset-2 hover:text-teal-300"
           >
             {{ link.name }}
+            <UIcon name="i-lucide-external-link" class="h-3 w-3" />
           </a>
-        </div>
-      </UCard>
+        </p>
+      </div>
+    </DashboardModuleSection>
 
-      <!-- ── Card 2: Personality & Instructions ───────────────────── -->
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <UIcon
-                name="i-heroicons-chat-bubble-left-ellipsis"
-                class="w-5 h-5 text-blue-400"
-              />
-              <h2 class="font-semibold text-base">Personality &amp; Instructions</h2>
-            </div>
-            <UButton
-              size="xs"
-              variant="ghost"
-              color="neutral"
-              @click="resetSystemPrompt"
-            >
-              Reset to default
-            </UButton>
-          </div>
-        </template>
+    <!-- ── Personality ── -->
+    <DashboardModuleSection
+      title="Personality"
+      description="Tone and extra instructions, added on top of Modus's built-in behaviour."
+    >
+      <template #actions>
+        <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-rotate-cw" @click="resetSystemPrompt">
+          Reset to default
+        </UButton>
+      </template>
 
-        <UFormField>
-          <UTextarea
-            v-model="settings.systemPrompt"
-            :rows="6"
-            :maxlength="2000"
-            placeholder="Describe the tone and any extra instructions…"
-            class="font-mono text-sm w-full"
-            resize
-          />
-        </UFormField>
-
-        <div class="mt-2 flex justify-between items-center">
+      <div class="space-y-3">
+        <UTextarea
+          v-model="settings.systemPrompt"
+          :rows="6"
+          :maxlength="2000"
+          placeholder="Describe the tone and any extra instructions…"
+          class="w-full font-mono text-sm"
+          :ui="{ base: 'font-mono text-sm' }"
+          aria-label="System prompt"
+        />
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <span
             class="text-xs"
-            :class="(settings.systemPrompt?.length ?? 0) > 1800 ? 'text-amber-400' : 'text-gray-500'"
+            :class="(settings.systemPrompt?.length ?? 0) > 1800 ? 'text-amber-300' : 'text-gray-400'"
           >
             {{ settings.systemPrompt?.length ?? 0 }} / 2000 characters
           </span>
-          <span class="text-xs text-gray-500">
-            Added on top of Modus's built-in behavior. Leave blank for the default friendly tone.
+          <span class="text-xs text-gray-400">Leave blank for the default friendly tone.</span>
+        </div>
+
+        <details class="group rounded-lg ring-1 ring-inset ring-white/10">
+          <summary
+            class="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm text-white select-none"
+          >
+            Built-in behaviour (always applied)
+            <UIcon
+              name="i-lucide-chevron-down"
+              class="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180"
+            />
+          </summary>
+          <p class="border-t border-white/[0.06] p-3 text-[13px] leading-relaxed text-gray-400">
+            {{ CORE_BEHAVIOR_PREVIEW }}
+          </p>
+        </details>
+      </div>
+    </DashboardModuleSection>
+
+    <!-- ── Features ── -->
+    <DashboardModuleSection title="Features" description="What the assistant is allowed to do.">
+      <div class="space-y-1">
+        <label
+          class="-mx-2 flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-white/[0.04]"
+        >
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-medium text-white">Respond in DMs</span>
+            <span class="block text-[13px] text-gray-400">Answer @mentions in direct messages too.</span>
           </span>
-        </div>
+          <USwitch v-model="settings.respondToDMs" aria-label="Respond in DMs" />
+        </label>
 
-        <UCollapsible class="mt-4">
-          <UButton
-            variant="ghost"
-            color="neutral"
-            size="xs"
-            trailing-icon="i-heroicons-chevron-down"
-            label="Built-in behavior (always applied)"
-          />
-          <template #content>
-            <p class="text-xs text-gray-400 leading-relaxed bg-gray-900/40 rounded-lg p-3 mt-2">
-              {{ CORE_BEHAVIOR_PREVIEW }}
-            </p>
-          </template>
-        </UCollapsible>
-      </UCard>
+        <label
+          class="-mx-2 flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-white/[0.04]"
+        >
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-medium text-white">Tool use</span>
+            <span class="block text-[13px] text-gray-400">
+              Let the AI control music (play, skip, pause, queue), search the web and find images.
+            </span>
+          </span>
+          <USwitch v-model="settings.toolUseEnabled" aria-label="Enable tool use" />
+        </label>
+      </div>
 
-      <!-- ── Card 3: Behavior & Features ──────────────────────────── -->
-      <UCard>
-        <template #header>
-          <div class="flex items-center gap-2">
-            <UIcon name="i-heroicons-sparkles" class="w-5 h-5 text-fuchsia-400" />
-            <h2 class="font-semibold text-base">Behavior & Features</h2>
+      <p
+        v-if="settings.toolUseEnabled && toolUseWarning"
+        class="mt-3 flex items-start gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+      >
+        <UIcon name="i-lucide-triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+        <span>
+          <strong class="font-semibold">{{ toolUseWarning }}</strong>
+          Tool use works best with 70B+ models. Try llama-3.3-70b-versatile (Groq, free) or
+          gpt-4o-mini (OpenAI).
+        </span>
+      </p>
+    </DashboardModuleSection>
+
+    <!-- ── Conversation memory ── -->
+    <DashboardModuleSection
+      title="Conversation memory"
+      description="Recent messages in a channel are included so follow-ups feel natural."
+    >
+      <div class="space-y-5">
+        <label
+          class="-mx-2 flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-white/[0.04]"
+        >
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-medium text-white">Remember context</span>
+            <span class="block text-[13px] text-gray-400">Keep recent messages per channel.</span>
+          </span>
+          <USwitch v-model="settings.contextEnabled" aria-label="Remember conversation context" />
+        </label>
+
+        <template v-if="settings.contextEnabled">
+          <div>
+            <div class="mb-2 flex items-baseline justify-between gap-3">
+              <label class="text-sm font-medium text-white" for="ai-ctx-count">Messages to remember</label>
+              <span class="text-sm text-sky-200">{{ settings.contextMessageCount }} messages</span>
+            </div>
+            <USlider id="ai-ctx-count" v-model="settings.contextMessageCount" :min="1" :max="20" :step="1" />
+            <p class="mt-2 text-[13px] text-gray-400">More means better continuity but uses more tokens.</p>
           </div>
+
+          <div>
+            <div class="mb-2 flex items-baseline justify-between gap-3">
+              <label class="text-sm font-medium text-white" for="ai-ctx-ttl">Memory duration</label>
+              <span class="text-sm text-sky-200">{{ settings.contextTTLMinutes }} minutes</span>
+            </div>
+            <USlider id="ai-ctx-ttl" v-model="settings.contextTTLMinutes" :min="1" :max="60" :step="1" />
+            <p class="mt-2 text-[13px] text-gray-400">Older messages are forgotten, which keeps conversations fresh.</p>
+          </div>
+
+          <p class="flex items-center gap-2 rounded-lg bg-sky-200/[0.06] px-3 py-2 text-[13px] text-sky-200">
+            <UIcon name="i-lucide-info" class="h-4 w-4 shrink-0" />
+            Context is trimmed to fit your max input tokens. The new message always gets priority.
+          </p>
         </template>
+      </div>
+    </DashboardModuleSection>
 
-        <div class="space-y-5">
-          <UFormField
-            label="DM Responses"
-            hint="Allow the bot to respond to @mentions in DMs."
-          >
-            <USwitch v-model="settings.respondToDMs" label="Respond in DMs" />
-          </UFormField>
+    <!-- ── Limits ── -->
+    <DashboardModuleSection
+      title="Limits"
+      description="Rate and length limits for each member's requests."
+    >
+      <div class="space-y-5">
+        <p
+          v-if="!settings.aiApiKey"
+          class="flex items-center gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+        >
+          <UIcon name="i-lucide-triangle-alert" class="h-4 w-4 shrink-0" />
+          Shared key limits: 60s cooldown, 500 input tokens and 300 output tokens at most. Add your
+          own key to raise them.
+        </p>
 
-          <UFormField
-            label="Tool Use — Music, Web Search & Images"
-            hint="Let the AI control music (play/skip/pause/queue), search the web, and find images on @mention."
-          >
-            <USwitch
-              v-model="settings.toolUseEnabled"
-              label="Enable tool use"
-            />
-          </UFormField>
-
-          <UAlert
-            v-if="settings.toolUseEnabled && toolUseWarning"
-            color="warning"
-            variant="soft"
-            icon="i-heroicons-exclamation-triangle"
-            :title="toolUseWarning"
-            description="Tool use works best with 70B+ models. Try llama-3.3-70b-versatile (Groq, free) or gpt-4o-mini (OpenAI) for reliable results."
+        <div>
+          <div class="mb-2 flex items-baseline justify-between gap-3">
+            <label class="text-sm font-medium text-white" for="ai-cooldown">Member cooldown</label>
+            <span class="text-sm text-sky-200">{{ settings.rateLimitSeconds }}s</span>
+          </div>
+          <USlider
+            id="ai-cooldown"
+            v-model="settings.rateLimitSeconds"
+            :min="settings.aiApiKey ? 5 : 60"
+            :max="300"
+            :step="5"
           />
         </div>
-      </UCard>
 
-      <!-- ── Card 4: Conversation Memory ──────────────────────────── -->
-      <UCard>
-        <template #header>
-          <div class="flex items-center gap-2">
-            <UIcon name="i-heroicons-clock" class="w-5 h-5 text-cyan-400" />
-            <h2 class="font-semibold text-base">Conversation Memory</h2>
+        <div>
+          <div class="mb-2 flex items-baseline justify-between gap-3">
+            <label class="text-sm font-medium text-white" for="ai-max-in">Max input tokens</label>
+            <span class="text-sm text-sky-200">{{ settings.maxInputTokens }} tokens</span>
           </div>
-        </template>
-
-        <div class="space-y-5">
-          <UFormField
-            label="Enable Context"
-            hint="When enabled, the bot remembers recent messages in each channel for more natural follow-up conversations."
-          >
-            <USwitch
-              v-model="settings.contextEnabled"
-              label="Remember conversation context"
-            />
-          </UFormField>
-
-          <UFormField
-            v-if="settings.contextEnabled"
-            label="Messages to Remember"
-            hint="How many recent messages to include as context per channel. More = better continuity but uses more tokens."
-          >
-            <div class="flex items-center gap-3">
-              <USlider
-                v-model="settings.contextMessageCount"
-                :min="1"
-                :max="20"
-                :step="1"
-                class="flex-1"
-              />
-              <span class="text-sm font-mono w-12 text-right">
-                {{ settings.contextMessageCount }} msg
-              </span>
-            </div>
-          </UFormField>
-
-          <UFormField
-            v-if="settings.contextEnabled"
-            label="Memory Duration (minutes)"
-            hint="Context messages older than this are forgotten. Keeps conversations fresh."
-          >
-            <div class="flex items-center gap-3">
-              <USlider
-                v-model="settings.contextTTLMinutes"
-                :min="1"
-                :max="60"
-                :step="1"
-                class="flex-1"
-              />
-              <span class="text-sm font-mono w-16 text-right">
-                {{ settings.contextTTLMinutes }} min
-              </span>
-            </div>
-          </UFormField>
-
-          <UAlert
-            v-if="settings.contextEnabled"
-            color="info"
-            variant="soft"
-            icon="i-heroicons-information-circle"
-            title="Token budget aware"
-            description="Context messages are automatically trimmed to fit within your Max Input Tokens limit. The new message always gets priority."
+          <USlider
+            id="ai-max-in"
+            v-model="settings.maxInputTokens"
+            :min="100"
+            :max="settings.aiApiKey ? 4000 : 500"
+            :step="50"
           />
+          <p class="mt-2 text-[13px] text-gray-400">Caps message length (about 4 characters per token).</p>
         </div>
-      </UCard>
 
-      <!-- ── Card 5: Limits & Rate Limiting ────────────────────────── -->
-      <UCard>
-        <template #header>
-          <div class="flex items-center gap-2">
-            <UIcon
-              name="i-heroicons-shield-check"
-              class="w-5 h-5 text-emerald-400"
-            />
-            <h2 class="font-semibold text-base">Limits & Rate Limiting</h2>
+        <div>
+          <div class="mb-2 flex items-baseline justify-between gap-3">
+            <label class="text-sm font-medium text-white" for="ai-max-out">Max output tokens</label>
+            <span class="text-sm text-sky-200">{{ settings.maxOutputTokens }} tokens</span>
           </div>
-        </template>
-
-        <div class="space-y-5">
-          <UFormField
-            label="User Cooldown (seconds)"
-            :hint="
-              !settings.aiApiKey ? 'Shared key: minimum 60s enforced.' : ''
-            "
-          >
-            <div class="flex items-center gap-3">
-              <USlider
-                v-model="settings.rateLimitSeconds"
-                :min="settings.aiApiKey ? 5 : 60"
-                :max="300"
-                :step="5"
-                class="flex-1"
-              />
-              <span class="text-sm font-mono w-12 text-right">
-                {{ settings.rateLimitSeconds }}s
-              </span>
-            </div>
-          </UFormField>
-
-          <UFormField
-            label="Max Input Tokens"
-            :hint="
-              !settings.aiApiKey
-                ? 'Shared key: max 500 enforced.'
-                : 'Caps message length (~4 chars/token)'
-            "
-          >
-            <div class="flex items-center gap-3">
-              <USlider
-                v-model="settings.maxInputTokens"
-                :min="100"
-                :max="settings.aiApiKey ? 4000 : 500"
-                :step="50"
-                class="flex-1"
-              />
-              <span class="text-sm font-mono w-16 text-right">
-                {{ settings.maxInputTokens }} tok
-              </span>
-            </div>
-          </UFormField>
-
-          <UFormField
-            label="Max Output Tokens"
-            hint="Controls response length. Higher = more detailed but costs more."
-          >
-            <div class="flex items-center gap-3">
-              <USlider
-                v-model="settings.maxOutputTokens"
-                :min="50"
-                :max="settings.aiApiKey ? 4000 : 300"
-                :step="50"
-                class="flex-1"
-              />
-              <span class="text-sm font-mono w-16 text-right">
-                {{ settings.maxOutputTokens }} tok
-              </span>
-            </div>
-          </UFormField>
-        </div>
-      </UCard>
-    </div>
-
-    <!-- ── Card 6: Usage & Spending ──────────────────────────────────── -->
-    <UCard>
-      <template #header>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <UIcon
-              name="i-heroicons-chart-bar"
-              class="w-5 h-5 text-amber-400"
-            />
-            <h2 class="font-semibold text-base">Usage & Spending</h2>
-          </div>
-          <UButton
-            size="xs"
-            variant="ghost"
-            icon="i-heroicons-arrow-path"
-            :loading="usageLoading"
-            @click="fetchUsage"
+          <USlider
+            id="ai-max-out"
+            v-model="settings.maxOutputTokens"
+            :min="50"
+            :max="settings.aiApiKey ? 4000 : 300"
+            :step="50"
           />
+          <p class="mt-2 text-[13px] text-gray-400">Controls response length. Longer answers cost more.</p>
         </div>
+      </div>
+    </DashboardModuleSection>
+
+    <!-- ── Usage & spending ── -->
+    <DashboardModuleSection title="Usage & spending" description="Recent AI calls for this server.">
+      <template #actions>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          icon="i-lucide-rotate-cw"
+          :loading="usageLoading"
+          aria-label="Refresh usage"
+          @click="fetchUsage"
+        />
       </template>
 
-      <div v-if="usageLoading" class="flex justify-center py-10">
-        <UProgress />
+      <div v-if="usageLoading" class="space-y-2" aria-busy="true">
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div v-for="i in 4" :key="i" class="h-16 animate-pulse rounded-lg bg-white/[0.04]" />
+        </div>
       </div>
 
-      <div
-        v-else-if="usageLogs.length === 0"
-        class="text-center py-10 text-gray-500"
-      >
-        <UIcon
-          name="i-heroicons-chart-bar"
-          class="w-10 h-10 mx-auto mb-3 opacity-20"
-        />
-        <p>No usage recorded yet. Start chatting with the bot!</p>
-      </div>
+      <p v-else-if="usageLogs.length === 0" class="text-[13px] text-gray-400">
+        No usage recorded yet. @mention the bot to get started.
+      </p>
 
       <div v-else class="space-y-6">
-        <!-- Aggregate Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div
-            v-for="stat in usageStats"
-            :key="stat.label"
-            class="bg-gray-900/50 rounded-xl p-4 ring-1 ring-gray-800"
-          >
-            <p class="text-xs text-gray-500 mb-1">{{ stat.label }}</p>
-            <p class="text-2xl font-bold">{{ stat.value }}</p>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div v-for="stat in usageStats" :key="stat.label" class="rounded-lg bg-white/[0.04] p-3">
+            <p class="text-xs text-gray-400">{{ stat.label }}</p>
+            <p class="mt-0.5 font-mono text-lg font-semibold text-white">{{ stat.value }}</p>
           </div>
         </div>
 
-        <!-- Token ratio bar -->
         <div>
-          <div class="flex justify-between text-xs text-gray-500 mb-1">
+          <div class="mb-1 flex justify-between text-xs text-gray-400">
             <span>Input tokens</span>
             <span>Output tokens</span>
           </div>
-          <div class="flex h-2 rounded-full overflow-hidden bg-gray-800">
-            <div
-              class="bg-blue-500 transition-all"
-              :style="{ width: inputRatioPct + '%' }"
-            />
-            <div
-              class="bg-primary-500 transition-all"
-              :style="{ width: outputRatioPct + '%' }"
-            />
+          <div class="flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
+            <div class="bg-sky-300 transition-all" :style="{ width: inputRatioPct + '%' }" />
+            <div class="bg-teal-300 transition-all" :style="{ width: outputRatioPct + '%' }" />
           </div>
-          <div class="flex justify-between text-xs text-gray-600 mt-1">
+          <div class="mt-1 flex justify-between font-mono text-xs text-gray-400">
             <span>{{ totalInputTokens.toLocaleString() }}</span>
             <span>{{ totalOutputTokens.toLocaleString() }}</span>
           </div>
         </div>
 
-        <!-- Provider/Model Breakdown -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-400 mb-3">By Model</h3>
-          <div class="space-y-2">
-            <div
+          <h3 class="mb-2 text-sm font-medium text-white">By model</h3>
+          <ul class="-mx-2 divide-y divide-white/[0.06]">
+            <li
               v-for="entry in modelBreakdown"
               :key="entry.model"
-              class="flex items-center justify-between py-2 px-3 bg-gray-900/40 rounded-lg"
+              class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-2.5"
             >
-              <div>
-                <span class="text-sm font-medium">{{ entry.model }}</span>
-                <span class="text-xs text-gray-500 ml-2">{{
-                  entry.provider
-                }}</span>
-              </div>
-              <div class="flex items-center gap-4 text-xs text-gray-400">
-                <span>{{ entry.calls }} calls</span>
-                <span>{{ entry.tokens.toLocaleString() }} tok</span>
-                <span class="font-mono text-emerald-400"
-                  >${{ entry.cost.toFixed(4) }}</span
-                >
-              </div>
-            </div>
-          </div>
+              <span class="min-w-0">
+                <span class="text-sm font-medium text-white">{{ entry.model }}</span>
+                <span class="ml-2 text-xs text-gray-400">{{ entry.provider }}</span>
+              </span>
+              <span class="flex items-center gap-4 text-xs text-gray-400">
+                <span>{{ entry.calls }} call{{ entry.calls !== 1 ? "s" : "" }}</span>
+                <span>{{ entry.tokens.toLocaleString() }} tokens</span>
+                <span class="font-mono text-teal-300">${{ entry.cost.toFixed(4) }}</span>
+              </span>
+            </li>
+          </ul>
         </div>
 
-        <!-- Recent Activity -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-400 mb-3">
-            Recent Activity
-          </h3>
-          <div class="overflow-x-auto">
+          <h3 class="mb-2 text-sm font-medium text-white">Recent activity</h3>
+          <div class="-mx-2 max-h-80 overflow-auto px-2">
             <table class="w-full text-xs">
-              <thead>
-                <tr class="text-gray-500 border-b border-gray-800">
-                  <th class="text-left pb-2">Time</th>
-                  <th class="text-left pb-2">User</th>
-                  <th class="text-left pb-2">Model</th>
-                  <th class="text-right pb-2">Tokens</th>
-                  <th class="text-right pb-2">Cost</th>
-                  <th class="text-center pb-2">Action</th>
-                  <th class="text-center pb-2">Key</th>
+              <thead class="sticky top-0 bg-[#060a14]">
+                <tr class="border-b border-white/10 text-gray-400">
+                  <th class="pb-2 text-left font-medium">Time</th>
+                  <th class="pb-2 text-left font-medium">User</th>
+                  <th class="pb-2 text-left font-medium">Model</th>
+                  <th class="pb-2 text-right font-medium">Tokens</th>
+                  <th class="pb-2 text-right font-medium">Cost</th>
+                  <th class="pb-2 text-center font-medium">Type</th>
+                  <th class="pb-2 text-center font-medium">Key</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-800/50">
-                <tr
-                  v-for="log in usageLogs.slice(0, 20)"
-                  :key="log.$id"
-                  class="hover:bg-white/2 transition-colors"
-                >
-                  <td class="py-2 text-gray-500 whitespace-nowrap">
-                    {{ formatTime(log.timestamp) }}
-                  </td>
-                  <td class="py-2 font-mono text-gray-400">{{ log.userId }}</td>
-                  <td class="py-2 text-gray-300">{{ log.model }}</td>
-                  <td class="py-2 text-right text-gray-400">
-                    {{ (log.total_tokens || 0).toLocaleString() }}
-                  </td>
-                  <td class="py-2 text-right text-emerald-400 font-mono">
+              <tbody class="divide-y divide-white/[0.06]">
+                <tr v-for="log in usageLogs.slice(0, 20)" :key="log.$id">
+                  <td class="whitespace-nowrap py-2 text-gray-400">{{ formatTime(log.timestamp) }}</td>
+                  <td class="max-w-24 truncate py-2 font-mono text-gray-300">{{ log.userId }}</td>
+                  <td class="py-2 text-gray-200">{{ log.model }}</td>
+                  <td class="py-2 text-right text-gray-300">{{ (log.total_tokens || 0).toLocaleString() }}</td>
+                  <td class="py-2 text-right font-mono text-teal-300">
                     ${{ (log.estimated_cost || 0).toFixed(4) }}
                   </td>
                   <td class="py-2 text-center">
-                    <UBadge
-                      :color="log.action === 'tool_use' ? 'success' : 'info'"
-                      variant="soft"
-                      size="xs"
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full px-2 py-0.5"
+                      :class="
+                        log.action === 'tool_use'
+                          ? 'bg-teal-300/10 text-teal-300'
+                          : 'bg-sky-200/10 text-sky-200'
+                      "
                     >
-                      {{ log.action === "tool_use" ? "🔧 Tool" : "💬 Chat" }}
-                    </UBadge>
+                      <UIcon
+                        :name="log.action === 'tool_use' ? 'i-lucide-wrench' : 'i-lucide-message-square'"
+                        class="h-3 w-3"
+                      />
+                      {{ log.action === "tool_use" ? "Tool" : "Chat" }}
+                    </span>
                   </td>
                   <td class="py-2 text-center">
-                    <UBadge
-                      :color="log.key_source === 'guild' ? 'info' : 'warning'"
-                      variant="soft"
-                      size="xs"
+                    <span
+                      class="rounded-full px-2 py-0.5"
+                      :class="
+                        log.key_source === 'guild'
+                          ? 'bg-sky-200/10 text-sky-200'
+                          : 'bg-amber-400/10 text-amber-300'
+                      "
                     >
                       {{ log.key_source === "guild" ? "Guild" : "Shared" }}
-                    </UBadge>
+                    </span>
                   </td>
                 </tr>
               </tbody>
@@ -560,26 +475,16 @@
           </div>
         </div>
       </div>
-    </UCard>
+    </DashboardModuleSection>
 
     <DashboardModuleAccessSection :guild-id="guildId" module-name="ai" />
 
-    <!-- Save Button -->
-    <div class="flex justify-end">
-      <UButton
-        size="lg"
-        icon="i-heroicons-check"
-        :loading="saving"
-        @click="saveSettings"
-      >
-        Save Settings
-      </UButton>
-    </div>
+    <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="saveSettings" @discard="discard" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 
 const route = useRoute();
 const toast = useToast();
@@ -592,6 +497,7 @@ const moduleEnabled = ref(false);
 const savingEnabled = ref(false);
 const saving = ref(false);
 const isPremium = ref(false);
+const showKey = ref(false);
 
 const DEFAULT_PERSONALITY = `You have a witty, upbeat personality and keep a conversational, friendly tone.`;
 
@@ -623,6 +529,10 @@ const settings = ref({
   contextMessageCount: 5,
   contextTTLMinutes: 15,
 });
+
+// Last loaded/saved values (JSON); drives the unsaved-changes bar and Discard.
+const baseline = ref(JSON.stringify(settings.value));
+const dirty = computed(() => JSON.stringify(settings.value) !== baseline.value);
 
 const availableModels = ref<string[]>([
   "llama-3.3-70b-versatile",
@@ -685,11 +595,11 @@ const inputRatioPct = computed(() => {
 const outputRatioPct = computed(() => 100 - inputRatioPct.value);
 
 const usageStats = computed(() => [
-  { label: "Total Calls", value: totalCalls.value.toLocaleString() },
-  { label: "Total Tokens", value: totalTokens.value.toLocaleString() },
-  { label: "Total Cost", value: `$${totalCost.value.toFixed(4)}` },
+  { label: "Total calls", value: totalCalls.value.toLocaleString() },
+  { label: "Total tokens", value: totalTokens.value.toLocaleString() },
+  { label: "Total cost", value: `$${totalCost.value.toFixed(4)}` },
   {
-    label: "Avg Cost / Call",
+    label: "Avg cost per call",
     value:
       totalCalls.value === 0
         ? "$0.0000"
@@ -737,6 +647,10 @@ const modelBreakdown = computed(() => {
 
 // ── Methods ────────────────────────────────────────────────────────
 
+// Watchers only react to the user's edits, not to the initial load (which
+// fetches the model list itself).
+let watching = false;
+
 async function loadSettings() {
   try {
     // Load module enabled state + settings via the guild-configs endpoint.
@@ -758,6 +672,9 @@ async function loadSettings() {
     );
     if (!norm || isLegacy) settings.value.systemPrompt = DEFAULT_PERSONALITY;
 
+    // Taken before the model fetch, so an implicit model swap shows as unsaved.
+    baseline.value = JSON.stringify(settings.value);
+
     // Premium flag lives on the servers row. by-guild-ids returns just
     // the public projection we need without paginating the whole list.
     try {
@@ -777,6 +694,8 @@ async function loadSettings() {
     await fetchUsage();
   } catch (err) {
     console.error("[AI Dashboard] Error loading settings:", err);
+  } finally {
+    watching = true;
   }
 }
 
@@ -793,6 +712,7 @@ async function saveSettings() {
       },
     );
 
+    baseline.value = JSON.stringify(settings.value);
     toast.add({
       title: "Saved",
       description: "AI settings updated.",
@@ -808,6 +728,10 @@ async function saveSettings() {
   } finally {
     saving.value = false;
   }
+}
+
+function discard() {
+  settings.value = JSON.parse(baseline.value);
 }
 
 async function toggleModule(enabled: boolean) {
@@ -889,25 +813,31 @@ async function fetchUsage() {
   }
 }
 
+// Picking a provider sets a sensible default model; the provider watcher below
+// then fetches that provider's model list once.
 function onProviderChange(provider: string) {
-  // Set a sensible default model for the new provider
   settings.value.aiModel = PROVIDER_DEFAULT_MODELS[provider] || "";
-  fetchModels();
 }
 
-// Auto-fetch models when a valid API key is entered
+// One fetch per provider change (the fallback list comes back even without a key).
 watch(
-  [() => settings.value.aiProvider, () => settings.value.aiApiKey],
-  ([_provider, key]) => {
-    if (key && key.length > 10) fetchModels();
+  () => settings.value.aiProvider,
+  () => {
+    if (watching) fetchModels();
   },
 );
 
-// Re-fetch on provider change (returns fallback list even without a key)
+// Fetch when a plausible API key has been typed, once typing pauses.
+let keyTimer: ReturnType<typeof setTimeout> | undefined;
 watch(
-  () => settings.value.aiProvider,
-  () => fetchModels(),
+  () => settings.value.aiApiKey,
+  (key) => {
+    clearTimeout(keyTimer);
+    if (!watching || !key || key.length <= 10) return;
+    keyTimer = setTimeout(fetchModels, 600);
+  },
 );
+onBeforeUnmount(() => clearTimeout(keyTimer));
 
 function resetSystemPrompt() {
   settings.value.systemPrompt = DEFAULT_PERSONALITY;
