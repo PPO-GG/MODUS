@@ -1,700 +1,575 @@
 <template>
-  <div class="p-6 lg:p-8 space-y-6">
-    <!-- Header -->
-    <div class="flex items-center gap-4">
-      <NuxtLink
-        :to="`/dashboard/server/${guildId}/modules`"
-        class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
+  <div class="mx-auto max-w-3xl space-y-6">
+    <DashboardModuleHeader
+      :guild-id="guildId"
+      icon="i-lucide-mic"
+      title="Recording"
+      description="Record voice channels, and manage what's been recorded."
+      :enabled="isModuleEnabled('Recording')"
+    />
+
+    <!-- ── Tabs ── -->
+    <div
+      class="inline-flex rounded-full bg-white/[0.04] p-1 ring-1 ring-inset ring-white/10"
+      role="tablist"
+      aria-label="Recording sections"
+    >
+      <button
+        v-for="tab in tabs"
+        :key="tab.value"
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === tab.value"
+        class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-teal-300"
+        :class="
+          activeTab === tab.value
+            ? 'bg-sky-200/15 text-white ring-1 ring-inset ring-sky-100/25'
+            : 'text-gray-400 hover:text-white'
+        "
+        @click="activeTab = tab.value"
       >
-        <UIcon name="i-heroicons-arrow-left" class="w-5 h-5 text-gray-400" />
-      </NuxtLink>
-      <div class="flex items-center gap-3">
-        <div
-          class="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0"
+        <UIcon :name="tab.icon" class="h-4 w-4" />
+        {{ tab.label }}
+        <span
+          v-if="tab.value === 'recordings' && !loadingRecordings"
+          class="rounded-full bg-white/[0.08] px-1.5 text-[11px] text-gray-300"
         >
-          <UIcon name="i-heroicons-microphone" class="w-5 h-5 text-red-400" />
-        </div>
-        <div>
-          <h2 class="text-xl font-bold text-white">Recording Settings</h2>
-          <p class="text-xs text-gray-500">
-            Configure voice channel recording for this server
-          </p>
-        </div>
-      </div>
-      <UBadge
-        :color="isModuleEnabled('Recording') ? 'success' : 'neutral'"
-        variant="soft"
-        class="ml-auto"
-      >
-        {{ isModuleEnabled("Recording") ? "Module Active" : "Module Disabled" }}
-      </UBadge>
+          {{ recordings.length }}
+        </span>
+      </button>
     </div>
 
-    <!-- Settings Grid -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      <!-- Recording Quality -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-4">
-          <div class="flex items-center gap-2 mb-1">
-            <div
-              class="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-heroicons-signal" class="text-red-400" />
-            </div>
-            <div>
-              <h3 class="font-semibold text-white">Recording Quality</h3>
-              <p class="text-[10px] text-gray-500">
-                Higher bitrates produce better audio but larger files
-              </p>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <button
-              v-for="option in bitrateOptions"
-              :key="option.value"
-              type="button"
-              class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-all duration-200"
-              :class="
-                recordingSettings.bitrate === option.value
-                  ? 'bg-red-500/20 border border-red-500/40 text-red-300 ring-1 ring-red-500/30'
-                  : 'bg-gray-800/50 border border-white/5 text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
-              "
-              @click="recordingSettings.bitrate = option.value"
-            >
-              <div class="flex items-center gap-3">
-                <UIcon
-                  :name="
-                    recordingSettings.bitrate === option.value
-                      ? 'i-heroicons-check-circle-solid'
-                      : 'i-heroicons-stop'
-                  "
-                  :class="
-                    recordingSettings.bitrate === option.value
-                      ? 'text-red-400'
-                      : 'text-gray-600'
-                  "
-                />
-                <div class="text-left">
-                  <div class="font-medium">{{ option.label }}</div>
-                  <div class="text-[10px] opacity-60">
-                    {{ option.description }}
-                  </div>
-                </div>
-              </div>
-              <span class="text-xs font-mono opacity-60">
-                {{ option.estimate }}
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- General Settings -->
-      <div
-        class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
-      >
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none"
-        />
-        <div class="relative space-y-5">
-          <div class="flex items-center gap-2 mb-1">
-            <div
-              class="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0"
-            >
-              <UIcon name="i-heroicons-cog-6-tooth" class="text-orange-400" />
-            </div>
-            <h3 class="font-semibold text-white">General</h3>
-          </div>
-
-          <UFormField
-            label="Max Recording Duration"
-            :hint="`Recordings stop automatically after ${formatDuration(recordingSettings.maxDuration)} (5 min – 4 hours).`"
-          >
-            <div class="flex items-center gap-3">
-              <USlider
-                v-model="recordingSettings.maxDuration"
-                :min="300"
-                :max="14400"
-                :step="300"
-                class="flex-1"
-              />
-              <span class="text-sm font-mono w-14 text-right shrink-0">
-                {{ formatDuration(recordingSettings.maxDuration) }}
-              </span>
-            </div>
-          </UFormField>
-
-          <UFormField
-            label="Announcement Mode"
-            hint="Choose how to announce when a recording starts."
-          >
-              <div class="space-y-2">
-                <button
-                  v-for="option in announceModeOptions"
-                  :key="option.value"
-                  type="button"
-                  class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200"
-                  :class="
-                    recordingSettings.announceMode === option.value
-                      ? 'bg-orange-500/20 border border-orange-500/40 text-orange-300 ring-1 ring-orange-500/30'
-                      : 'bg-gray-800/50 border border-white/5 text-gray-400 hover:bg-gray-700/50 hover:text-gray-300'
-                  "
-                  @click="recordingSettings.announceMode = option.value"
-                >
-                  <UIcon
-                    :name="
-                      recordingSettings.announceMode === option.value
-                        ? 'i-heroicons-check-circle-solid'
-                        : 'i-heroicons-stop'
-                    "
-                    :class="
-                      recordingSettings.announceMode === option.value
-                        ? 'text-orange-400'
-                        : 'text-gray-600'
-                    "
-                  />
-                  <div class="text-left">
-                    <div class="font-medium">{{ option.label }}</div>
-                    <div class="text-[10px] opacity-60">
-                      {{ option.description }}
-                    </div>
-                  </div>
-                </button>
-              </div>
-          </UFormField>
-
-            <!-- Custom announcement text (visible when TTS mode is selected) -->
-            <div
-              v-if="
-                recordingSettings.announceMode === 'tts' ||
-                recordingSettings.announceMode === 'textTts'
-              "
-              class="space-y-3 pl-1 border-l-2 border-orange-500/30 ml-2"
-            >
-              <div class="pl-3">
-                <label class="block text-sm font-medium mb-2 text-orange-300">
-                  Custom announcement text
-                </label>
-                <UTextarea
-                  v-model="recordingSettings.announceText"
-                  :rows="2"
-                  :maxlength="500"
-                  placeholder="Recording has started in {channel}. All audio is being captured."
-                  class="w-full"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                  Leave blank to use the default. Use
-                  <code class="text-orange-300">{channel}</code>
-                  as a placeholder for the voice channel name.
-                </p>
-              </div>
-
-              <div
-                v-if="recordingSettings.announceMode === 'tts'"
-                class="pl-3"
-              >
-                <label class="block text-sm font-medium mb-2 text-orange-300">
-                  Voice
-                </label>
-                <div class="flex items-center gap-2">
-                  <USelectMenu
-                    v-model="announceVoiceModel"
-                    :items="voiceOptions"
-                    value-key="value"
-                    :search-input="false"
-                    placeholder="Select a Kokoro voice..."
-                    class="flex-1"
-                  />
-                  <UButton
-                    color="neutral"
-                    variant="soft"
-                    :icon="
-                      previewingVoice
-                        ? 'i-heroicons-stop'
-                        : 'i-heroicons-play'
-                    "
-                    :loading="loadingVoicePreview"
-                    :disabled="loadingVoicePreview"
-                    @click="toggleVoicePreview"
-                  >
-                    {{ previewingVoice ? "Stop" : "Preview" }}
-                  </UButton>
-                </div>
-                <p class="text-xs text-gray-500 mt-1">
-                  Default falls back to the
-                  <code class="text-orange-300">KOKORO_VOICE</code>
-                  environment setting on the bot.
-                </p>
-              </div>
-            </div>
-
-            <!-- Sound Clip Upload (only visible when soundClip mode selected) -->
-            <div
-              v-if="recordingSettings.announceMode === 'soundClip'"
-              class="space-y-3 pl-1 border-l-2 border-orange-500/30 ml-2"
-            >
-              <div class="pl-3">
-                <label class="block text-sm font-medium mb-2 text-orange-300"
-                  >Sound Clip</label
-                >
-
-                <!-- Current file info -->
-                <div
-                  v-if="recordingSettings.announceSoundFileId"
-                  class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/60 border border-white/5 mb-3"
-                >
-                  <UIcon
-                    name="i-heroicons-musical-note"
-                    class="text-orange-400 text-lg"
-                  />
-                  <div class="flex-1 min-w-0">
-                    <div class="text-sm text-white truncate">
-                      Announcement clip uploaded
-                    </div>
-                    <div class="text-[10px] text-gray-500">
-                      {{ recordingSettings.announceSoundFileId }}
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <UButton
-                      color="neutral"
-                      variant="ghost"
-                      size="xs"
-                      icon="i-heroicons-play"
-                      @click="previewAnnounceClip"
-                    />
-                    <UButton
-                      color="error"
-                      variant="ghost"
-                      size="xs"
-                      icon="i-heroicons-trash"
-                      :loading="deletingAnnounce"
-                      @click="deleteAnnounceClip"
-                    />
-                  </div>
-                </div>
-
-                <!-- Upload area -->
-                <div
-                  class="relative rounded-lg border-2 border-dashed transition-all duration-200 p-4 text-center"
-                  :class="
-                    isDraggingClip
-                      ? 'border-orange-400 bg-orange-500/10'
-                      : 'border-white/10 hover:border-white/20 bg-gray-800/30'
-                  "
-                  @dragover.prevent="isDraggingClip = true"
-                  @dragleave="isDraggingClip = false"
-                  @drop.prevent="handleClipDrop"
-                >
-                  <input
-                    ref="clipFileInput"
-                    type="file"
-                    accept="audio/*,.ogg,.mp3,.wav,.m4a,.flac,.aac"
-                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    @change="handleClipSelect"
-                  />
-                  <div
-                    v-if="uploadingAnnounce"
-                    class="flex flex-col items-center gap-2"
-                  >
-                    <UIcon
-                      name="i-heroicons-arrow-path"
-                      class="animate-spin text-orange-400 text-xl"
-                    />
-                    <span class="text-xs text-gray-400">Uploading...</span>
-                  </div>
-                  <div v-else class="flex flex-col items-center gap-2">
-                    <UIcon
-                      name="i-heroicons-arrow-up-tray"
-                      class="text-gray-500 text-xl"
-                    />
-                    <span class="text-xs text-gray-400">
-                      {{
-                        recordingSettings.announceSoundFileId
-                          ? "Replace"
-                          : "Upload"
-                      }}
-                      sound clip
-                    </span>
-                    <span class="text-[10px] text-gray-600">
-                      Max 10 seconds, 5 MB • mp3, ogg, wav, m4a, flac
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Permissions Section (full width) -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl p-5"
+    <!-- ══════════════ Recordings ══════════════ -->
+    <DashboardModuleSection
+      v-if="activeTab === 'recordings'"
+      title="Recordings"
+      :description="
+        loadingRecordings
+          ? 'Loading recordings…'
+          : `${recordings.length} recording${recordings.length !== 1 ? 's' : ''}.`
+      "
     >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-secondary-500/5 to-transparent pointer-events-none"
-      />
-      <div class="relative space-y-5">
-        <div class="flex items-center gap-2 mb-1">
-          <div
-            class="w-7 h-7 rounded-lg bg-secondary-500/10 border border-secondary-500/20 flex items-center justify-center shrink-0"
-          >
-            <UIcon name="i-heroicons-shield-check" class="text-secondary-400" />
-          </div>
-          <div>
-            <h3 class="font-semibold text-white">Recording Permissions</h3>
-            <p class="text-[10px] text-gray-500">
-              Only server admins and users/roles listed here can start
-              recordings
-            </p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
-          <UFormField
-            label="Allowed Roles"
-            hint="Roles that can start recordings in addition to server admins."
-          >
-            <div
-              v-if="state.rolesLoading"
-              class="flex items-center gap-2 py-2 text-gray-400"
-            >
-              <UIcon
-                name="i-heroicons-arrow-path"
-                class="animate-spin text-secondary-400"
-              />
-              <span class="text-sm">Loading roles...</span>
-            </div>
-            <template v-else>
-              <USelectMenu
-                v-if="roleOptions.length > 0"
-                v-model="recordingSettings.allowedRoleIds"
-                :items="roleOptions"
-                value-key="value"
-                multiple
-                placeholder="Select roles that can record..."
-              />
-              <div v-else class="text-xs text-gray-500 italic py-2">
-                No roles available. Make sure the bot is in this server.
-              </div>
-            </template>
-            <div
-              v-if="recordingSettings.allowedRoleIds.length > 0"
-              class="flex flex-wrap gap-1.5 mt-2"
-            >
-              <UBadge
-                v-for="roleId in recordingSettings.allowedRoleIds"
-                :key="roleId"
-                color="primary"
-                variant="soft"
-                size="xs"
-              >
-                {{ getRoleName(roleId) }}
-                <button
-                  class="ml-1 hover:text-red-400 transition-colors"
-                  @click="removeRole(roleId)"
-                >
-                  ×
-                </button>
-              </UBadge>
-            </div>
-          </UFormField>
-
-          <UFormField
-            label="Allowed User IDs"
-            hint="Right-click a Discord user → Copy User ID to get their ID."
-          >
-            <div class="flex gap-2">
-              <UInput
-                v-model="newUserId"
-                placeholder="Enter a Discord user ID"
-                class="flex-1"
-                icon="i-heroicons-user"
-                @keyup.enter="addUserId"
-              />
-              <UButton
-                color="primary"
-                variant="soft"
-                icon="i-heroicons-plus"
-                :disabled="!newUserId.trim()"
-                @click="addUserId"
-              />
-            </div>
-            <div
-              v-if="recordingSettings.allowedUserIds.length > 0"
-              class="flex flex-wrap gap-1.5 mt-2"
-            >
-              <UBadge
-                v-for="userId in recordingSettings.allowedUserIds"
-                :key="userId"
-                color="info"
-                variant="soft"
-                size="xs"
-              >
-                {{ userId }}
-                <button
-                  class="ml-1 hover:text-red-400 transition-colors"
-                  @click="removeUser(userId)"
-                >
-                  ×
-                </button>
-              </UBadge>
-            </div>
-          </UFormField>
-        </div>
-      </div>
-    </div>
-
-    <DashboardModuleAccessSection :guild-id="guildId" module-name="recording" />
-
-    <!-- Save Button -->
-    <div class="flex justify-end">
-      <UButton
-        color="primary"
-        size="lg"
-        icon="i-heroicons-check"
-        :loading="saving"
-        @click="save"
-        class="min-w-[200px]"
-      >
-        Save Recording Settings
-      </UButton>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- Recordings Table                                                   -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <div
-      class="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-br from-red-500/3 to-transparent pointer-events-none"
-      />
-
-      <!-- Table Header Bar -->
-      <div
-        class="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-4 border-b border-white/5"
-      >
-        <div class="flex items-center gap-3">
-          <div
-            class="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0"
-          >
-            <UIcon
-              name="i-heroicons-folder-open"
-              class="w-5 h-5 text-red-400"
-            />
-          </div>
-          <div>
-            <h3 class="font-semibold text-white">Recordings</h3>
-            <p class="text-[10px] text-gray-500">
-              {{ recordings.length }} recording{{
-                recordings.length !== 1 ? "s" : ""
-              }}
-              found
-            </p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <UInput
-            v-model="searchQuery"
-            placeholder="Search recordings..."
-            icon="i-heroicons-magnifying-glass"
-            size="sm"
-            class="flex-1 sm:w-56"
-          />
-          <UButton
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            icon="i-heroicons-arrow-path"
-            :loading="loadingRecordings"
-            @click="fetchRecordings"
-          />
-        </div>
-      </div>
-
-      <!-- Loading -->
-      <div
-        v-if="loadingRecordings"
-        class="relative flex items-center justify-center py-16 text-gray-400"
-      >
-        <UIcon
-          name="i-heroicons-arrow-path"
-          class="animate-spin text-2xl text-red-400 mr-3"
-        />
-        <span class="text-sm">Loading recordings…</span>
-      </div>
-
-      <!-- Empty State -->
-      <div
-        v-else-if="filteredRecordings.length === 0"
-        class="relative text-center py-16"
-      >
-        <UIcon
-          name="i-heroicons-microphone"
-          class="text-5xl text-gray-600 mb-3"
-        />
-        <p class="text-gray-400">
-          {{
-            recordings.length === 0
-              ? "No recordings yet"
-              : "No recordings matching your search"
-          }}
-        </p>
-        <p v-if="recordings.length === 0" class="text-xs text-gray-600 mt-1">
-          Use <code class="text-red-400">/record start</code> in a voice channel
-        </p>
-      </div>
-
-      <!-- Table -->
-      <div v-else class="relative">
-        <UTable
-          :data="paginatedRecordings"
-          :columns="tableColumns"
+      <template #actions>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          icon="i-lucide-rotate-cw"
           :loading="loadingRecordings"
-          :ui="{
-            root: 'w-full',
-            th: 'text-gray-400 text-xs font-medium uppercase tracking-wider',
-            td: 'text-sm',
-          }"
+          aria-label="Refresh recordings"
+          @click="fetchRecordings"
+        />
+      </template>
+
+      <div class="space-y-4">
+        <UInput
+          v-model="searchQuery"
+          placeholder="Search by title or channel…"
+          icon="i-lucide-search"
+          class="w-full"
+          aria-label="Search recordings"
+        />
+
+        <div v-if="loadingRecordings" class="space-y-2" aria-busy="true">
+          <div v-for="i in 3" :key="i" class="h-16 animate-pulse rounded-lg bg-white/[0.04]" />
+        </div>
+
+        <div
+          v-else-if="filteredRecordings.length === 0"
+          class="flex flex-col items-center gap-3 rounded-lg border border-dashed border-white/10 px-6 py-10 text-center"
         >
-          <template #expanded="{ row }">
-            <div class="px-4 py-4 bg-gray-950/50">
-              <!-- Loading tracks -->
+          <span
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-200/10 ring-1 ring-inset ring-sky-100/20"
+          >
+            <UIcon name="i-lucide-mic" class="h-5 w-5 text-sky-200" />
+          </span>
+          <div>
+            <h4 class="text-sm font-semibold text-white">
+              {{ recordings.length === 0 ? "No recordings yet" : "Nothing matches your search" }}
+            </h4>
+            <p v-if="recordings.length === 0" class="mt-1 text-[13px] text-gray-400">
+              Run <code class="font-mono">/record start</code> in a voice channel to make one.
+            </p>
+          </div>
+        </div>
+
+        <ul v-else class="-mx-2 divide-y divide-white/[0.06]">
+          <li v-for="rec in paginatedRecordings" :key="rec.$id">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 py-3">
+              <span
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
+              >
+                <UIcon name="i-lucide-audio-lines" class="h-4 w-4" />
+              </span>
+
+              <div class="min-w-0 flex-1 basis-48">
+                <p class="truncate text-sm font-medium text-white">{{ rec.title || rec.channel_name }}</p>
+                <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-gray-400">
+                  <span>{{ formatDateTime(rec.started_at) }}</span>
+                  <span v-if="rec.duration" class="font-mono">{{ formatDuration(rec.duration) }}</span>
+                  <span v-if="rec.bitrate" class="rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px]">
+                    {{ rec.bitrate }} kbps
+                  </span>
+                  <span
+                    v-if="rec.participants"
+                    class="inline-flex items-center gap-1"
+                    :title="`${getParticipantCount(rec.participants)} participants`"
+                  >
+                    <UIcon name="i-lucide-users" class="h-3.5 w-3.5" />
+                    {{ getParticipantCount(rec.participants) }}
+                  </span>
+                </p>
+              </div>
+
+              <div class="ml-auto flex items-center gap-1">
+                <UButton
+                  color="neutral"
+                  variant="soft"
+                  size="sm"
+                  :icon="expandedId === rec.$id ? 'i-lucide-chevron-up' : 'i-lucide-play'"
+                  @click="toggleExpand(rec)"
+                >
+                  {{ expandedId === rec.$id ? "Hide" : rec.mixed_file_id ? "Play" : "Tracks" }}
+                </UButton>
+                <UButton
+                  color="error"
+                  variant="ghost"
+                  size="sm"
+                  icon="i-lucide-trash-2"
+                  :loading="deletingId === rec.$id"
+                  :aria-label="`Delete ${rec.title || rec.channel_name}`"
+                  @click="confirmDelete(rec)"
+                />
+              </div>
+            </div>
+
+            <div v-if="expandedId === rec.$id" class="rounded-lg bg-black/25 p-3 mb-2 mx-1">
               <div
                 v-if="loadingTracks"
-                class="flex items-center gap-2 py-6 justify-center text-gray-500 text-sm"
+                class="flex items-center justify-center gap-2 py-6 text-sm text-gray-400"
               >
-                <UIcon
-                  name="i-heroicons-arrow-path"
-                  class="animate-spin text-red-400"
-                />
-                Loading tracks...
+                <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+                Loading tracks…
               </div>
-
-              <!-- No tracks -->
-              <div
-                v-else-if="
-                  expandedTracks.length === 0 && !row.original.mixed_file_id
-                "
-                class="text-xs text-gray-500 italic py-6 text-center"
+              <p
+                v-else-if="expandedTracks.length === 0 && !rec.mixed_file_id"
+                class="py-6 text-center text-[13px] text-gray-400"
               >
                 No audio tracks found for this recording.
-              </div>
-
-              <!-- Multi-track Player -->
+              </p>
               <RecordingMultiTrackPlayer
                 v-else-if="expandedTracks.length > 0"
                 :tracks="expandedTracks"
-                :mixed-file-id="row.original.mixed_file_id"
-                :recording-title="
-                  row.original.title || row.original.channel_name
-                "
-                :recording-duration="row.original.duration || 0"
+                :mixed-file-id="rec.mixed_file_id"
+                :recording-title="rec.title || rec.channel_name"
+                :recording-duration="rec.duration || 0"
               />
-
-              <!-- Only mixed, no individual tracks -->
-              <div v-else-if="row.original.mixed_file_id" class="space-y-2">
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    name="i-heroicons-speaker-wave"
-                    class="text-red-400 text-xs"
-                  />
-                  <span class="text-xs font-medium text-gray-300"
-                    >Mixed Audio</span
-                  >
-                </div>
+              <div v-else-if="rec.mixed_file_id" class="space-y-2">
+                <p class="flex items-center gap-2 text-[13px] font-medium text-gray-300">
+                  <UIcon name="i-lucide-volume-2" class="h-4 w-4 text-sky-200" />
+                  Mixed audio
+                </p>
                 <audio
                   controls
-                  :src="getStreamUrl(row.original.mixed_file_id)"
-                  class="w-full h-8"
+                  :src="getStreamUrl(rec.mixed_file_id)"
+                  class="h-8 w-full"
                   preload="none"
                 />
               </div>
             </div>
-          </template>
-        </UTable>
+          </li>
+        </ul>
 
-        <!-- Pagination -->
         <div
           v-if="totalPages > 1"
-          class="flex items-center justify-between px-5 py-3 border-t border-white/5"
+          class="flex items-center justify-between border-t border-white/[0.06] pt-3"
         >
-          <span class="text-xs text-gray-500">
-            Showing {{ (currentPage - 1) * perPage + 1 }}–{{
-              Math.min(currentPage * perPage, filteredRecordings.length)
-            }}
-            of {{ filteredRecordings.length }}
+          <span class="text-[13px] text-gray-400">
+            {{ (currentPage - 1) * perPage + 1 }} to
+            {{ Math.min(currentPage * perPage, filteredRecordings.length) }} of
+            {{ filteredRecordings.length }}
           </span>
           <div class="flex gap-1">
             <UButton
-              icon="i-heroicons-chevron-left"
-              size="xs"
+              icon="i-lucide-chevron-left"
+              size="sm"
               variant="ghost"
+              color="neutral"
+              aria-label="Previous page"
               :disabled="currentPage <= 1"
               @click="currentPage--"
             />
             <UButton
-              icon="i-heroicons-chevron-right"
-              size="xs"
+              icon="i-lucide-chevron-right"
+              size="sm"
               variant="ghost"
+              color="neutral"
+              aria-label="Next page"
               :disabled="currentPage >= totalPages"
               @click="currentPage++"
             />
           </div>
         </div>
       </div>
-    </div>
+    </DashboardModuleSection>
 
-    <!-- Delete Confirmation Modal -->
-    <UModal v-model:open="showDeleteConfirm">
-      <template #content>
-        <div class="p-6 space-y-4">
-          <div class="flex items-center gap-3">
+    <!-- ══════════════ Settings ══════════════ -->
+    <template v-else>
+      <!-- Quality -->
+      <DashboardModuleSection
+        title="Quality"
+        description="Higher bitrates sound better but make larger files."
+      >
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Recording quality">
+          <label v-for="option in bitrateOptions" :key="option.value" class="block cursor-pointer">
+            <input
+              v-model="recordingSettings.bitrate"
+              type="radio"
+              name="recording-bitrate"
+              :value="option.value"
+              class="peer sr-only"
+            />
             <div
-              class="w-12 h-12 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center shrink-0"
+              class="flex h-full flex-col gap-1 rounded-xl p-3.5 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
             >
-              <UIcon
-                name="i-heroicons-exclamation-triangle"
-                class="w-6 h-6 text-red-400"
-              />
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-sm font-semibold text-white">{{ option.label }}</span>
+                <UIcon
+                  v-if="recordingSettings.bitrate === option.value"
+                  name="i-lucide-circle-check"
+                  class="h-5 w-5 text-teal-300"
+                />
+              </div>
+              <span class="text-[13px] text-gray-400">{{ option.description }}</span>
+              <span class="mt-auto pt-1 font-mono text-xs text-gray-500">{{ option.estimate }}</span>
             </div>
+          </label>
+        </div>
+      </DashboardModuleSection>
+
+      <!-- Limits -->
+      <DashboardModuleSection title="Limits" description="When a recording stops and how many people it covers.">
+        <div class="space-y-5">
+          <div>
+            <div class="mb-2 flex items-baseline justify-between gap-3">
+              <label class="text-sm font-medium text-white" for="rec-duration">Max recording length</label>
+              <span class="text-sm text-sky-200">{{ formatDuration(recordingSettings.maxDuration) }}</span>
+            </div>
+            <USlider
+              id="rec-duration"
+              v-model="recordingSettings.maxDuration"
+              :min="300"
+              :max="14400"
+              :step="300"
+            />
+            <p class="mt-2 text-[13px] text-gray-400">
+              Recordings stop automatically after this long (5 minutes to 4 hours).
+            </p>
+          </div>
+
+          <div class="border-t border-white/[0.06] pt-5">
+            <div class="mb-2 flex items-baseline justify-between gap-3">
+              <label class="text-sm font-medium text-white" for="rec-max-users">
+                Max users recorded at once
+              </label>
+              <span class="text-sm text-sky-200">{{ recordingSettings.maxConcurrentUsers }} users</span>
+            </div>
+            <UInput
+              id="rec-max-users"
+              v-model.number="recordingSettings.maxConcurrentUsers"
+              type="number"
+              :min="1"
+              :max="99"
+              icon="i-lucide-users"
+              class="w-full sm:w-48"
+            />
+            <p class="mt-2 text-[13px] text-gray-400">
+              Each recorded member runs one audio process. Members beyond this limit aren't
+              recorded, which protects smaller hosts.
+            </p>
+          </div>
+        </div>
+      </DashboardModuleSection>
+
+      <!-- Announcement -->
+      <DashboardModuleSection
+        title="Announcement"
+        description="How members are told a recording has started."
+      >
+        <div class="space-y-5">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Announcement mode">
+            <label v-for="option in announceModeOptions" :key="option.value" class="block cursor-pointer">
+              <input
+                v-model="recordingSettings.announceMode"
+                type="radio"
+                name="recording-announce"
+                :value="option.value"
+                class="peer sr-only"
+              />
+              <div
+                class="flex h-full items-start gap-3 rounded-xl p-3.5 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/[0.04] peer-checked:bg-sky-200/[0.06] peer-checked:ring-2 peer-checked:ring-teal-300/60 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-300"
+              >
+                <span
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
+                >
+                  <UIcon :name="option.icon" class="h-4 w-4" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-sm font-semibold text-white">{{ option.label }}</span>
+                  <span class="block text-[13px] leading-relaxed text-gray-400">{{ option.description }}</span>
+                </span>
+                <UIcon
+                  v-if="recordingSettings.announceMode === option.value"
+                  name="i-lucide-circle-check"
+                  class="h-5 w-5 shrink-0 text-teal-300"
+                />
+              </div>
+            </label>
+          </div>
+
+          <!-- Spoken / posted text -->
+          <div
+            v-if="recordingSettings.announceMode === 'tts' || recordingSettings.announceMode === 'textTts'"
+            class="space-y-5 border-t border-white/[0.06] pt-5"
+          >
             <div>
-              <h3 class="text-lg font-bold text-white">Delete Recording</h3>
-              <p class="text-sm text-gray-400">This action cannot be undone</p>
+              <UFormField label="Announcement text" hint="Optional" class="w-full">
+                <UTextarea
+                  v-model="recordingSettings.announceText"
+                  :rows="2"
+                  :maxlength="500"
+                  :placeholder="DEFAULT_ANNOUNCE_TEXT"
+                  autoresize
+                  class="w-full"
+                />
+              </UFormField>
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <span class="text-[13px] text-gray-400">Insert:</span>
+                <button
+                  type="button"
+                  class="rounded-md bg-white/5 px-2 py-0.5 font-mono text-[12px] text-sky-200 ring-1 ring-inset ring-white/10 transition-colors hover:bg-sky-200/10 hover:ring-sky-200/30 focus-visible:outline-2 focus-visible:outline-teal-300"
+                  @click="insertChannelTag"
+                >
+                  {channel}
+                </button>
+                <span class="text-[13px] text-gray-400">
+                  is replaced with the voice channel's name. Leave blank for the default.
+                </span>
+              </div>
+              <p class="mt-3 flex items-start gap-2 rounded-lg bg-sky-200/[0.06] px-3 py-2 text-[13px] text-sky-200">
+                <UIcon name="i-lucide-volume-2" class="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  {{ recordingSettings.announceMode === "tts" ? "Spoken:" : "Posted as a text-to-speech message:" }}
+                  <strong class="font-semibold">“{{ announcePreview }}”</strong>
+                </span>
+              </p>
+            </div>
+
+            <div v-if="recordingSettings.announceMode === 'tts'">
+              <span class="mb-2 block text-sm font-medium text-white">Voice</span>
+              <div class="flex items-center gap-2">
+                <USelectMenu
+                  v-model="announceVoiceModel"
+                  :items="voiceOptions"
+                  value-key="value"
+                  :search-input="false"
+                  placeholder="Select a Kokoro voice…"
+                  icon="i-lucide-mic"
+                  class="min-w-0 flex-1"
+                />
+                <UButton
+                  color="neutral"
+                  variant="soft"
+                  :icon="previewingVoice ? 'i-lucide-square' : 'i-lucide-play'"
+                  :loading="loadingVoicePreview"
+                  :disabled="loadingVoicePreview"
+                  @click="toggleVoicePreview"
+                >
+                  {{ previewingVoice ? "Stop" : "Preview" }}
+                </UButton>
+              </div>
+              <p class="mt-2 text-[13px] text-gray-400">
+                Default uses the <code class="font-mono">KOKORO_VOICE</code> setting on the bot.
+              </p>
             </div>
           </div>
 
-          <p class="text-gray-300">
-            Are you sure you want to delete
-            <strong>{{
-              recordingToDelete?.title || recordingToDelete?.channel_name
-            }}</strong
-            >? All audio tracks will be permanently deleted.
-          </p>
+          <!-- Sound clip -->
+          <div v-if="recordingSettings.announceMode === 'soundClip'" class="space-y-3 border-t border-white/[0.06] pt-5">
+            <span class="block text-sm font-medium text-white">Sound clip</span>
 
-          <div class="flex justify-end gap-3 pt-2">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              @click="showDeleteConfirm = false"
+            <div
+              v-if="recordingSettings.announceSoundFileId"
+              class="flex items-center gap-3 rounded-lg bg-white/[0.03] p-3 ring-1 ring-inset ring-white/10"
             >
-              Cancel
-            </UButton>
-            <UButton
-              color="error"
-              @click="handleDelete"
-              :loading="deletingId !== null"
-              icon="i-heroicons-trash"
+              <span
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-200/10 text-sky-200"
+              >
+                <UIcon name="i-lucide-music" class="h-4 w-4" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm text-white">Announcement clip uploaded</p>
+                <p class="truncate font-mono text-xs text-gray-500">{{ recordingSettings.announceSoundFileId }}</p>
+              </div>
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                icon="i-lucide-play"
+                aria-label="Play clip"
+                @click="previewAnnounceClip"
+              />
+              <UButton
+                color="error"
+                variant="ghost"
+                size="sm"
+                icon="i-lucide-trash-2"
+                :loading="deletingAnnounce"
+                aria-label="Delete clip"
+                @click="deleteAnnounceClip"
+              />
+            </div>
+
+            <div
+              class="relative rounded-lg border-2 border-dashed p-5 text-center transition-colors"
+              :class="
+                isDraggingClip
+                  ? 'border-teal-300 bg-teal-300/[0.06]'
+                  : 'border-white/10 bg-white/[0.02] hover:border-white/20'
+              "
+              @dragover.prevent="isDraggingClip = true"
+              @dragleave="isDraggingClip = false"
+              @drop.prevent="handleClipDrop"
             >
-              Delete Recording
+              <input
+                ref="clipFileInput"
+                type="file"
+                accept="audio/*,.ogg,.mp3,.wav,.m4a,.flac,.aac"
+                class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                aria-label="Upload a sound clip"
+                @change="handleClipSelect"
+              />
+              <div v-if="uploadingAnnounce" class="flex flex-col items-center gap-2">
+                <UIcon name="i-lucide-loader-circle" class="h-5 w-5 animate-spin text-sky-200" />
+                <span class="text-sm text-gray-300">Uploading…</span>
+              </div>
+              <div v-else class="flex flex-col items-center gap-1.5">
+                <UIcon name="i-lucide-upload" class="h-5 w-5 text-gray-400" />
+                <span class="text-sm text-gray-200">
+                  {{ recordingSettings.announceSoundFileId ? "Replace" : "Upload" }} sound clip
+                </span>
+                <span class="text-xs text-gray-500">Max 10 seconds, 5 MB. mp3, ogg, wav, m4a or flac.</span>
+              </div>
+            </div>
+            <p class="text-[13px] text-gray-400">
+              Uploading or deleting a clip takes effect straight away and doesn't wait for Save.
+            </p>
+          </div>
+        </div>
+      </DashboardModuleSection>
+
+      <!-- Permissions -->
+      <DashboardModuleSection
+        title="Permissions"
+        description="Server admins can always record. Add roles or members who can start recordings too."
+      >
+        <div class="space-y-5">
+          <UFormField label="Allowed roles" class="w-full">
+            <div v-if="state.rolesLoading" class="flex items-center gap-2 py-2 text-gray-400">
+              <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
+              <span class="text-sm">Loading roles…</span>
+            </div>
+            <USelectMenu
+              v-else-if="roleOptions.length > 0"
+              v-model="recordingSettings.allowedRoleIds"
+              :items="roleOptions"
+              value-key="value"
+              multiple
+              searchable
+              placeholder="No extra roles"
+              icon="i-lucide-shield-check"
+              class="w-full"
+            />
+            <p v-else class="py-2 text-sm italic text-gray-500">
+              No roles available. Make sure the bot is in this server.
+            </p>
+          </UFormField>
+
+          <div>
+            <UFormField
+              label="Allowed member IDs"
+              description="In Discord, right-click a member and choose Copy User ID."
+              class="w-full"
+            >
+              <div class="flex gap-2">
+                <UInput
+                  v-model="newUserId"
+                  placeholder="Enter a Discord user ID"
+                  icon="i-lucide-user"
+                  class="min-w-0 flex-1"
+                  @keyup.enter="addUserId"
+                />
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  icon="i-lucide-plus"
+                  :disabled="!newUserId.trim()"
+                  @click="addUserId"
+                >
+                  Add
+                </UButton>
+              </div>
+            </UFormField>
+            <div v-if="recordingSettings.allowedUserIds.length > 0" class="mt-3 flex flex-wrap gap-2">
+              <span
+                v-for="userId in recordingSettings.allowedUserIds"
+                :key="userId"
+                class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] py-1 pl-3 pr-1.5 font-mono text-xs text-gray-200 ring-1 ring-inset ring-white/10"
+              >
+                {{ userId }}
+                <button
+                  type="button"
+                  class="flex h-5 w-5 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/10 hover:text-red-300 focus-visible:outline-2 focus-visible:outline-teal-300"
+                  :aria-label="`Remove ${userId}`"
+                  @click="removeUser(userId)"
+                >
+                  <UIcon name="i-lucide-x" class="h-3 w-3" />
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+      </DashboardModuleSection>
+
+      <DashboardModuleAccessSection :guild-id="guildId" module-name="recording" />
+
+      <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
+    </template>
+
+    <!-- ── Delete confirmation ── -->
+    <UModal v-model:open="showDeleteConfirm">
+      <template #content>
+        <div class="space-y-4 p-6">
+          <div class="flex items-center gap-3">
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 ring-1 ring-inset ring-red-400/30"
+            >
+              <UIcon name="i-lucide-triangle-alert" class="h-5 w-5 text-red-300" />
+            </span>
+            <div>
+              <h3 class="text-base font-semibold text-white">Delete recording</h3>
+              <p class="text-[13px] text-gray-400">This can't be undone.</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-300">
+            Delete
+            <strong class="text-white">{{ recordingToDelete?.title || recordingToDelete?.channel_name }}</strong>?
+            All of its audio tracks are permanently deleted.
+          </p>
+          <div class="flex justify-end gap-2 pt-1">
+            <UButton color="neutral" variant="ghost" @click="showDeleteConfirm = false">Cancel</UButton>
+            <UButton color="error" icon="i-lucide-trash-2" :loading="deletingId !== null" @click="handleDelete">
+              Delete recording
             </UButton>
           </div>
         </div>
@@ -704,8 +579,7 @@
 </template>
 
 <script setup lang="ts">
-import { h, ref, computed, onMounted, resolveComponent } from "vue";
-import type { TableColumn } from "@nuxt/ui";
+import { ref, computed, watch, onMounted } from "vue";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
@@ -717,22 +591,65 @@ const {
   loadRoles,
   roleOptions,
 } = useServerSettings(guildId);
+const toast = useToast();
+
+const tabs = [
+  { value: "recordings", label: "Recordings", icon: "i-lucide-audio-lines" },
+  { value: "settings", label: "Settings", icon: "i-lucide-sliders-horizontal" },
+] as const;
+const activeTab = ref<"recordings" | "settings">("recordings");
 
 const saving = ref(false);
 const newUserId = ref("");
 
 // ── Settings ──
 
-const recordingSettings = ref({
+interface RecordingForm {
+  maxDuration: number;
+  bitrate: number;
+  maxConcurrentUsers: number;
+  announceMode: "none" | "tts" | "textTts" | "soundClip";
+  announceText: string;
+  announceVoice: string;
+  announceSoundFileId: string;
+  allowedRoleIds: string[];
+  allowedUserIds: string[];
+}
+
+const defaults = (): RecordingForm => ({
   maxDuration: 14400,
   bitrate: 64,
-  announceMode: "tts" as "none" | "tts" | "textTts" | "soundClip",
+  maxConcurrentUsers: 25,
+  announceMode: "tts",
   announceText: "",
   announceVoice: "",
   announceSoundFileId: "",
-  allowedRoleIds: [] as string[],
-  allowedUserIds: [] as string[],
+  allowedRoleIds: [],
+  allowedUserIds: [],
 });
+
+const recordingSettings = ref<RecordingForm>(defaults());
+
+// Last loaded/saved values (JSON); drives the unsaved-changes bar and Discard.
+const baseline = ref(JSON.stringify(recordingSettings.value));
+const dirty = computed(() => JSON.stringify(recordingSettings.value) !== baseline.value);
+
+// The bot's own default; the placeholder and the preview use it when blank.
+const DEFAULT_ANNOUNCE_TEXT = "Recording has started in {channel}. All audio is being captured.";
+
+const announcePreview = computed(() =>
+  (recordingSettings.value.announceText.trim() || DEFAULT_ANNOUNCE_TEXT).replace(
+    /\{channel\}/g,
+    "General voice",
+  ),
+);
+
+const insertChannelTag = () => {
+  const current = recordingSettings.value.announceText;
+  if (!current.includes("{channel}")) {
+    recordingSettings.value.announceText = `${current}${current && !current.endsWith(" ") ? " " : ""}{channel}`;
+  }
+};
 
 const VOICE_DEFAULT_SENTINEL = "__default__";
 const voiceOptions = [
@@ -748,7 +665,6 @@ const announceVoiceModel = computed({
   },
 });
 
-const toast = useToast();
 const loadingVoicePreview = ref(false);
 const previewingVoice = ref(false);
 let previewAudio: HTMLAudioElement | null = null;
@@ -803,24 +719,26 @@ const announceModeOptions = [
   {
     value: "none" as const,
     label: "None",
-    description: "Recording starts silently",
+    description: "Recording starts silently.",
+    icon: "i-lucide-volume-2",
   },
   {
     value: "tts" as const,
     label: "Voice TTS",
-    description:
-      "Bot speaks the announcement in the voice channel via Kokoro",
+    description: "The bot speaks the announcement in the voice channel.",
+    icon: "i-lucide-megaphone",
   },
   {
     value: "textTts" as const,
     label: "Text TTS (legacy)",
-    description:
-      "Send a text message with Discord's TTS flag (client reads it aloud)",
+    description: "Posts a message with Discord's TTS flag, which the client reads aloud.",
+    icon: "i-lucide-message-square",
   },
   {
     value: "soundClip" as const,
-    label: "Sound Clip",
-    description: "Play a custom audio file into the voice channel",
+    label: "Sound clip",
+    description: "Plays a custom audio file into the voice channel.",
+    icon: "i-lucide-music",
   },
 ];
 
@@ -834,26 +752,26 @@ const clipFileInput = ref<HTMLInputElement | null>(null);
 const bitrateOptions = [
   {
     value: 32,
-    label: "Low (Voice)",
-    description: "Phone-call quality, smallest files",
+    label: "Low (voice)",
+    description: "Phone-call quality, smallest files.",
     estimate: "~57 MB / 4hr",
   },
   {
     value: 64,
     label: "Standard",
-    description: "Good voice quality — recommended",
+    description: "Good voice quality. Recommended.",
     estimate: "~115 MB / 4hr",
   },
   {
     value: 128,
     label: "High",
-    description: "Music-grade quality",
+    description: "Music-grade quality.",
     estimate: "~230 MB / 4hr",
   },
   {
     value: 256,
     label: "Ultra",
-    description: "Near-transparent quality",
+    description: "Near-transparent quality.",
     estimate: "~460 MB / 4hr",
   },
 ];
@@ -876,6 +794,7 @@ type Recording = {
 
 const recordings = ref<Recording[]>([]);
 const loadingRecordings = ref(true);
+const expandedId = ref<string | null>(null);
 const expandedTracks = ref<any[]>([]);
 const loadingTracks = ref(false);
 const showDeleteConfirm = ref(false);
@@ -908,6 +827,11 @@ const paginatedRecordings = computed(() =>
   ),
 );
 
+// A new search should start from the first page.
+watch(searchQuery, () => {
+  currentPage.value = 1;
+});
+
 // ── Stream URL (proxied through our server) ──
 
 function getStreamUrl(fileId: string): string {
@@ -936,12 +860,6 @@ function formatDateTime(iso: string): string {
   });
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function getParticipantCount(value: unknown): number {
   if (Array.isArray(value)) return value.length;
   if (typeof value === "string" && value.length > 0) {
@@ -955,147 +873,7 @@ function getParticipantCount(value: unknown): number {
   return 0;
 }
 
-function getRoleName(roleId: string): string {
-  const role = state.value.roles.find((r: any) => r.id === roleId);
-  return role ? `@${role.name}` : roleId;
-}
-
-// ── Table Columns ──
-
-const UBadge = resolveComponent("UBadge");
-const UButton = resolveComponent("UButton");
-
-const tableColumns: TableColumn<Recording>[] = [
-  {
-    accessorKey: "channel_name",
-    header: "Recording",
-    cell: ({ row }) => {
-      const rec = row.original;
-      const title = rec.title || rec.channel_name;
-      return h("div", { class: "space-y-0.5" }, [
-        h("div", { class: "font-medium text-white text-sm" }, title),
-        h(
-          "div",
-          { class: "text-[10px] text-gray-500" },
-          formatDateTime(rec.started_at),
-        ),
-      ]);
-    },
-  },
-  {
-    id: "duration",
-    header: "Duration",
-    cell: ({ row }) => {
-      const rec = row.original;
-      if (!rec.duration)
-        return h("span", { class: "text-gray-600 text-xs" }, "–");
-      return h(
-        "span",
-        { class: "text-xs font-mono text-gray-300" },
-        formatDuration(rec.duration),
-      );
-    },
-    meta: { class: { th: "w-24", td: "w-24" } },
-  },
-  {
-    id: "bitrate",
-    header: "Quality",
-    cell: ({ row }) => {
-      const rec = row.original;
-      if (!rec.bitrate)
-        return h("span", { class: "text-gray-600 text-xs" }, "–");
-      return h(
-        UBadge,
-        { color: "neutral", variant: "subtle", size: "xs" },
-        () => `${rec.bitrate} kbps`,
-      );
-    },
-    meta: { class: { th: "w-24", td: "w-24" } },
-  },
-  {
-    id: "participants",
-    header: "Users",
-    cell: ({ row }) => {
-      const rec = row.original;
-      if (!rec.participants)
-        return h("span", { class: "text-gray-600 text-xs" }, "–");
-      const count = getParticipantCount(rec.participants);
-      return h(
-        "div",
-        { class: "flex items-center gap-1 text-xs text-gray-400" },
-        [
-          h(resolveComponent("UIcon"), {
-            name: "i-heroicons-users",
-            class: "text-[10px]",
-          }),
-          h("span", {}, `${count}`),
-        ],
-      );
-    },
-    meta: { class: { th: "w-20", td: "w-20" } },
-  },
-  {
-    id: "playback",
-    header: "Play",
-    cell: ({ row }) => {
-      const rec = row.original;
-      if (!rec.mixed_file_id)
-        return h("span", { class: "text-gray-600 text-[10px]" }, "No audio");
-      return h(
-        UButton,
-        {
-          color: "neutral",
-          variant: "ghost",
-          size: "xs",
-          icon: row.getIsExpanded()
-            ? "i-heroicons-chevron-up"
-            : "i-heroicons-play",
-          onClick: () => toggleExpand(row),
-        },
-        () => (row.getIsExpanded() ? "Hide" : "Play"),
-      );
-    },
-    meta: { class: { th: "w-24 text-center", td: "w-24 text-center" } },
-  },
-  {
-    id: "actions",
-    header: "",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const rec = row.original;
-      return h("div", { class: "flex items-center justify-end gap-1" }, [
-        // Expand tracks (even if no mixed file)
-        !rec.mixed_file_id
-          ? h(UButton, {
-              color: "neutral",
-              variant: "ghost",
-              size: "xs",
-              icon: row.getIsExpanded()
-                ? "i-heroicons-chevron-up"
-                : "i-heroicons-chevron-down",
-              onClick: () => toggleExpand(row),
-            })
-          : null,
-        h(UButton, {
-          color: "error",
-          variant: "ghost",
-          size: "xs",
-          icon: "i-heroicons-trash",
-          loading: deletingId.value === rec.$id,
-          onClick: () => confirmDelete(rec),
-        }),
-      ]);
-    },
-    meta: { class: { th: "w-20 text-right", td: "w-20 text-right" } },
-  },
-];
-
-// ── Role / User Management ──
-
-function removeRole(roleId: string) {
-  recordingSettings.value.allowedRoleIds =
-    recordingSettings.value.allowedRoleIds.filter((id) => id !== roleId);
-}
+// ── User Management ──
 
 function addUserId() {
   const id = newUserId.value.trim();
@@ -1111,10 +889,28 @@ function removeUser(userId: string) {
 }
 
 // ── Announce Clip Upload / Delete ──
+// Files change straight away, so the setting that points at them is saved
+// straight away too (only that key). Otherwise leaving the page without
+// pressing Save would leave the saved setting pointing at a deleted file.
+
+async function persistSoundFileId(fileId: string): Promise<boolean> {
+  const ok = await saveModuleSettings("recording", {
+    ...getModuleConfig("recording"),
+    announceSoundFileId: fileId,
+  });
+  if (ok) {
+    recordingSettings.value.announceSoundFileId = fileId;
+    // Keep the baseline in step so this doesn't show as an unsaved change.
+    const b = JSON.parse(baseline.value);
+    b.announceSoundFileId = fileId;
+    baseline.value = JSON.stringify(b);
+  }
+  return ok;
+}
 
 async function uploadAnnounceClip(file: File) {
   if (file.size > 5 * 1024 * 1024) {
-    alert("File too large. Maximum size is 5 MB.");
+    toast.add({ title: "File too large", description: "The maximum size is 5 MB.", color: "error" });
     return;
   }
 
@@ -1128,38 +924,48 @@ async function uploadAnnounceClip(file: File) {
       { method: "POST", body: formData },
     );
 
-    // Delete the old file if one existed
-    if (recordingSettings.value.announceSoundFileId) {
-      try {
-        await $fetch("/api/recordings/delete-file", {
-          method: "POST",
-          body: { fileId: recordingSettings.value.announceSoundFileId },
-        });
-      } catch {}
+    const oldFileId = recordingSettings.value.announceSoundFileId;
+
+    // Point the setting at the new file first, then remove the old one.
+    const saved = await persistSoundFileId(result.fileId);
+    if (!saved) {
+      await $fetch("/api/recordings/delete-file", {
+        method: "POST",
+        body: { fileId: result.fileId },
+      }).catch(() => {});
+      return;
     }
 
-    recordingSettings.value.announceSoundFileId = result.fileId;
+    if (oldFileId) {
+      await $fetch("/api/recordings/delete-file", {
+        method: "POST",
+        body: { fileId: oldFileId },
+      }).catch(() => {});
+    }
   } catch (err: any) {
     const message =
       err?.data?.statusMessage || err?.message || "Upload failed.";
-    alert(message);
+    toast.add({ title: "Upload failed", description: message, color: "error" });
   } finally {
     uploadingAnnounce.value = false;
   }
 }
 
 async function deleteAnnounceClip() {
-  if (!recordingSettings.value.announceSoundFileId) return;
+  const fileId = recordingSettings.value.announceSoundFileId;
+  if (!fileId) return;
 
   deletingAnnounce.value = true;
   try {
+    // Clear the setting first, then remove the file.
+    if (!(await persistSoundFileId(""))) return;
     await $fetch("/api/recordings/delete-file", {
       method: "POST",
-      body: { fileId: recordingSettings.value.announceSoundFileId },
-    });
-    recordingSettings.value.announceSoundFileId = "";
+      body: { fileId },
+    }).catch(() => {});
   } catch (err) {
     console.error("Error deleting announce clip:", err);
+    toast.add({ title: "Couldn't delete the clip", color: "error" });
   } finally {
     deletingAnnounce.value = false;
   }
@@ -1190,8 +996,19 @@ function handleClipDrop(event: DragEvent) {
 
 const save = async () => {
   saving.value = true;
-  await saveModuleSettings("recording", recordingSettings.value);
+  const ok = await saveModuleSettings("recording", {
+    // The save replaces the module's whole settings blob, so keep any keys
+    // this page doesn't edit.
+    ...getModuleConfig("recording"),
+    ...recordingSettings.value,
+  });
+  // A failed save keeps the form dirty so the bar stays and Save can retry.
+  if (ok) baseline.value = JSON.stringify(recordingSettings.value);
   saving.value = false;
+};
+
+const discard = () => {
+  recordingSettings.value = JSON.parse(baseline.value);
 };
 
 // ── Recordings CRUD (server-side API routes) ──
@@ -1204,6 +1021,8 @@ async function fetchRecordings() {
     });
     recordings.value = data;
     currentPage.value = 1;
+    expandedId.value = null;
+    expandedTracks.value = [];
   } catch (err) {
     console.error("Error fetching recordings:", err);
   } finally {
@@ -1211,28 +1030,29 @@ async function fetchRecordings() {
   }
 }
 
-async function toggleExpand(row: any) {
-  if (row.getIsExpanded()) {
-    row.toggleExpanded(false);
+async function toggleExpand(rec: Recording) {
+  if (expandedId.value === rec.$id) {
+    expandedId.value = null;
     expandedTracks.value = [];
     return;
   }
 
-  // Collapse any other expanded row
-  row.toggleExpanded(true);
+  // Only one recording is open at a time.
+  expandedId.value = rec.$id;
   loadingTracks.value = true;
   expandedTracks.value = [];
 
   try {
     const data = await $fetch<any[]>("/api/recordings/tracks", {
-      params: { recording_id: row.original.$id },
+      params: { recording_id: rec.$id },
     });
-    expandedTracks.value = data;
+    // Ignore the response if another row was opened meanwhile.
+    if (expandedId.value === rec.$id) expandedTracks.value = data;
   } catch (err) {
     console.error("Error fetching tracks:", err);
-    expandedTracks.value = [];
+    if (expandedId.value === rec.$id) expandedTracks.value = [];
   } finally {
-    loadingTracks.value = false;
+    if (expandedId.value === rec.$id) loadingTracks.value = false;
   }
 }
 
@@ -1257,9 +1077,13 @@ async function handleDelete() {
     recordings.value = recordings.value.filter((r) => r.$id !== rec.$id);
     showDeleteConfirm.value = false;
     recordingToDelete.value = null;
-    expandedTracks.value = [];
+    if (expandedId.value === rec.$id) {
+      expandedId.value = null;
+      expandedTracks.value = [];
+    }
   } catch (err) {
     console.error("Error deleting recording:", err);
+    toast.add({ title: "Couldn't delete the recording", color: "error" });
   } finally {
     deletingId.value = null;
   }
@@ -1280,6 +1104,7 @@ onMounted(async () => {
     recordingSettings.value = {
       maxDuration: saved.maxDuration ?? 14400,
       bitrate: saved.bitrate ?? 64,
+      maxConcurrentUsers: saved.maxConcurrentUsers ?? 25,
       announceMode,
       announceText: saved.announceText ?? "",
       announceVoice: saved.announceVoice ?? "",
@@ -1288,6 +1113,7 @@ onMounted(async () => {
       allowedUserIds: saved.allowedUserIds ?? [],
     };
   }
+  baseline.value = JSON.stringify(recordingSettings.value);
 
   // Load roles for the permission selector
   await loadRoles();
