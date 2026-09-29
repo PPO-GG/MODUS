@@ -364,24 +364,27 @@
       </div>
 
       <DashboardModuleAccessSection :guild-id="guildId" module-name="xp" />
-
-      <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save()" @discard="discard" />
     </template>
 
     <!-- ── Rank card designer ── -->
-    <RankCardEditor
+    <CanvasEditor
       v-else
+      :key="editorKey"
+      :model-value="settings.cardTemplate"
       :guild-id="guildId"
-      v-model="settings.cardTemplate"
+      :profile="rankCardProfile"
       class="min-h-0 flex-1"
-      @save="save"
     />
+
+    <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save()" @discard="discard" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import RankCardEditor from "~/components/RankCardEditor.vue";
+import CanvasEditor from "~/components/CanvasEditor.vue";
+import { rankCardProfile } from "~/utils/canvas-editor/profiles/rank-card";
+import { MAX_IMAGE_LAYERS, imageLayerCount } from "~/utils/canvas-editor/elements";
 import {
   DEFAULT_RANK_CARD_TEMPLATE,
   getCumulativeXpForLevel,
@@ -389,6 +392,7 @@ import {
 } from "~/utils/rank-cards";
 
 const route = useRoute();
+const toast = useToast();
 const guildId = route.params.guild_id as string;
 const {
   state,
@@ -416,6 +420,8 @@ watch(activeTab, (tab) => {
   }
 });
 const saving = ref(false);
+// Bumped on Discard so the card designer reloads the restored template.
+const editorKey = ref(0);
 const calcLevel = ref(10);
 
 // ── Settings ──
@@ -541,11 +547,16 @@ const resetToDefaults = () => {
 
 // ── Save ──
 
-const save = async (customTemplate?: RankCardTemplate) => {
-  saving.value = true;
-  if (customTemplate) {
-    settings.value.cardTemplate = customTemplate;
+const save = async () => {
+  if (imageLayerCount(settings.value.cardTemplate.elements) > MAX_IMAGE_LAYERS) {
+    toast.add({
+      title: "Image layer limit reached",
+      description: `A ${rankCardProfile.noun} can contain up to 10 images.`,
+      color: "error",
+    });
+    return;
   }
+  saving.value = true;
 
   const ok = await saveModuleSettings("xp", {
     // The save replaces the module's whole settings blob, so keep any keys
@@ -570,6 +581,7 @@ const save = async (customTemplate?: RankCardTemplate) => {
 
 const discard = () => {
   settings.value = JSON.parse(baseline.value);
+  editorKey.value++;
 };
 
 onMounted(() => {
@@ -583,7 +595,9 @@ onMounted(() => {
       announcementChannel: saved.announcementChannel ?? "",
       levelUpMessage: saved.levelUpMessage ?? DEFAULT_LEVEL_UP_MESSAGE,
       leaderboardVisibility: saved.leaderboardVisibility ?? "private",
-      cardTemplate: saved.cardTemplate ?? JSON.parse(JSON.stringify(DEFAULT_RANK_CARD_TEMPLATE)),
+      // Cloned to detach the editable object from the reactive parse and to protect the DEFAULT_RANK_CARD_TEMPLATE
+      // constant, which the card designer now mutates in place.
+      cardTemplate: JSON.parse(JSON.stringify(saved.cardTemplate ?? DEFAULT_RANK_CARD_TEMPLATE)),
       excludedChannelIds: Array.isArray(saved.excludedChannelIds) ? [...saved.excludedChannelIds] : [],
       excludedRoleIds: Array.isArray(saved.excludedRoleIds) ? [...saved.excludedRoleIds] : [],
     };

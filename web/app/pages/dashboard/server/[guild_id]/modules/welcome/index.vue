@@ -37,7 +37,7 @@
         <UIcon :name="tab.icon" class="h-4 w-4" />
         {{ tab.label }}
         <span
-          v-if="tab.value === 'image' ? imageDirty : dirty"
+          v-if="tab.value === 'image' ? imageDirty : messageDirty"
           class="h-1.5 w-1.5 rounded-full bg-amber-400"
           aria-label="Unsaved changes"
         />
@@ -45,17 +45,17 @@
     </div>
 
     <!-- ── Image designer ── -->
-    <WelcomeEditor
-      v-if="activeTab === 'image'"
-      embedded
+    <CanvasEditor
+      v-if="activeTab === 'image' && !loading"
+      :key="editorKey"
+      :model-value="template"
       :guild-id="guildId"
+      :profile="welcomeProfile"
       class="min-h-0 flex-1"
-      @dirty="imageDirty = $event"
-      @saved="onImageSaved"
     />
 
     <div
-      v-else
+      v-else-if="activeTab === 'message'"
       class="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]"
     >
       <!-- ══════════════ Settings ══════════════ -->
@@ -276,8 +276,6 @@
           </DashboardModuleSection>
 
           <DashboardModuleAccessSection :guild-id="guildId" module-name="welcome" />
-
-          <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
         </template>
       </div>
 
@@ -346,11 +344,17 @@
         </div>
       </DashboardModuleSection>
     </div>
+
+    <DashboardModuleSaveBar :dirty="dirty" :saving="saving" @save="save" @discard="discard" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import CanvasEditor from "~/components/CanvasEditor.vue";
+import { MAX_IMAGE_LAYERS, imageLayerCount } from "~/utils/canvas-editor/elements";
+import { welcomeProfile } from "~/utils/canvas-editor/profiles/welcome";
+import type { CanvasTemplate } from "~/utils/canvas-editor/types";
 import { renderDiscordMarkdown } from "~/utils/discord-markdown";
 import {
   WELCOME_MESSAGE_ORDERS as ORDERS,
@@ -370,10 +374,28 @@ const settingsUrl = `/api/guild-configs/${encodeURIComponent(guildId)}/welcome`;
 
 const loading = ref(true);
 const saving = ref(false);
+// A failed load leaves defaults in place; saving them would overwrite the stored design.
+const loadFailed = ref(false);
 const channelId = ref<string | undefined>(undefined);
 const message = ref<WelcomeMessage>(normalizeWelcomeMessage(undefined));
 const savedSnapshot = ref("");
 const bodyRef = ref<HTMLTextAreaElement | null>(null);
+
+// Only these keys belong to the image designer; channel and message are the form's.
+const CANVAS_KEYS = ["canvasWidth", "canvasHeight", "backgroundColor", "backgroundImage", "elements"] as const;
+
+// The editor mutates this object in place, so it must stay the same reactive
+// object while mounted (only load and Discard replace it, and Discard remounts).
+const template = ref<CanvasTemplate>(welcomeProfile.defaultTemplate());
+const editorKey = ref(0);
+
+const pickCanvas = (settings: Record<string, any>): Partial<CanvasTemplate> =>
+  Object.fromEntries(CANVAS_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]]));
+
+// Every canvas key, even unset ones: an absent backgroundImage must override
+// (and so clear) the saved one when merged, e.g. after Reset.
+const canvasPatch = (t: CanvasTemplate): Record<string, unknown> =>
+  Object.fromEntries(CANVAS_KEYS.map((k) => [k, t[k]]));
 
 // ── Static option data ──
 const modeCards = [
@@ -400,8 +422,28 @@ const ACCENT_PRESETS = ["#a78bfa", "#5eead4", "#7dd3fc", "#f472b6", "#fbbf24", "
 
 // ── Dirty tracking ──
 const snapshot = () =>
-  JSON.stringify({ channelId: channelId.value ?? null, message: message.value });
+  JSON.stringify({
+    channelId: channelId.value ?? null,
+    message: message.value,
+    canvas: canvasPatch(template.value),
+  });
 const dirty = computed(() => !loading.value && snapshot() !== savedSnapshot.value);
+
+// Per-tab dots, compared against the saved snapshot.
+const savedParts = computed(() => (savedSnapshot.value ? JSON.parse(savedSnapshot.value) : null));
+const messageDirty = computed(
+  () =>
+    !loading.value &&
+    !!savedParts.value &&
+    JSON.stringify({ channelId: channelId.value ?? null, message: message.value }) !==
+      JSON.stringify({ channelId: savedParts.value.channelId, message: savedParts.value.message }),
+);
+const imageDirty = computed(
+  () =>
+    !loading.value &&
+    !!savedParts.value &&
+    JSON.stringify(canvasPatch(template.value)) !== JSON.stringify(savedParts.value.canvas),
+);
 
 // The bot only accepts a full #rrggbb value here.
 const accentValid = computed(
@@ -430,11 +472,16 @@ async function fetchSettings() {
 
 async function load() {
   loading.value = true;
+  loadFailed.value = false;
   try {
     const settings = await fetchSettings();
     channelId.value = settings.channelId || undefined;
     message.value = normalizeWelcomeMessage(settings.message);
+    if (Object.keys(settings).length > 0) {
+      template.value = { ...welcomeProfile.defaultTemplate(), ...pickCanvas(settings) };
+    }
   } catch (err) {
+    loadFailed.value = true;
     console.error("[Welcome] load error:", err);
     toast.add({ title: "Error", description: "Failed to load welcome settings.", color: "error" });
   } finally {
@@ -444,6 +491,22 @@ async function load() {
 }
 
 async function save() {
+  if (loadFailed.value) {
+    toast.add({
+      title: "Couldn't load your saved settings",
+      description: "Reload the page before saving so your existing welcome design isn't overwritten.",
+      color: "error",
+    });
+    return;
+  }
+  if (imageLayerCount(template.value.elements) > MAX_IMAGE_LAYERS) {
+    toast.add({
+      title: "Image layer limit reached",
+      description: `A ${welcomeProfile.noun} can contain up to ${MAX_IMAGE_LAYERS} images.`,
+      color: "error",
+    });
+    return;
+  }
   if (!accentValid.value) {
     toast.add({
       title: "Check the accent color",
@@ -455,15 +518,19 @@ async function save() {
   saving.value = true;
   try {
     // Saving replaces the whole settings row, so merge over the latest saved
-    // settings to keep the image design the editor page owns.
+    // settings to keep any keys this page doesn't know about.
     const current = await fetchSettings();
     const ok = await saveModuleSettings("welcome", {
       ...current,
+      ...canvasPatch(template.value),
       channelId: channelId.value,
       message: message.value,
     });
     // A failed save keeps the form dirty so the bar stays and Save can retry.
-    if (ok) savedSnapshot.value = snapshot();
+    if (ok) {
+      savedSnapshot.value = snapshot();
+      onImageSaved();
+    }
   } catch (err) {
     console.error("[Welcome] save error:", err);
     toast.add({ title: "Error", description: "Failed to save.", color: "error" });
@@ -476,6 +543,8 @@ function discard() {
   const saved = JSON.parse(savedSnapshot.value);
   channelId.value = saved.channelId ?? undefined;
   message.value = saved.message;
+  template.value = { ...welcomeProfile.defaultTemplate(), ...saved.canvas };
+  editorKey.value++;
 }
 
 function insertPlaceholder(placeholder: string) {
@@ -523,7 +592,7 @@ const renderMd = (text: string) => renderDiscordMarkdown(text, markdownContext.v
 
 const showImage = computed(() => message.value.mode !== "text");
 
-// Refreshed when the image design is saved, so the preview shows the new render.
+// Refreshed after a save, since the image design may have changed.
 const imageUrl = ref(previewImageUrl());
 function previewImageUrl() {
   return `/api/welcome/preview/${encodeURIComponent(guildId)}?t=${Date.now()}`;
@@ -544,15 +613,9 @@ type TabValue = (typeof tabs)[number]["value"];
 const router = useRouter();
 const { setFullBleed, reset: resetPageChrome } = usePageChrome();
 const activeTab = ref<TabValue>(route.query.tab === "image" ? "image" : "message");
-// The canvas keeps its own state, so its unsaved changes are reported up.
-const imageDirty = ref(false);
 
-const UNSAVED_IMAGE = "You have unsaved changes to the welcome image. Leave them behind?";
-
+// Both tabs share one dirty state and one save bar, so switching never needs a confirm.
 function selectTab(tab: TabValue) {
-  if (tab === activeTab.value) return;
-  if (activeTab.value === "image" && imageDirty.value && !window.confirm(UNSAVED_IMAGE)) return;
-  if (activeTab.value === "image") imageDirty.value = false;
   activeTab.value = tab;
 }
 
@@ -573,7 +636,6 @@ onBeforeRouteLeave(() => {
   if (dirty.value && !window.confirm("You have unsaved welcome changes. Leave anyway?")) {
     return false;
   }
-  if (imageDirty.value && !window.confirm(UNSAVED_IMAGE)) return false;
 });
 
 onMounted(() => {

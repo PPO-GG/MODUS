@@ -1,23 +1,9 @@
 <template>
-  <div class="we font-sans flex flex-col h-full select-none">
+  <div class="rce font-sans flex flex-col h-full select-none">
     <!-- TOP TOOLBAR -->
-    <div class="we-toolbar we-glass-panel rounded-2xl">
-      <template v-if="!embedded">
-        <div class="we-toolbar-group">
-          <UButton
-            :to="`/dashboard/server/${guildId}/modules/welcome`"
-            icon="i-heroicons-arrow-left"
-            label="Welcome"
-            color="neutral"
-            variant="ghost"
-            size="xs"
-          />
-        </div>
-
-        <div class="we-toolbar-sep" />
-      </template>
-
-      <div class="we-toolbar-group">
+    <div class="rce-toolbar rce-glass-panel rounded-2xl">
+      <!-- Canvas Dimensions Popover -->
+      <div class="rce-toolbar-group">
         <UPopover>
           <UTooltip text="Canvas size">
             <UButton
@@ -32,7 +18,7 @@
           <template #content>
             <div class="p-3 space-y-3 w-48">
               <div>
-                <p class="we-prop-label mb-1">Width</p>
+                <p class="rce-prop-label mb-1">Width</p>
                 <UInputNumber
                   v-model="template.canvasWidth"
                   :min="200"
@@ -42,7 +28,7 @@
                 />
               </div>
               <div>
-                <p class="we-prop-label mb-1">Height</p>
+                <p class="rce-prop-label mb-1">Height</p>
                 <UInputNumber
                   v-model="template.canvasHeight"
                   :min="100"
@@ -56,9 +42,10 @@
         </UPopover>
       </div>
 
-      <div class="we-toolbar-sep" />
+      <div class="rce-toolbar-sep" />
 
-      <div class="we-toolbar-group">
+      <!-- Background Color & Image -->
+      <div class="rce-toolbar-group">
         <UPopover>
           <UTooltip text="Background">
             <UButton
@@ -79,7 +66,7 @@
           <template #content>
             <div class="p-3 space-y-3 w-56">
               <div>
-                <p class="we-prop-label mb-1.5">Color</p>
+                <p class="rce-prop-label mb-1.5">Color</p>
                 <div class="space-y-2">
                   <UColorPicker v-model="template.backgroundColor" size="sm" />
                   <UInput
@@ -90,7 +77,7 @@
                 </div>
               </div>
               <div class="border-t border-white/10 pt-3">
-                <p class="we-prop-label mb-1.5">Image</p>
+                <p class="rce-prop-label mb-1.5">Image</p>
                 <div class="flex items-center gap-2">
                   <UFileUpload
                     v-model="bgImageFile"
@@ -122,7 +109,10 @@
                     v-if="bgUploading"
                     class="text-[10px] text-zinc-500 flex items-center gap-1"
                   >
-                    <UIcon name="i-heroicons-arrow-path" class="animate-spin text-xs" />
+                    <UIcon
+                      name="i-heroicons-arrow-path"
+                      class="animate-spin text-xs"
+                    />
                   </span>
                 </div>
               </div>
@@ -131,10 +121,11 @@
         </UPopover>
       </div>
 
-      <div class="we-toolbar-sep" />
+      <div class="rce-toolbar-sep" />
 
-      <div class="we-toolbar-group">
-        <span class="we-label">Zoom</span>
+      <!-- Zoom Controls -->
+      <div class="rce-toolbar-group">
+        <span class="rce-label">Zoom</span>
         <span class="text-xs text-zinc-400 tabular-nums w-10 text-center">
           {{ Math.round(zoomMultiplier * 100) }}%
         </span>
@@ -152,7 +143,8 @@
 
       <div class="flex-1" />
 
-      <div class="we-toolbar-group">
+      <!-- Undo / Redo / Reset / Save -->
+      <div class="rce-toolbar-group">
         <UTooltip text="Undo (Ctrl+Z)">
           <UButton
             icon="i-heroicons-arrow-uturn-left"
@@ -185,57 +177,48 @@
             @click="resetTemplate"
           />
         </UTooltip>
-        <UButton
-          icon="i-heroicons-cloud-arrow-up"
-          label="Save"
-          color="primary"
-          variant="solid"
-          size="xs"
-          :loading="saving"
-          :disabled="saving"
-          @click="saveTemplate"
-        />
       </div>
     </div>
 
     <!-- MAIN EDITOR AREA -->
-    <div class="flex-1 flex min-h-0 gap-px bg-zinc-950">
-      <!-- LEFT PANEL: Tools + Layers -->
-      <div
-        class="w-72 shrink-0 flex flex-col we-glass-panel rounded-2xl"
-      >
-        <!-- Preset Templates -->
-        <div class="p-2 border-b border-zinc-800">
-          <p class="we-panel-label mb-2">Presets</p>
+    <div class="flex-1 flex min-h-0 gap-px rce-glass-panel">
+      <!-- LEFT PANEL: Presets, Tools + Layers -->
+      <div class="w-72 shrink-0 flex flex-col rounded-2xl">
+        <!-- Preset Themes -->
+        <div class="p-2 border-b border-white/10">
+          <p class="rce-panel-label mb-2">Presets</p>
           <div class="grid grid-cols-2 gap-1">
             <UTooltip
-              v-for="preset in PRESETS"
+              v-for="preset in profile.presets"
               :key="preset.name"
               :text="preset.name"
             >
-              <button
-                class="we-preset-btn"
-                @click="applyPreset(preset)"
-              >
+              <button class="rce-preset-btn" @click="applyPreset(preset)">
                 <div
-                  class="we-preset-swatch"
+                  class="rce-preset-swatch"
                   :style="{ background: preset.preview }"
                 />
-                <span class="text-[9px] truncate">{{ preset.name }}</span>
+                <span class="text-[9px] truncate text-zinc-300">{{
+                  preset.name
+                }}</span>
               </button>
             </UTooltip>
           </div>
         </div>
 
         <!-- Add Element Tools -->
-        <div class="p-2 border-b border-zinc-800">
-          <p class="we-panel-label mb-2">Tools</p>
+        <div class="p-2 border-b border-white/10">
+          <p class="rce-panel-label mb-2">Tools</p>
           <div class="flex flex-col gap-1.5">
             <button
-              v-for="t in toolTypes"
+              v-for="t in profile.tools"
               :key="t.type"
-              class="we-tool-row"
-              @click="t.type === 'image' ? imageUploadInput?.click() : addElement(t.type)"
+              class="rce-tool-row"
+              @click="
+                t.type === 'image'
+                  ? imageUploadInput?.click()
+                  : addElement(t.type)
+              "
             >
               <UIcon :name="t.icon" class="text-lg shrink-0" :class="t.color" />
               <span class="text-sm font-medium">{{ t.label }}</span>
@@ -251,16 +234,16 @@
           />
         </div>
 
-        <!-- Layers -->
+        <!-- Layers List -->
         <div class="flex-1 flex flex-col min-h-0">
           <div
-            class="flex items-center justify-between p-2 border-b border-zinc-800"
+            class="flex items-center justify-between p-2 border-b border-white/10"
           >
-            <p class="we-panel-label">Layers</p>
+            <p class="rce-panel-label">Layers</p>
             <div class="flex items-center gap-1">
               <UTooltip text="Move up">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   :aria-disabled="selectedElementIds.size !== 1"
                   aria-label="Move up"
                   @click="moveLayer('up')"
@@ -270,7 +253,7 @@
               </UTooltip>
               <UTooltip text="Move down">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   :aria-disabled="selectedElementIds.size !== 1"
                   aria-label="Move down"
                   @click="moveLayer('down')"
@@ -280,17 +263,20 @@
               </UTooltip>
               <UTooltip text="Duplicate">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   :aria-disabled="selectedElementIds.size === 0"
                   aria-label="Duplicate"
                   @click="duplicateSelectedElement"
                 >
-                  <UIcon name="i-heroicons-document-duplicate" class="text-sm" />
+                  <UIcon
+                    name="i-heroicons-document-duplicate"
+                    class="text-sm"
+                  />
                 </button>
               </UTooltip>
               <UTooltip text="Delete">
                 <button
-                  class="we-tool-btn-sm text-red-400 hover:text-red-300"
+                  class="rce-tool-btn-sm text-red-400 hover:text-red-300"
                   :aria-disabled="selectedElementIds.size === 0"
                   aria-label="Delete"
                   @click="deleteSelectedElement"
@@ -298,11 +284,12 @@
                   <UIcon name="i-heroicons-trash" class="text-sm" />
                 </button>
               </UTooltip>
-              <span class="text-[10px] text-zinc-500 tabular-nums ml-1">{{
-                template.elements.length
-              }}</span>
+              <span class="text-[10px] text-zinc-500 tabular-nums ml-1">
+                {{ template.elements.length }}
+              </span>
             </div>
           </div>
+
           <div class="flex-1 overflow-y-auto p-1 space-y-px">
             <div
               v-if="template.elements.length === 0"
@@ -313,8 +300,8 @@
             <button
               v-for="(el, index) in reversedElements"
               :key="el.id"
-              class="we-layer"
-              :class="{ 'we-layer-active': selectedElementIds.has(el.id) }"
+              class="rce-layer"
+              :class="{ 'rce-layer-active': selectedElementIds.has(el.id) }"
               @click="(e: MouseEvent) => selectElement(el.id, e)"
               @mouseenter="hoveredElementId = el.id"
               @mouseleave="hoveredElementId = null"
@@ -326,25 +313,32 @@
               <span class="truncate flex-1 text-left">
                 {{ elementLabel(el) }}
               </span>
-              <span class="text-[9px] text-zinc-600 tabular-nums">{{
-                template.elements.length - index
-              }}</span>
+              <span class="text-[9px] text-zinc-600 tabular-nums">
+                {{ template.elements.length - index }}
+              </span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- CENTER: Canvas -->
+      <!-- CENTER: Interactive Konva Canvas -->
       <div
-        class="flex-1 flex [align-items:safe_center] [justify-content:safe_center] bg-[#2d2d2d] overflow-auto relative"
+        class="flex-1 flex [align-items:safe_center] [justify-content:safe_center] bg-[#131722] overflow-auto relative"
         ref="canvasWrap"
-        :class="{ 'cursor-grab': isSpaceHeld && !isPanning, 'cursor-grabbing': isPanning }"
+        :class="{
+          'cursor-grab': isSpaceHeld && !isPanning,
+          'cursor-grabbing': isPanning,
+        }"
         @wheel.prevent="handleWheelZoom"
         @mousedown="handlePanStart"
         @mousemove="handlePanMove"
         @mouseup="handlePanEnd"
         @mouseleave="handlePanEnd"
-        @contextmenu="(e: MouseEvent) => { if (isSpaceHeld) e.preventDefault(); }"
+        @contextmenu="
+          (e: MouseEvent) => {
+            if (isSpaceHeld) e.preventDefault();
+          }
+        "
       >
         <!-- Checkerboard under canvas -->
         <div
@@ -366,7 +360,7 @@
         >
           <UIcon
             name="i-heroicons-cursor-arrow-rays"
-            class="text-2xl text-zinc-500 mb-2"
+            class="text-2xl text-secondary-400/60 mb-2"
           />
           <p class="text-xs text-zinc-500">
             Click a tool on the left to add your first element
@@ -379,7 +373,7 @@
               width: `${template.canvasWidth * scaleFactor}px`,
               height: `${template.canvasHeight * scaleFactor}px`,
             }"
-            class="relative z-10 shadow-2xl shadow-black/50 ring-1 ring-white/10"
+            class="relative z-10 shadow-2xl shadow-black/80 ring-1 ring-white/10 rounded-xl overflow-hidden"
           >
             <v-stage
               ref="stageRef"
@@ -393,6 +387,7 @@
               @tap="handleStageClick"
             >
               <v-layer>
+                <!-- Background Rect -->
                 <v-rect
                   :config="{
                     x: 0,
@@ -417,7 +412,64 @@
                   }"
                 />
 
+                <!-- Elements Loop -->
                 <template v-for="el in template.elements" :key="el.id">
+                  <!-- Progress Bar -->
+                  <v-group
+                    v-if="el.type === 'progressbar'"
+                    :config="{
+                      x: el.x,
+                      y: el.y,
+                      rotation: el.rotation || 0,
+                      draggable: true,
+                      name: el.id,
+                    }"
+                    @dragstart="(e: any) => handleDragStart(e, el)"
+                    @dragend="(e: any) => handleDragEnd(e, el)"
+                    @click="(e: any) => selectElement(el.id, e.evt)"
+                    @tap="(e: any) => selectElement(el.id, e.evt)"
+                    @transformend="(e: any) => handleTransformEnd(e, el)"
+                  >
+                    <!-- Track -->
+                    <v-rect
+                      :config="{
+                        x: 0,
+                        y: 0,
+                        width: el.width || 500,
+                        height: el.height || 18,
+                        cornerRadius: el.cornerRadius || 9,
+                        fill: el.trackColor || 'rgba(255, 255, 255, 0.08)',
+                        stroke: el.trackBorderColor,
+                        strokeWidth: el.trackBorderWidth || 0,
+                        shadowColor: el.shadowColor,
+                        shadowBlur: el.shadowBlur,
+                        shadowOffsetX: el.shadowOffsetX,
+                        shadowOffsetY: el.shadowOffsetY,
+                        opacity: el.opacity ?? 1,
+                      }"
+                    />
+                    <!-- Fill (65% sample preview progress) -->
+                    <v-rect
+                      :config="{
+                        x: 0,
+                        y: 0,
+                        width: (el.width || 500) * 0.65,
+                        height: el.height || 18,
+                        cornerRadius: el.cornerRadius || 9,
+                        ...gradientFillProps(
+                          el.fill,
+                          0,
+                          0,
+                          (el.width || 500) * 0.65,
+                          el.height || 18,
+                          '#6366f1',
+                        ),
+                        opacity: el.opacity ?? 1,
+                      }"
+                    />
+                  </v-group>
+
+                  <!-- Rectangle -->
                   <v-rect
                     v-if="el.type === 'rect'"
                     :config="rectConfig(el)"
@@ -427,6 +479,8 @@
                     @tap="(e: any) => selectElement(el.id, e.evt)"
                     @transformend="(e: any) => handleTransformEnd(e, el)"
                   />
+
+                  <!-- Circle -->
                   <v-circle
                     v-if="el.type === 'circle'"
                     :config="circleConfig(el)"
@@ -436,6 +490,8 @@
                     @tap="(e: any) => selectElement(el.id, e.evt)"
                     @transformend="(e: any) => handleTransformEnd(e, el)"
                   />
+
+                  <!-- Triangle -->
                   <v-regular-polygon
                     v-if="el.type === 'triangle'"
                     :config="triangleConfig(el)"
@@ -445,6 +501,8 @@
                     @tap="(e: any) => selectElement(el.id, e.evt)"
                     @transformend="(e: any) => handleTransformEnd(e, el)"
                   />
+
+                  <!-- Star -->
                   <v-star
                     v-if="el.type === 'star'"
                     :config="starConfig(el)"
@@ -454,6 +512,8 @@
                     @tap="(e: any) => selectElement(el.id, e.evt)"
                     @transformend="(e: any) => handleTransformEnd(e, el)"
                   />
+
+                  <!-- Line / Arrow -->
                   <template v-if="el.type === 'line'">
                     <v-line
                       v-if="!el.arrow"
@@ -471,15 +531,16 @@
                       @click="(e: any) => selectElement(el.id, e.evt)"
                       @tap="(e: any) => selectElement(el.id, e.evt)"
                     />
+                    <!-- Interactive handles when selected -->
                     <template v-if="selectedElementId === el.id">
                       <v-circle
                         :config="{
                           x: el.x + (el.points?.[0] ?? -60),
                           y: el.y + (el.points?.[1] ?? 0),
                           radius: 6,
-                          fill: '#7c6ef6',
-                          stroke: '#1e1e1e',
-                          strokeWidth: 1,
+                          fill: '#6366f1',
+                          stroke: '#0f172a',
+                          strokeWidth: 1.5,
                           draggable: true,
                         }"
                         @dragmove="(e: any) => handleLineHandleDrag(e, el, 0)"
@@ -489,15 +550,17 @@
                           x: el.x + (el.points?.[2] ?? 60),
                           y: el.y + (el.points?.[3] ?? 0),
                           radius: 6,
-                          fill: '#7c6ef6',
-                          stroke: '#1e1e1e',
-                          strokeWidth: 1,
+                          fill: '#6366f1',
+                          stroke: '#0f172a',
+                          strokeWidth: 1.5,
                           draggable: true,
                         }"
                         @dragmove="(e: any) => handleLineHandleDrag(e, el, 2)"
                       />
                     </template>
                   </template>
+
+                  <!-- Custom Image Layer -->
                   <v-image
                     v-if="el.type === 'image' && imageObjects[el.id]"
                     :config="imageConfig(el)"
@@ -507,6 +570,8 @@
                     @tap="(e: any) => selectElement(el.id, e.evt)"
                     @transformend="(e: any) => handleTransformEnd(e, el)"
                   />
+
+                  <!-- Text -->
                   <v-text
                     v-if="el.type === 'text'"
                     :config="textConfig(el)"
@@ -516,6 +581,8 @@
                     @tap="(e: any) => selectElement(el.id, e.evt)"
                     @transformend="(e: any) => handleTransformEnd(e, el)"
                   />
+
+                  <!-- Avatar Group -->
                   <v-group
                     v-if="el.type === 'avatar'"
                     :config="{
@@ -535,24 +602,27 @@
                       <v-rect
                         v-if="el.borderWidth"
                         :config="{
-                          x: -(el.radius || 64) - (el.borderWidth || 0),
-                          y: -(el.radius || 64) - (el.borderWidth || 0),
-                          width: ((el.radius || 64) + (el.borderWidth || 0)) * 2,
-                          height: ((el.radius || 64) + (el.borderWidth || 0)) * 2,
+                          x: -(el.radius || profile.fallback.avatarRadius) - (el.borderWidth || 0),
+                          y: -(el.radius || profile.fallback.avatarRadius) - (el.borderWidth || 0),
+                          width:
+                            ((el.radius || profile.fallback.avatarRadius) + (el.borderWidth || 0)) * 2,
+                          height:
+                            ((el.radius || profile.fallback.avatarRadius) + (el.borderWidth || 0)) * 2,
                           cornerRadius: el.avatarCornerRadius ?? 0,
-                          fill: el.borderColor || '#ffffff',
+                          fill: el.borderColor || profile.fallback.avatarBorder,
                           opacity: el.opacity ?? 1,
                         }"
                       />
                       <v-rect
                         :config="{
-                          x: -(el.radius || 64),
-                          y: -(el.radius || 64),
-                          width: (el.radius || 64) * 2,
-                          height: (el.radius || 64) * 2,
+                          x: -(el.radius || profile.fallback.avatarRadius),
+                          y: -(el.radius || profile.fallback.avatarRadius),
+                          width: (el.radius || profile.fallback.avatarRadius) * 2,
+                          height: (el.radius || profile.fallback.avatarRadius) * 2,
                           cornerRadius: el.avatarCornerRadius ?? 0,
                           fill: '#4f46e5',
                           opacity: el.opacity ?? 1,
+                          ...avatarShadowProps(el),
                         }"
                       />
                     </template>
@@ -562,8 +632,8 @@
                         :config="{
                           x: 0,
                           y: 0,
-                          radius: (el.radius || 64) + (el.borderWidth || 0),
-                          fill: el.borderColor || '#ffffff',
+                          radius: (el.radius || profile.fallback.avatarRadius) + (el.borderWidth || 0),
+                          fill: el.borderColor || profile.fallback.avatarBorder,
                           opacity: el.opacity ?? 1,
                         }"
                       />
@@ -571,25 +641,27 @@
                         :config="{
                           x: 0,
                           y: 0,
-                          radius: el.radius || 64,
+                          radius: el.radius || profile.fallback.avatarRadius,
                           fill: '#4f46e5',
                           opacity: el.opacity ?? 1,
+                          ...avatarShadowProps(el),
                         }"
                       />
                     </template>
                     <v-text
                       :config="{
-                        x: -(el.radius || 64),
-                        y: -(el.radius || 64) / 2,
-                        width: (el.radius || 64) * 2,
+                        x: -(el.radius || profile.fallback.avatarRadius),
+                        y: -(el.radius || profile.fallback.avatarRadius) / 2,
+                        width: (el.radius || profile.fallback.avatarRadius) * 2,
                         text: '👤',
-                        fontSize: (el.radius || 64) * 0.8,
+                        fontSize: (el.radius || profile.fallback.avatarRadius) * 0.8,
                         align: 'center',
                       }"
                     />
                   </v-group>
                 </template>
 
+                <!-- Transformer -->
                 <v-transformer
                   v-if="transformerNodes.length > 0"
                   ref="transformerRef"
@@ -597,7 +669,12 @@
                     nodes: transformerNodes,
                     enabledAnchors:
                       selectedElement?.type === 'avatar'
-                        ? ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+                        ? [
+                            'top-left',
+                            'top-right',
+                            'bottom-left',
+                            'bottom-right',
+                          ]
                         : selectedElement?.type === 'text'
                           ? ['middle-left', 'middle-right']
                           : [
@@ -611,29 +688,37 @@
                               'bottom-center',
                             ],
                     keepRatio:
-                      selectedElement?.type === 'avatar' || selectedElement?.type === 'image'
+                      selectedElement?.type === 'avatar' ||
+                      selectedElement?.type === 'image'
                         ? true
                         : selectedElementIds.size > 1
                           ? true
                           : selectedElement?.type !== 'circle',
                     shiftBehavior:
-                      selectedElement?.type === 'image' ? 'inverted' : 'default',
+                      selectedElement?.type === 'image'
+                        ? 'inverted'
+                        : 'default',
                     rotateEnabled: true,
                     rotationSnaps: isShiftHeld
-                      ? [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345]
+                      ? [
+                          0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165,
+                          180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330,
+                          345,
+                        ]
                       : [],
-                    borderStroke: '#7c6ef6',
-                    borderStrokeWidth: 2.5,
-                    anchorStroke: '#7c6ef6',
+                    borderStroke: '#6366f1',
+                    borderStrokeWidth: 2,
+                    anchorStroke: '#6366f1',
                     anchorStrokeWidth: 2,
-                    anchorFill: '#1e1e1e',
-                    anchorSize: 9,
-                    anchorCornerRadius: 3,
+                    anchorFill: '#0f172a',
+                    anchorSize: 8,
+                    anchorCornerRadius: 2,
                     rotateAnchorOffset: 20,
                     padding: 2,
                   }"
                 />
 
+                <!-- Hover Highlight Outline -->
                 <v-rect
                   v-if="hoveredElementRect"
                   :config="{
@@ -641,7 +726,7 @@
                     y: hoveredElementRect.y,
                     width: hoveredElementRect.width,
                     height: hoveredElementRect.height,
-                    stroke: 'rgba(124, 110, 246, 0.6)',
+                    stroke: 'rgba(99, 102, 241, 0.65)',
                     strokeWidth: 1.5,
                     dash: [4, 4],
                     listening: false,
@@ -658,33 +743,32 @@
                 name="i-heroicons-arrow-path"
                 class="w-5 h-5 animate-spin mr-2"
               />
-              Loading…
+              Loading Canvas…
             </div>
           </template>
         </client-only>
       </div>
 
-      <!-- RIGHT PANEL: Properties -->
-      <div
-        class="w-72 shrink-0 we-glass-panel rounded-2xl overflow-y-auto"
-      >
+      <!-- RIGHT PANEL: Property Inspector -->
+      <div class="w-72 shrink-0 rce-glass-panel rounded-2xl overflow-y-auto">
+        <!-- Single Selection Properties -->
         <div v-if="selectedElement" class="flex flex-col">
           <!-- Header -->
           <div
-            class="flex items-center justify-between p-2 border-b border-zinc-800"
+            class="flex items-center justify-between p-2 border-b border-white/10"
           >
             <div class="flex items-center gap-1.5">
               <UIcon
                 :name="elementTypeIcon(selectedElement.type)"
-                class="text-sm text-zinc-400"
+                class="text-sm text-secondary-400"
               />
-              <span class="text-xs font-medium text-zinc-300">{{
-                elementLabel(selectedElement)
-              }}</span>
+              <span class="text-xs font-medium text-zinc-200">
+                {{ elementLabel(selectedElement) }}
+              </span>
             </div>
             <UTooltip text="Delete element">
               <button
-                class="we-tool-btn text-red-400 hover:text-red-300"
+                class="rce-tool-btn text-red-400 hover:text-red-300"
                 aria-label="Delete element"
                 @click="deleteSelectedElement"
               >
@@ -693,13 +777,13 @@
             </UTooltip>
           </div>
 
-          <!-- Align -->
-          <div class="we-prop-section">
-            <p class="we-prop-title">Align</p>
+          <!-- Alignment Suite -->
+          <div class="rce-prop-section">
+            <p class="rce-prop-title">Align</p>
             <div class="grid grid-cols-6 gap-1">
               <UTooltip text="Align left">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align left"
                   @click="alignLayers('left')"
                 >
@@ -708,16 +792,19 @@
               </UTooltip>
               <UTooltip text="Align center">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align center"
                   @click="alignLayers('center-h')"
                 >
-                  <UIcon name="i-lucide-align-center-vertical" class="text-sm" />
+                  <UIcon
+                    name="i-lucide-align-center-vertical"
+                    class="text-sm"
+                  />
                 </button>
               </UTooltip>
               <UTooltip text="Align right">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align right"
                   @click="alignLayers('right')"
                 >
@@ -726,25 +813,31 @@
               </UTooltip>
               <UTooltip text="Align top">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align top"
                   @click="alignLayers('top')"
                 >
-                  <UIcon name="i-lucide-align-start-horizontal" class="text-sm" />
+                  <UIcon
+                    name="i-lucide-align-start-horizontal"
+                    class="text-sm"
+                  />
                 </button>
               </UTooltip>
               <UTooltip text="Align middle">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align middle"
                   @click="alignLayers('middle-v')"
                 >
-                  <UIcon name="i-lucide-align-center-horizontal" class="text-sm" />
+                  <UIcon
+                    name="i-lucide-align-center-horizontal"
+                    class="text-sm"
+                  />
                 </button>
               </UTooltip>
               <UTooltip text="Align bottom">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align bottom"
                   @click="alignLayers('bottom')"
                 >
@@ -755,7 +848,7 @@
             <div class="grid grid-cols-2 gap-1 mt-1">
               <UTooltip text="Distribute horizontally">
                 <button
-                  class="we-tool-btn-sm !w-full"
+                  class="rce-tool-btn-sm !w-full"
                   aria-label="Distribute horizontally"
                   :aria-disabled="selectedElementIds.size < 3"
                   @click="distributeLayers('horizontal')"
@@ -768,7 +861,7 @@
               </UTooltip>
               <UTooltip text="Distribute vertically">
                 <button
-                  class="we-tool-btn-sm !w-full"
+                  class="rce-tool-btn-sm !w-full"
                   aria-label="Distribute vertically"
                   :aria-disabled="selectedElementIds.size < 3"
                   @click="distributeLayers('vertical')"
@@ -782,54 +875,55 @@
             </div>
           </div>
 
-          <!-- Transform -->
-          <div class="we-prop-section">
-            <p class="we-prop-title">Transform</p>
+          <!-- Transform (Position & Sizing) -->
+          <div class="rce-prop-section">
+            <p class="rce-prop-title">Transform</p>
             <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
-              <div class="we-prop-row">
-                <span class="we-prop-label">X</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">X</span>
                 <input
                   v-model.number="selectedElement.x"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">Y</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">Y</span>
                 <input
                   v-model.number="selectedElement.y"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">Rotation</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">Rotation</span>
                 <input
                   v-model.number="selectedElement.rotation"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                 />
               </div>
               <template
                 v-if="
                   selectedElement.type === 'rect' ||
+                  selectedElement.type === 'progressbar' ||
                   selectedElement.type === 'image'
                 "
               >
-                <div class="we-prop-row">
-                  <span class="we-prop-label">W</span>
+                <div class="rce-prop-row">
+                  <span class="rce-prop-label">W</span>
                   <input
                     v-model.number="selectedElement.width"
                     type="number"
-                    class="we-num-input w-full"
+                    class="rce-num-input w-full"
                   />
                 </div>
-                <div class="we-prop-row">
-                  <span class="we-prop-label">H</span>
+                <div class="rce-prop-row">
+                  <span class="rce-prop-label">H</span>
                   <input
                     v-model.number="selectedElement.height"
                     type="number"
-                    class="we-num-input w-full"
+                    class="rce-num-input w-full"
                   />
                 </div>
               </template>
@@ -840,73 +934,76 @@
                   selectedElement.type === 'triangle'
                 "
               >
-                <div class="we-prop-row">
-                  <span class="we-prop-label">R</span>
+                <div class="rce-prop-row">
+                  <span class="rce-prop-label">R</span>
                   <input
                     v-model.number="selectedElement.radius"
                     type="number"
-                    class="we-num-input w-full"
+                    class="rce-num-input w-full"
                   />
                 </div>
               </template>
               <template v-if="selectedElement.type === 'star'">
-                <div class="we-prop-row">
-                  <span class="we-prop-label">Outer</span>
+                <div class="rce-prop-row">
+                  <span class="rce-prop-label">Outer</span>
                   <input
                     v-model.number="selectedElement.outerRadius"
                     type="number"
-                    class="we-num-input w-full"
+                    class="rce-num-input w-full"
                   />
                 </div>
-                <div class="we-prop-row">
-                  <span class="we-prop-label">Inner</span>
+                <div class="rce-prop-row">
+                  <span class="rce-prop-label">Inner</span>
                   <input
                     v-model.number="selectedElement.innerRadius"
                     type="number"
-                    class="we-num-input w-full"
+                    class="rce-num-input w-full"
                   />
                 </div>
-                <div class="we-prop-row">
-                  <span class="we-prop-label">Points</span>
+                <div class="rce-prop-row">
+                  <span class="rce-prop-label">Points</span>
                   <input
                     v-model.number="selectedElement.numPoints"
                     type="number"
-                    class="we-num-input w-full"
+                    class="rce-num-input w-full"
                     min="3"
                     max="12"
                   />
                 </div>
               </template>
               <div
-                v-if="selectedElement.type === 'rect'"
-                class="we-prop-row col-span-2"
+                v-if="
+                  selectedElement.type === 'rect' ||
+                  selectedElement.type === 'progressbar'
+                "
+                class="rce-prop-row col-span-2"
               >
-                <span class="we-prop-label">Radius</span>
+                <span class="rce-prop-label">Corner Radius</span>
                 <input
                   v-model.number="selectedElement.cornerRadius"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                   min="0"
                 />
               </div>
             </div>
           </div>
 
-          <!-- Text -->
-          <div v-if="selectedElement.type === 'text'" class="we-prop-section">
-            <p class="we-prop-title">Text</p>
+          <!-- Typography / Text Section -->
+          <div v-if="selectedElement.type === 'text'" class="rce-prop-section">
+            <p class="rce-prop-title">Text</p>
             <textarea
               ref="textFieldRef"
               v-model="selectedElement.text"
               rows="2"
-              class="we-textarea"
-              placeholder="Use {username}, etc."
+              class="rce-textarea"
+              :placeholder="profile.textHint"
             />
-            <div class="flex flex-wrap gap-1.5 mt-2">
+            <div class="flex flex-wrap gap-1 mt-2">
               <button
-                v-for="ph in placeholders"
+                v-for="ph in profile.placeholders"
                 :key="ph"
-                class="we-placeholder-chip"
+                class="rce-placeholder-chip"
                 @click="insertPlaceholder(ph)"
               >
                 {{ ph }}
@@ -914,8 +1011,8 @@
             </div>
 
             <!-- Font Family -->
-            <div class="mt-1.5">
-              <span class="we-prop-label block mb-1">Font</span>
+            <div class="mt-2">
+              <span class="rce-prop-label block mb-1">Font</span>
               <FontPicker
                 :model-value="selectedElement.fontFamily || 'sans-serif'"
                 @update:model-value="handleFontChange"
@@ -923,20 +1020,20 @@
             </div>
 
             <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-1.5">
-              <div class="we-prop-row">
-                <span class="we-prop-label">Size</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">Size</span>
                 <input
                   v-model.number="selectedElement.fontSize"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                   min="6"
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">Style</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">Style</span>
                 <select
                   v-model="selectedElement.fontStyle"
-                  class="we-select w-full"
+                  class="rce-select w-full"
                 >
                   <option value="">Normal</option>
                   <option value="bold">Bold</option>
@@ -945,13 +1042,15 @@
                 </select>
               </div>
             </div>
+
+            <!-- Justification Buttons -->
             <div class="flex gap-1 mt-1.5">
               <button
                 v-for="a in ['left', 'center', 'right']"
                 :key="a"
-                class="we-tool-btn flex-1"
+                class="rce-tool-btn flex-1"
                 :class="{
-                  'bg-primary-600/30 text-primary-300':
+                  'bg-secondary-600/30 text-secondary-300':
                     selectedElement.align === a,
                 }"
                 @click="selectedElement!.align = a"
@@ -969,74 +1068,124 @@
             </div>
           </div>
 
-          <!-- Image -->
-          <div v-if="selectedElement.type === 'image'" class="we-prop-section">
-            <p class="we-prop-title">Image</p>
+          <!-- Progress Bar Specifics -->
+          <div
+            v-if="
+              profile.tools.some((t) => t.type === 'progressbar') &&
+              selectedElement.type === 'progressbar'
+            "
+            class="rce-prop-section"
+          >
+            <p class="rce-prop-title">Progress Track</p>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="rce-prop-label">Track Color</span>
+                <UPopover>
+                  <button
+                    type="button"
+                    class="rce-color-chip-lg cursor-pointer"
+                    :style="{
+                      background: swatchPreview(
+                        selectedElement.trackColor || 'rgba(255,255,255,0.08)',
+                      ),
+                    }"
+                  />
+                  <template #content>
+                    <GradientPicker
+                      :model-value="
+                        selectedElement.trackColor || 'rgba(255,255,255,0.08)'
+                      "
+                      :allow-radial="false"
+                      @update:model-value="
+                        (v: string) => {
+                          if (selectedElement) selectedElement.trackColor = v;
+                        }
+                      "
+                    />
+                  </template>
+                </UPopover>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Image -->
+          <div v-if="selectedElement.type === 'image'" class="rce-prop-section">
+            <p class="rce-prop-title">Image</p>
             <UButton
               label="Replace image"
               color="neutral"
               variant="outline"
               block
-              @click="replacingImageId = selectedElement!.id; imageUploadInput?.click()"
+              @click="
+                replacingImageId = selectedElement!.id;
+                imageUploadInput?.click();
+              "
             />
           </div>
 
-          <!-- Image Shadow -->
-          <div v-if="selectedElement.type === 'image'" class="we-prop-section">
-            <p class="we-prop-title">Shadow</p>
+          <!-- Shadow / Glow -->
+          <div
+            v-if="profile.shadow === 'all' || selectedElement.type === 'image'"
+            class="rce-prop-section"
+          >
+            <p class="rce-prop-title">Shadow</p>
             <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
-              <div class="we-prop-row">
-                <span class="we-prop-label">Color</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">Color</span>
                 <input
                   :value="selectedElement.shadowColor || '#000000'"
                   type="color"
-                  class="we-color-chip-lg cursor-pointer"
-                  @input="selectedElement.shadowColor = ($event.target as HTMLInputElement).value"
+                  class="rce-color-chip-lg cursor-pointer"
+                  @input="
+                    selectedElement.shadowColor = (
+                      $event.target as HTMLInputElement
+                    ).value
+                  "
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">Blur</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">Blur</span>
                 <input
                   v-model.number="selectedElement.shadowBlur"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                   min="0"
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">X offset</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">X offset</span>
                 <input
                   v-model.number="selectedElement.shadowOffsetX"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">Y offset</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">Y offset</span>
                 <input
                   v-model.number="selectedElement.shadowOffsetY"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                 />
               </div>
             </div>
           </div>
 
-          <!-- Fill -->
+          <!-- Fill & Gradient Picker -->
           <div
             v-if="
               selectedElement.type !== 'avatar' &&
               (selectedElement.type !== 'image' ||
-                isTintableWelcomeSvgSource(selectedElement.src)) &&
+                profile.images.isTintableSvg(selectedElement.src)) &&
               selectedElement.type !== 'line'
             "
-            class="we-prop-section"
+            class="rce-prop-section"
           >
-            <p class="we-prop-title">Fill</p>
+            <p class="rce-prop-title">Fill</p>
             <UPopover>
               <button
                 type="button"
-                class="we-color-chip-lg cursor-pointer"
+                class="rce-color-chip-lg cursor-pointer"
                 :style="{ background: swatchPreview(selectedElement.fill) }"
               />
               <template #content>
@@ -1056,20 +1205,21 @@
             </UPopover>
           </div>
 
-          <!-- Stroke -->
+          <!-- Stroke & Gradient Picker -->
           <div
             v-if="
               selectedElement.type !== 'avatar' &&
-              selectedElement.type !== 'image'
+              selectedElement.type !== 'image' &&
+              selectedElement.type !== 'progressbar'
             "
-            class="we-prop-section"
+            class="rce-prop-section"
           >
-            <p class="we-prop-title">Stroke</p>
+            <p class="rce-prop-title">Stroke</p>
             <div class="flex items-center gap-2">
               <UPopover>
                 <button
                   type="button"
-                  class="we-color-chip-lg cursor-pointer"
+                  class="rce-color-chip-lg cursor-pointer"
                   :style="{ background: swatchPreview(selectedElement.stroke) }"
                 />
                 <template #content>
@@ -1091,7 +1241,7 @@
               <input
                 v-model.number="selectedElement.strokeWidth"
                 type="number"
-                class="we-num-input w-14"
+                class="rce-num-input w-14"
                 min="0"
                 placeholder="0"
               />
@@ -1099,26 +1249,34 @@
             <UCheckbox
               v-if="selectedElement.type === 'line'"
               v-model="selectedElement.arrow"
-              label="Arrow"
+              label="Arrowhead"
               class="mt-2"
             />
           </div>
 
-          <!-- Avatar Shape -->
-          <div v-if="selectedElement.type === 'avatar'" class="we-prop-section">
-            <p class="we-prop-title">Shape</p>
+          <!-- Avatar Shape & Border -->
+          <div
+            v-if="selectedElement.type === 'avatar'"
+            class="rce-prop-section"
+          >
+            <p class="rce-prop-title">Avatar Shape</p>
             <div class="flex gap-1">
               <button
-                class="we-tool-btn-sm flex-1"
-                :class="{ 'we-layer-active': (selectedElement.avatarShape ?? 'circle') === 'circle' }"
+                class="rce-tool-btn-sm flex-1"
+                :class="{
+                  'rce-layer-active':
+                    (selectedElement.avatarShape ?? 'circle') === 'circle',
+                }"
                 aria-label="Circle"
                 @click="selectedElement.avatarShape = 'circle'"
               >
                 <UIcon name="i-heroicons-sun" class="text-sm" />
               </button>
               <button
-                class="we-tool-btn-sm flex-1"
-                :class="{ 'we-layer-active': selectedElement.avatarShape === 'square' }"
+                class="rce-tool-btn-sm flex-1"
+                :class="{
+                  'rce-layer-active': selectedElement.avatarShape === 'square',
+                }"
                 aria-label="Square"
                 @click="selectedElement.avatarShape = 'square'"
               >
@@ -1127,25 +1285,29 @@
             </div>
             <div
               v-if="selectedElement.avatarShape === 'square'"
-              class="we-prop-row mt-1.5"
+              class="rce-prop-row mt-1.5"
             >
-              <span class="we-prop-label">Radius</span>
+              <span class="rce-prop-label">Corner Radius</span>
               <input
                 v-model.number="selectedElement.avatarCornerRadius"
                 type="number"
-                class="we-num-input w-full"
+                class="rce-num-input w-full"
                 min="0"
               />
             </div>
           </div>
 
-          <!-- Avatar Border -->
-          <div v-if="selectedElement.type === 'avatar'" class="we-prop-section">
-            <p class="we-prop-title">Border</p>
+          <div
+            v-if="selectedElement.type === 'avatar'"
+            class="rce-prop-section"
+          >
+            <p class="rce-prop-title">Avatar Border</p>
             <div class="flex items-center gap-2">
               <div
-                class="we-color-chip-lg"
-                :style="{ background: selectedElement.borderColor || '#fff' }"
+                class="rce-color-chip-lg"
+                :style="{
+                  background: selectedElement.borderColor || profile.fallback.avatarBorder,
+                }"
                 @click="($refs.borderColor as HTMLInputElement).click()"
               />
               <input
@@ -1157,20 +1319,20 @@
               <input
                 v-model.number="selectedElement.borderWidth"
                 type="number"
-                class="we-num-input w-14"
+                class="rce-num-input w-14"
                 min="0"
                 placeholder="0"
               />
             </div>
           </div>
 
-          <!-- Opacity -->
-          <div class="we-prop-section">
+          <!-- Opacity Slider -->
+          <div class="rce-prop-section">
             <div class="flex items-center justify-between">
-              <p class="we-prop-title mb-0">Opacity</p>
-              <span class="text-[10px] text-zinc-500 tabular-nums"
-                >{{ Math.round((selectedElement.opacity ?? 1) * 100) }}%</span
-              >
+              <p class="rce-prop-title mb-0">Opacity</p>
+              <span class="text-[10px] text-zinc-500 tabular-nums">
+                {{ Math.round((selectedElement.opacity ?? 1) * 100) }}%
+              </span>
             </div>
             <USlider
               v-model="selectedElementOpacityPct"
@@ -1183,11 +1345,11 @@
           </div>
         </div>
 
-        <!-- Multi-select -->
+        <!-- Multi-Selection Properties -->
         <div v-else-if="selectedElementIds.size > 1" class="flex flex-col">
           <!-- Header -->
           <div
-            class="flex items-center justify-between p-2 border-b border-zinc-800"
+            class="flex items-center justify-between p-2 border-b border-white/10"
           >
             <span class="text-xs font-medium text-zinc-300">
               {{ selectedElementIds.size }} layers selected
@@ -1195,7 +1357,7 @@
             <div class="flex items-center gap-1">
               <UTooltip text="Duplicate selection">
                 <button
-                  class="we-tool-btn"
+                  class="rce-tool-btn"
                   aria-label="Duplicate selection"
                   @click="duplicateSelectedElement"
                 >
@@ -1207,7 +1369,7 @@
               </UTooltip>
               <UTooltip text="Delete selection">
                 <button
-                  class="we-tool-btn text-red-400 hover:text-red-300"
+                  class="rce-tool-btn text-red-400 hover:text-red-300"
                   aria-label="Delete selection"
                   @click="deleteSelectedElement"
                 >
@@ -1217,13 +1379,13 @@
             </div>
           </div>
 
-          <!-- Align -->
-          <div class="we-prop-section">
-            <p class="we-prop-title">Align</p>
+          <!-- Align Suite for Multi-Selection -->
+          <div class="rce-prop-section">
+            <p class="rce-prop-title">Align</p>
             <div class="grid grid-cols-6 gap-1">
               <UTooltip text="Align left">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align left"
                   @click="alignLayers('left')"
                 >
@@ -1232,16 +1394,19 @@
               </UTooltip>
               <UTooltip text="Align center">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align center"
                   @click="alignLayers('center-h')"
                 >
-                  <UIcon name="i-lucide-align-center-vertical" class="text-sm" />
+                  <UIcon
+                    name="i-lucide-align-center-vertical"
+                    class="text-sm"
+                  />
                 </button>
               </UTooltip>
               <UTooltip text="Align right">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align right"
                   @click="alignLayers('right')"
                 >
@@ -1250,25 +1415,31 @@
               </UTooltip>
               <UTooltip text="Align top">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align top"
                   @click="alignLayers('top')"
                 >
-                  <UIcon name="i-lucide-align-start-horizontal" class="text-sm" />
+                  <UIcon
+                    name="i-lucide-align-start-horizontal"
+                    class="text-sm"
+                  />
                 </button>
               </UTooltip>
               <UTooltip text="Align middle">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align middle"
                   @click="alignLayers('middle-v')"
                 >
-                  <UIcon name="i-lucide-align-center-horizontal" class="text-sm" />
+                  <UIcon
+                    name="i-lucide-align-center-horizontal"
+                    class="text-sm"
+                  />
                 </button>
               </UTooltip>
               <UTooltip text="Align bottom">
                 <button
-                  class="we-tool-btn-sm"
+                  class="rce-tool-btn-sm"
                   aria-label="Align bottom"
                   @click="alignLayers('bottom')"
                 >
@@ -1279,7 +1450,7 @@
             <div class="grid grid-cols-2 gap-1 mt-1">
               <UTooltip text="Distribute horizontally">
                 <button
-                  class="we-tool-btn-sm !w-full"
+                  class="rce-tool-btn-sm !w-full"
                   aria-label="Distribute horizontally"
                   :aria-disabled="selectedElementIds.size < 3"
                   @click="distributeLayers('horizontal')"
@@ -1292,7 +1463,7 @@
               </UTooltip>
               <UTooltip text="Distribute vertically">
                 <button
-                  class="we-tool-btn-sm !w-full"
+                  class="rce-tool-btn-sm !w-full"
                   aria-label="Distribute vertically"
                   :aria-disabled="selectedElementIds.size < 3"
                   @click="distributeLayers('vertical')"
@@ -1306,73 +1477,85 @@
             </div>
           </div>
 
-          <!-- Transform -->
-          <div class="we-prop-section">
-            <p class="we-prop-title">Transform</p>
+          <!-- Group Transform -->
+          <div class="rce-prop-section">
+            <p class="rce-prop-title">Group Transform</p>
             <div class="grid grid-cols-2 gap-x-3 gap-y-1.5">
-              <div class="we-prop-row">
-                <span class="we-prop-label">X</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">X</span>
                 <input
                   :value="Math.round(groupBounds?.x ?? 0)"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                   @change="
                     (e: any) =>
-                      applyGroupMove(Number(e.target.value), groupBounds?.y ?? 0)
+                      applyGroupMove(
+                        Number(e.target.value),
+                        groupBounds?.y ?? 0,
+                      )
                   "
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">Y</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">Y</span>
                 <input
                   :value="Math.round(groupBounds?.y ?? 0)"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                   @change="
                     (e: any) =>
-                      applyGroupMove(groupBounds?.x ?? 0, Number(e.target.value))
+                      applyGroupMove(
+                        groupBounds?.x ?? 0,
+                        Number(e.target.value),
+                      )
                   "
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">W</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">W</span>
                 <input
                   :value="Math.round(groupBounds?.width ?? 0)"
                   type="number"
                   min="1"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                   @change="
                     (e: any) =>
-                      applyGroupScale(Number(e.target.value), groupBounds?.height ?? 1)
+                      applyGroupScale(
+                        Number(e.target.value),
+                        groupBounds?.height ?? 1,
+                      )
                   "
                 />
               </div>
-              <div class="we-prop-row">
-                <span class="we-prop-label">H</span>
+              <div class="rce-prop-row">
+                <span class="rce-prop-label">H</span>
                 <input
                   :value="Math.round(groupBounds?.height ?? 0)"
                   type="number"
                   min="1"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                   @change="
                     (e: any) =>
-                      applyGroupScale(groupBounds?.width ?? 1, Number(e.target.value))
+                      applyGroupScale(
+                        groupBounds?.width ?? 1,
+                        Number(e.target.value),
+                      )
                   "
                 />
               </div>
-              <div class="we-prop-row col-span-2">
-                <span class="we-prop-label">Rotation</span>
+              <div class="rce-prop-row col-span-2">
+                <span class="rce-prop-label">Rotation</span>
                 <input
                   v-model.number.lazy="groupRotationDelta"
                   type="number"
-                  class="we-num-input w-full"
+                  class="rce-num-input w-full"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <!-- No selection -->
+        <!-- No Selection Empty State -->
         <div
           v-else
           class="flex flex-col items-center justify-center h-full text-center py-12"
@@ -1381,7 +1564,7 @@
             name="i-heroicons-cursor-arrow-rays"
             class="text-2xl text-zinc-600 mb-2"
           />
-          <p class="text-xs text-zinc-500">Select an element</p>
+          <p class="text-xs text-zinc-500">Select an element on canvas</p>
         </div>
       </div>
     </div>
@@ -1389,257 +1572,66 @@
 </template>
 
 <script setup lang="ts">
-import {
-  getWelcomeImageRenderCacheKey,
-  getWelcomeImageTintRasterSize,
-  isTintableWelcomeSvgSource,
-} from "~/utils/welcome-images";
-import { remeasureText } from "~/utils/konva-text";
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
+import type {
+  CanvasElement,
+  CanvasTemplate,
+  AlignDirection,
+} from "~/utils/canvas-editor/types";
+import type {
+  CanvasPreset,
+  CanvasProfile,
+} from "~/utils/canvas-editor/profile";
+import {
+  MAX_IMAGE_LAYERS,
+  elementLabel,
+  elementTypeIcon,
+  imageLayerCount,
+  previewText as previewTextWith,
+  scaleElementSize as scaleElementSizeWith,
+} from "~/utils/canvas-editor/elements";
+import {
+  gradientType,
+  parseGradientAngle,
+  parseGradientColors,
+  parseGradientStops,
+} from "~/utils/gradient";
+import { remeasureText } from "~/utils/konva-text";
 import { useGoogleFonts } from "~/composables/useGoogleFonts";
 
 const { loadFont, loadTemplateFonts } = useGoogleFonts();
 
 const props = defineProps<{
+  modelValue: CanvasTemplate;
   guildId: string;
-  /** Rendered inside the Welcome page's tabs, so the "back to Welcome" link is hidden. */
-  embedded?: boolean;
+  profile: CanvasProfile;
 }>();
 
-const emit = defineEmits<{ (e: "saved"): void; (e: "dirty", value: boolean): void }>();
 const toast = useToast();
 
+// The template is owned by the host page (a reactive object). The editor edits
+// it in place. To discard changes the host swaps in a restored object and
+// remounts the editor with a new key.
+const template = computed(() => props.modelValue);
 
-// ── Types ──
-
-interface TemplateElement {
-  id: string;
-  type:
-    | "text"
-    | "image"
-    | "rect"
-    | "circle"
-    | "avatar"
-    | "triangle"
-    | "star"
-    | "line";
-  x: number;
-  y: number;
-  width?: number;
-  height?: number;
-  text?: string;
-  fontSize?: number;
-  fontFamily?: string;
-  fontStyle?: string;
-  fill?: string;
-  align?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  cornerRadius?: number;
-  opacity?: number;
-  src?: string;
-  radius?: number;
-  borderColor?: string;
-  borderWidth?: number;
-  rotation?: number;
-  shadowColor?: string;
-  shadowBlur?: number;
-  shadowOffsetX?: number;
-  shadowOffsetY?: number;
-  scaleX?: number;
-  scaleY?: number;
-  numPoints?: number;
-  innerRadius?: number;
-  outerRadius?: number;
-  points?: number[];
-  arrow?: boolean;
-  avatarShape?: "circle" | "square";
-  avatarCornerRadius?: number;
+/** Swaps the whole design in place (preset, reset, undo, redo) so the host's object stays the one in use. */
+function replaceTemplate(next: CanvasTemplate) {
+  const t = template.value;
+  t.canvasWidth = next.canvasWidth;
+  t.canvasHeight = next.canvasHeight;
+  t.backgroundColor = next.backgroundColor;
+  if (next.backgroundImage) t.backgroundImage = next.backgroundImage;
+  else delete t.backgroundImage;
+  t.elements = next.elements;
 }
 
-interface WelcomeTemplate {
-  canvasWidth: number;
-  canvasHeight: number;
-  backgroundColor: string;
-  backgroundImage?: string;
-  elements: TemplateElement[];
-}
-
-// Only these keys belong to the canvas editor. The rest of the welcome
-// settings (channel, message) are owned by the welcome overview page.
-const CANVAS_KEYS = [
-  "canvasWidth",
-  "canvasHeight",
-  "backgroundColor",
-  "backgroundImage",
-  "elements",
-] as const;
-
-function pickCanvas(settings: Record<string, any>): Partial<WelcomeTemplate> {
-  return Object.fromEntries(
-    CANVAS_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]]),
-  );
-}
-
-// Every canvas key, even unset ones: an absent backgroundImage must override
-// (and so clear) the saved one when merged, e.g. after Reset.
-function canvasPatch(t: WelcomeTemplate): Record<string, unknown> {
-  return Object.fromEntries(CANVAS_KEYS.map((k) => [k, t[k]]));
-}
-
-const DEFAULT_TEMPLATE: WelcomeTemplate = {
-  canvasWidth: 1024,
-  canvasHeight: 500,
-  backgroundColor: "#1a1a2e",
-  elements: [
-    {
-      id: "bg-overlay",
-      type: "rect",
-      x: 0,
-      y: 0,
-      width: 1024,
-      height: 500,
-      fill: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
-      opacity: 1,
-    },
-    {
-      id: "decoration-top",
-      type: "rect",
-      x: 0,
-      y: 0,
-      width: 1024,
-      height: 4,
-      fill: "linear-gradient(90deg, #6366f1, #a78bfa, #c084fc)",
-      opacity: 1,
-    },
-    {
-      id: "avatar",
-      type: "avatar",
-      x: 512,
-      y: 155,
-      radius: 80,
-      borderColor: "#a78bfa",
-      borderWidth: 4,
-    },
-    {
-      id: "welcome-label",
-      type: "text",
-      x: 512,
-      y: 280,
-      text: "WELCOME",
-      fontSize: 44,
-      fontFamily: "sans-serif",
-      fontStyle: "bold",
-      fill: "#ffffff",
-      align: "center",
-    },
-    {
-      id: "username-text",
-      type: "text",
-      x: 512,
-      y: 340,
-      text: "{username}",
-      fontSize: 30,
-      fontFamily: "sans-serif",
-      fill: "#a78bfa",
-      align: "center",
-    },
-    {
-      id: "server-text",
-      type: "text",
-      x: 512,
-      y: 395,
-      text: "to {server_name}",
-      fontSize: 20,
-      fontFamily: "sans-serif",
-      fill: "#9ca3af",
-      align: "center",
-    },
-    {
-      id: "member-count",
-      type: "text",
-      x: 512,
-      y: 450,
-      text: "Member #{member_count}",
-      fontSize: 16,
-      fontFamily: "sans-serif",
-      fill: "#6b7280",
-      align: "center",
-    },
-  ],
-};
-
-// ── Preset Templates ──
-
-interface TemplatePreset {
-  name: string;
-  preview: string;
-  template: WelcomeTemplate;
-}
-
-const PRESETS: TemplatePreset[] = [
-  {
-    name: "Classic",
-    preview: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
-    template: JSON.parse(JSON.stringify(DEFAULT_TEMPLATE)),
-  },
-  {
-    name: "Sunset",
-    preview: "linear-gradient(135deg, #f12711, #f5af19)",
-    template: {
-      canvasWidth: 1024, canvasHeight: 500, backgroundColor: "#1a0a00",
-      elements: [
-        { id: "bg-overlay", type: "rect", x: 0, y: 0, width: 1024, height: 500, fill: "linear-gradient(135deg, #1a0a00, #4a1a00, #1a0a00)", opacity: 1 },
-        { id: "accent-top", type: "rect", x: 0, y: 0, width: 1024, height: 4, fill: "linear-gradient(90deg, #f12711, #f5af19, #f12711)", opacity: 1 },
-        { id: "avatar", type: "avatar", x: 512, y: 155, radius: 80, borderColor: "#f5af19", borderWidth: 4 },
-        { id: "welcome-label", type: "text", x: 512, y: 280, text: "WELCOME", fontSize: 44, fontFamily: "sans-serif", fontStyle: "bold", fill: "#ffffff", align: "center" },
-        { id: "username-text", type: "text", x: 512, y: 340, text: "{username}", fontSize: 30, fontFamily: "sans-serif", fill: "#f5af19", align: "center" },
-        { id: "server-text", type: "text", x: 512, y: 395, text: "to {server_name}", fontSize: 20, fontFamily: "sans-serif", fill: "#d4a574", align: "center" },
-        { id: "member-count", type: "text", x: 512, y: 450, text: "Member #{member_count}", fontSize: 16, fontFamily: "sans-serif", fill: "#8b6914", align: "center" },
-      ],
-    },
-  },
-  {
-    name: "Neon",
-    preview: "linear-gradient(135deg, #0a0a0a, #1a0033, #0a0a0a)",
-    template: {
-      canvasWidth: 1024, canvasHeight: 500, backgroundColor: "#0a0a0a",
-      elements: [
-        { id: "bg-overlay", type: "rect", x: 0, y: 0, width: 1024, height: 500, fill: "linear-gradient(135deg, #0a0a0a, #1a0033, #0a0a0a)", opacity: 1 },
-        { id: "accent-top", type: "rect", x: 0, y: 0, width: 1024, height: 3, fill: "linear-gradient(90deg, #00ff88, #00ccff, #ff00ff)", opacity: 1 },
-        { id: "accent-bot", type: "rect", x: 0, y: 497, width: 1024, height: 3, fill: "linear-gradient(90deg, #ff00ff, #00ccff, #00ff88)", opacity: 1 },
-        { id: "avatar", type: "avatar", x: 512, y: 155, radius: 80, borderColor: "#00ccff", borderWidth: 4 },
-        { id: "welcome-label", type: "text", x: 512, y: 280, text: "WELCOME", fontSize: 44, fontFamily: "sans-serif", fontStyle: "bold", fill: "#00ff88", align: "center" },
-        { id: "username-text", type: "text", x: 512, y: 340, text: "{username}", fontSize: 30, fontFamily: "sans-serif", fill: "#00ccff", align: "center" },
-        { id: "server-text", type: "text", x: 512, y: 395, text: "to {server_name}", fontSize: 20, fontFamily: "sans-serif", fill: "#cc66ff", align: "center" },
-        { id: "member-count", type: "text", x: 512, y: 450, text: "Member #{member_count}", fontSize: 16, fontFamily: "sans-serif", fill: "#555577", align: "center" },
-      ],
-    },
-  },
-  {
-    name: "Minimal",
-    preview: "linear-gradient(135deg, #18181b, #27272a)",
-    template: {
-      canvasWidth: 1024, canvasHeight: 500, backgroundColor: "#18181b",
-      elements: [
-        { id: "avatar", type: "avatar", x: 512, y: 175, radius: 70, borderColor: "#3f3f46", borderWidth: 3 },
-        { id: "username-text", type: "text", x: 512, y: 300, text: "{username}", fontSize: 32, fontFamily: "sans-serif", fontStyle: "bold", fill: "#fafafa", align: "center" },
-        { id: "server-text", type: "text", x: 512, y: 360, text: "joined {server_name}", fontSize: 18, fontFamily: "sans-serif", fill: "#71717a", align: "center" },
-      ],
-    },
-  },
-];
-
-// ── State ──
-
-const template = ref<WelcomeTemplate>(
-  JSON.parse(JSON.stringify(DEFAULT_TEMPLATE)),
-);
 const selectedElementIds = ref<Set<string>>(new Set());
 const selectedElementId = computed(() =>
-  selectedElementIds.value.size === 1 ? [...selectedElementIds.value][0]! : null,
+  selectedElementIds.value.size === 1
+    ? [...selectedElementIds.value][0]!
+    : null,
 );
-const saving = ref(false);
+
 const stageRef = ref<any>(null);
 const textFieldRef = ref<HTMLTextAreaElement | null>(null);
 const transformerRef = ref<any>(null);
@@ -1653,25 +1645,21 @@ const bgUploading = ref(false);
 const bgImageObj = ref<HTMLImageElement | null>(null);
 const bgImageFile = ref<File | null>(null);
 const MAX_IMAGE_LAYER_SIZE = 5 * 1024 * 1024;
-const MAX_IMAGE_LAYERS = 10;
 const imageUploadInput = ref<HTMLInputElement | null>(null);
 const replacingImageId = ref<string | null>(null);
 const imageUploading = ref(false);
-type BrowserWelcomeImage = HTMLImageElement | HTMLCanvasElement;
-interface BrowserWelcomeImageCacheEntry {
+
+type BrowserCanvasImage = HTMLImageElement | HTMLCanvasElement;
+interface BrowserCanvasImageCacheEntry {
   source: string;
   renderKey: string;
   original: HTMLImageElement;
-  rendered: BrowserWelcomeImage;
+  rendered: BrowserCanvasImage;
 }
-const imageObjects = ref<Record<string, BrowserWelcomeImage>>({});
-const imageCache = new Map<string, BrowserWelcomeImageCacheEntry>();
+const imageObjects = ref<Record<string, BrowserCanvasImage>>({});
+const imageCache = new Map<string, BrowserCanvasImageCacheEntry>();
 
-function imageLayerCount(elements: TemplateElement[]) {
-  return elements.filter((el) => el.type === "image").length;
-}
-
-// ── Undo/Redo History ──
+// ── Undo/Redo History ──────────────────────────────────────────────────
 
 const undoStack = ref<string[]>([]);
 const redoStack = ref<string[]>([]);
@@ -1695,8 +1683,6 @@ watch(
   { deep: true },
 );
 
-// Forces any not-yet-captured edit onto undoStack before undo/redo reads it.
-// Reuses captureSnapshot's own dedup guard rather than a restoration flag.
 function flushPendingSnapshot() {
   if (historyTimer) {
     clearTimeout(historyTimer);
@@ -1719,7 +1705,7 @@ function undo() {
   const current = undoStack.value.pop()!;
   redoStack.value.push(current);
   const prev = undoStack.value[undoStack.value.length - 1]!;
-  template.value = JSON.parse(prev);
+  replaceTemplate(JSON.parse(prev));
   pruneSelectionToExisting();
 }
 
@@ -1728,14 +1714,14 @@ function redo() {
   if (redoStack.value.length === 0) return;
   const next = redoStack.value.pop()!;
   undoStack.value.push(next);
-  template.value = JSON.parse(next);
+  replaceTemplate(JSON.parse(next));
   pruneSelectionToExisting();
 }
 
 const canUndo = computed(() => undoStack.value.length > 1);
 const canRedo = computed(() => redoStack.value.length > 0);
 
-// ── Background Image ──
+// ── Background Image ───────────────────────────────────────────────────
 
 function loadBgImage(url: string) {
   if (!url) {
@@ -1760,7 +1746,6 @@ watch(
 );
 
 async function uploadBgImage(file: File) {
-  // Immediately preview via data URL
   const reader = new FileReader();
   reader.onload = (e) => {
     const dataUrl = e.target?.result as string;
@@ -1768,13 +1753,12 @@ async function uploadBgImage(file: File) {
   };
   reader.readAsDataURL(file);
 
-  // Upload to server for persistent URL
   bgUploading.value = true;
   try {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("guild_id", props.guildId);
-    const res = await fetch("/api/welcome/upload-bg", {
+    const res = await fetch(props.profile.uploads.background, {
       method: "POST",
       body: formData,
     });
@@ -1805,17 +1789,24 @@ watch(bgImageFile, (file) => {
   if (file) uploadBgImage(file);
 });
 
-function createTintedBrowserWelcomeImage(
+function removeBgImage() {
+  template.value.backgroundImage = undefined;
+  bgImageObj.value = null;
+}
+
+// ── Element Images & Tinting ───────────────────────────────────────────
+
+function createTintedBrowserImage(
   image: HTMLImageElement,
   source: string,
   fill?: string,
   width?: number,
   height?: number,
-): BrowserWelcomeImage {
-  if (!fill || !isTintableWelcomeSvgSource(source)) return image;
+): BrowserCanvasImage {
+  if (!fill || !props.profile.images.isTintableSvg(source)) return image;
 
   const canvas = document.createElement("canvas");
-  const size = getWelcomeImageTintRasterSize(
+  const size = props.profile.images.tintRasterSize(
     image.naturalWidth || image.width,
     image.naturalHeight || image.height,
     width || image.width,
@@ -1835,12 +1826,12 @@ function createTintedBrowserWelcomeImage(
 }
 
 function cacheElementImage(
-  el: TemplateElement,
+  el: CanvasElement,
   original: HTMLImageElement,
   renderKey: string,
 ) {
   if (!el.src) return;
-  const rendered = createTintedBrowserWelcomeImage(
+  const rendered = createTintedBrowserImage(
     original,
     el.src,
     el.fill,
@@ -1858,10 +1849,10 @@ function cacheElementImage(
   void rebindTransformer();
 }
 
-function loadElementImage(el: TemplateElement) {
+function loadElementImage(el: CanvasElement) {
   if (el.type !== "image" || !el.src) return;
   const source = el.src;
-  const renderKey = getWelcomeImageRenderCacheKey(
+  const renderKey = props.profile.images.renderKey(
     el.id,
     source,
     el.fill,
@@ -1884,25 +1875,25 @@ function loadElementImage(el: TemplateElement) {
     if (
       currentElement?.type !== "image" ||
       !currentElement.src ||
-        getWelcomeImageRenderCacheKey(
-          currentElement.id,
-          currentElement.src,
-          currentElement.fill,
-          currentElement.width,
-          currentElement.height,
-        ) !== renderKey
+      props.profile.images.renderKey(
+        currentElement.id,
+        currentElement.src,
+        currentElement.fill,
+        currentElement.width,
+        currentElement.height,
+      ) !== renderKey
     ) {
       return;
     }
     cacheElementImage(currentElement, image, renderKey);
   };
   image.onerror = () => {
-    console.warn("[WelcomeEditor] Failed to load image layer", source);
+    console.warn(`${props.profile.logPrefix} Failed to load image layer`, source);
   };
   image.src = source;
 }
 
-function syncElementImages(elements: TemplateElement[]) {
+function syncElementImages(elements: CanvasElement[]) {
   const liveImageIds = new Set(
     elements.filter((el) => el.type === "image").map((el) => el.id),
   );
@@ -1923,11 +1914,10 @@ function syncElementImages(elements: TemplateElement[]) {
   elements.forEach(loadElementImage);
 }
 
-watch(
-  () => template.value.elements,
-  syncElementImages,
-  { deep: true, immediate: true },
-);
+watch(() => template.value.elements, syncElementImages, {
+  deep: true,
+  immediate: true,
+});
 
 function loadLocalImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -1964,7 +1954,10 @@ function handleImageFileSelection(event: Event) {
   }
 }
 
-async function uploadImageLayer(file: File, replaceElement?: TemplateElement): Promise<void> {
+async function uploadImageLayer(
+  file: File,
+  replaceElement?: CanvasElement,
+): Promise<void> {
   if (file.size > MAX_IMAGE_LAYER_SIZE) {
     toast.add({
       title: "Image too large",
@@ -1979,7 +1972,7 @@ async function uploadImageLayer(file: File, replaceElement?: TemplateElement): P
   ) {
     toast.add({
       title: "Image layer limit reached",
-      description: "A welcome template can contain up to 10 images.",
+      description: `A ${props.profile.noun} can contain up to 10 images.`,
       color: "error",
     });
     return;
@@ -1991,7 +1984,7 @@ async function uploadImageLayer(file: File, replaceElement?: TemplateElement): P
     const formData = new FormData();
     formData.append("file", file);
     formData.append("guild_id", props.guildId);
-    const uploadPromise = fetch("/api/welcome/upload-image", {
+    const uploadPromise = fetch(props.profile.uploads.image, {
       method: "POST",
       body: formData,
     });
@@ -2031,7 +2024,7 @@ async function uploadImageLayer(file: File, replaceElement?: TemplateElement): P
       return;
     }
 
-    const element: TemplateElement = {
+    const element: CanvasElement = {
       id: `image-${Date.now()}-${++elementCounter}`,
       type: "image",
       x: Math.round((template.value.canvasWidth - width) / 2),
@@ -2063,77 +2056,12 @@ async function uploadImageLayer(file: File, replaceElement?: TemplateElement): P
   }
 }
 
-function removeBgImage() {
-  template.value.backgroundImage = undefined;
-  bgImageObj.value = null;
-}
-
-function applyPreset(preset: TemplatePreset) {
+function applyPreset(preset: CanvasPreset) {
   const bgImage = template.value.backgroundImage;
-  template.value = JSON.parse(JSON.stringify(preset.template));
-  // Preserve background image
+  replaceTemplate(JSON.parse(JSON.stringify(preset.template)));
   if (bgImage) template.value.backgroundImage = bgImage;
   selectedElementIds.value = new Set();
 }
-
-const placeholders = [
-  "{username}",
-  "{displayname}",
-  "{tag}",
-  "{server_name}",
-  "{member_count}",
-];
-
-const toolTypes = [
-  {
-    type: "text" as const,
-    icon: "i-heroicons-bars-3-bottom-left",
-    label: "Text",
-    color: "text-violet-400",
-  },
-  {
-    type: "rect" as const,
-    icon: "i-heroicons-stop",
-    label: "Rectangle",
-    color: "text-blue-400",
-  },
-  {
-    type: "circle" as const,
-    icon: "i-heroicons-sun",
-    label: "Circle",
-    color: "text-cyan-400",
-  },
-  {
-    type: "triangle" as const,
-    icon: "i-heroicons-play",
-    label: "Triangle",
-    color: "text-amber-400",
-  },
-  {
-    type: "star" as const,
-    icon: "i-heroicons-star",
-    label: "Star",
-    color: "text-yellow-400",
-  },
-  {
-    type: "line" as const,
-    icon: "i-heroicons-minus",
-    label: "Line / Arrow",
-    color: "text-lime-400",
-  },
-  {
-    type: "image" as const,
-    icon: "i-heroicons-photo",
-    label: "Image",
-    color: "text-sky-400",
-  },
-  {
-    type: "avatar" as const,
-    icon: "i-heroicons-user-circle",
-    label: "Avatar",
-    color: "text-pink-400",
-  },
-];
 
 const reversedElements = computed(() => [...template.value.elements].reverse());
 
@@ -2167,7 +2095,7 @@ const selectedElementOpacityPct = computed({
   },
 });
 
-// ── Transformer ──
+// ── Transformer ────────────────────────────────────────────────────────
 
 const transformerNodes = computed(() => {
   transformerRevision.value;
@@ -2177,7 +2105,8 @@ const transformerNodes = computed(() => {
     if (!stage) return [];
     return [...selectedElementIds.value]
       .filter(
-        (id) => template.value.elements.find((el) => el.id === id)?.type !== "line",
+        (id) =>
+          template.value.elements.find((el) => el.id === id)?.type !== "line",
       )
       .map((id) => stage.findOne(`.${id}`))
       .filter((node): node is NonNullable<typeof node> => Boolean(node));
@@ -2189,7 +2118,10 @@ const transformerNodes = computed(() => {
 const hoveredElementId = ref<string | null>(null);
 
 const hoveredElementRect = computed(() => {
-  if (!hoveredElementId.value || hoveredElementId.value === selectedElementId.value)
+  if (
+    !hoveredElementId.value ||
+    hoveredElementId.value === selectedElementId.value
+  )
     return null;
   if (!stageRef.value) return null;
   try {
@@ -2323,8 +2255,6 @@ const alignmentBounds = computed(() => {
   return null;
 });
 
-type AlignDirection = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
-
 function alignLayers(direction: AlignDirection) {
   const bounds = alignmentBounds.value;
   if (!bounds) return;
@@ -2365,7 +2295,7 @@ function distributeLayers(axis: "horizontal" | "vertical") {
 
   const items: {
     id: string;
-    el: TemplateElement;
+    el: CanvasElement;
     rect: { x: number; y: number; width: number; height: number };
   }[] = [];
   for (const id of ids) {
@@ -2396,32 +2326,8 @@ function distributeLayers(axis: "horizontal" | "vertical") {
   }
 }
 
-function scaleElementSize(el: TemplateElement, sx: number, sy: number) {
-  switch (el.type) {
-    case "rect":
-    case "image":
-      el.width = Math.round(Math.max(5, (el.width ?? 100) * sx));
-      el.height = Math.round(Math.max(5, (el.height ?? 100) * sy));
-      break;
-    case "circle":
-    case "triangle":
-    case "star":
-      el.scaleX = (el.scaleX ?? 1) * sx;
-      el.scaleY = (el.scaleY ?? 1) * sy;
-      break;
-    case "avatar":
-      el.radius = Math.round(Math.max(5, (el.radius ?? 64) * ((sx + sy) / 2)));
-      break;
-    case "text":
-      el.fontSize = Math.round(Math.max(6, (el.fontSize ?? 24) * ((sx + sy) / 2)));
-      break;
-    case "line":
-      el.points = (el.points ?? [-60, 0, 60, 0]).map((p, i) =>
-        Math.round(i % 2 === 0 ? p * sx : p * sy),
-      );
-      break;
-  }
-}
+const scaleElementSize = (el: CanvasElement, sx: number, sy: number) =>
+  scaleElementSizeWith(el, sx, sy, props.profile);
 
 function applyGroupScale(newWidth: number, newHeight: number) {
   const bounds = groupBounds.value;
@@ -2460,9 +2366,26 @@ watch(selectedElementIds, () => {
   void rebindTransformer();
 });
 
-// ── Config builders ──
+// ── Config Builders ────────────────────────────────────────────────────
 
-function rectConfig(el: TemplateElement) {
+/** Avatar preview nodes only ever carried colour and blur; nothing when the profile only shadows images. */
+function avatarShadowProps(el: CanvasElement) {
+  if (props.profile.shadow === "image") return {};
+  return { shadowColor: el.shadowColor, shadowBlur: el.shadowBlur };
+}
+
+/** Shadow props for an element, or nothing when the profile only shadows images. */
+function shadowProps(el: CanvasElement) {
+  if (props.profile.shadow === "image" && el.type !== "image") return {};
+  return {
+    shadowColor: el.shadowColor,
+    shadowBlur: el.shadowBlur,
+    shadowOffsetX: el.shadowOffsetX,
+    shadowOffsetY: el.shadowOffsetY,
+  };
+}
+
+function rectConfig(el: CanvasElement) {
   const w = el.width || 100;
   const h = el.height || 100;
   return {
@@ -2470,18 +2393,19 @@ function rectConfig(el: TemplateElement) {
     y: el.y,
     width: w,
     height: h,
-    ...gradientFillProps(el.fill, 0, 0, w, h, "#ffffff"),
+    ...gradientFillProps(el.fill, 0, 0, w, h, props.profile.fallback.rectFill),
     cornerRadius: el.cornerRadius || 0,
     opacity: el.opacity ?? 1,
     ...gradientStrokeProps(el.stroke, 0, 0, w, h),
     strokeWidth: el.strokeWidth || 0,
+    ...shadowProps(el),
     rotation: el.rotation || 0,
     draggable: true,
     name: el.id,
   };
 }
 
-function imageConfig(el: TemplateElement) {
+function imageConfig(el: CanvasElement) {
   return {
     x: el.x,
     y: el.y,
@@ -2501,16 +2425,24 @@ function imageConfig(el: TemplateElement) {
   };
 }
 
-function circleConfig(el: TemplateElement) {
+function circleConfig(el: CanvasElement) {
   const r = el.radius || 50;
   return {
     x: el.x,
     y: el.y,
     radius: r,
-    ...gradientFillProps(el.fill, -r, -r, r, r, "#ffffff"),
+    ...gradientFillProps(
+      el.fill,
+      -r,
+      -r,
+      r,
+      r,
+      props.profile.fallback.circleFill,
+    ),
     opacity: el.opacity ?? 1,
     ...gradientStrokeProps(el.stroke, -r, -r, r, r),
     strokeWidth: el.strokeWidth || 0,
+    ...shadowProps(el),
     rotation: el.rotation ?? 0,
     scaleX: el.scaleX ?? 1,
     scaleY: el.scaleY ?? 1,
@@ -2519,7 +2451,7 @@ function circleConfig(el: TemplateElement) {
   };
 }
 
-function triangleConfig(el: TemplateElement) {
+function triangleConfig(el: CanvasElement) {
   const r = el.radius || 50;
   return {
     x: el.x,
@@ -2530,6 +2462,7 @@ function triangleConfig(el: TemplateElement) {
     opacity: el.opacity ?? 1,
     ...gradientStrokeProps(el.stroke, -r, -r, r, r),
     strokeWidth: el.strokeWidth || 0,
+    ...shadowProps(el),
     rotation: el.rotation ?? 0,
     scaleX: el.scaleX ?? 1,
     scaleY: el.scaleY ?? 1,
@@ -2538,7 +2471,7 @@ function triangleConfig(el: TemplateElement) {
   };
 }
 
-function starConfig(el: TemplateElement) {
+function starConfig(el: CanvasElement) {
   const r = el.outerRadius || 50;
   return {
     x: el.x,
@@ -2546,10 +2479,18 @@ function starConfig(el: TemplateElement) {
     numPoints: el.numPoints || 5,
     innerRadius: el.innerRadius || 25,
     outerRadius: r,
-    ...gradientFillProps(el.fill, -r, -r, r, r, "#374151"),
+    ...gradientFillProps(
+      el.fill,
+      -r,
+      -r,
+      r,
+      r,
+      props.profile.fallback.starFill,
+    ),
     opacity: el.opacity ?? 1,
     ...gradientStrokeProps(el.stroke, -r, -r, r, r),
     strokeWidth: el.strokeWidth || 0,
+    ...shadowProps(el),
     rotation: el.rotation ?? 0,
     scaleX: el.scaleX ?? 1,
     scaleY: el.scaleY ?? 1,
@@ -2558,12 +2499,12 @@ function starConfig(el: TemplateElement) {
   };
 }
 
-function lineConfig(el: TemplateElement) {
+function lineConfig(el: CanvasElement) {
   return {
     x: el.x,
     y: el.y,
     points: el.points || [-60, 0, 60, 0],
-    stroke: el.stroke || "#e4e4e7",
+    stroke: el.stroke || props.profile.fallback.lineStroke,
     strokeWidth: el.strokeWidth || 3,
     opacity: el.opacity ?? 1,
     rotation: el.rotation ?? 0,
@@ -2572,14 +2513,15 @@ function lineConfig(el: TemplateElement) {
   };
 }
 
-function textConfig(el: TemplateElement) {
+function textConfig(el: CanvasElement) {
   const family = el.fontFamily || "sans-serif";
   const fontSize = el.fontSize || 24;
   const width = el.width || 400;
   return {
     x: el.x,
     y: el.y,
-    offsetX: el.align === "center" ? width / 2 : el.align === "right" ? width : 0,
+    offsetX:
+      el.align === "center" ? width / 2 : el.align === "right" ? width : 0,
     offsetY: fontSize / 2,
     width,
     text: previewText(el.text || ""),
@@ -2587,17 +2529,18 @@ function textConfig(el: TemplateElement) {
     fontFamily: family,
     fontStyle: el.fontStyle || "",
     fill: el.fill || "#ffffff",
-    align: el.align || "center",
+    align: el.align || props.profile.fallback.textAlign,
     opacity: el.opacity ?? 1,
     rotation: el.rotation ?? 0,
     stroke: el.stroke,
     strokeWidth: el.strokeWidth || 0,
+    ...shadowProps(el),
     draggable: true,
     name: el.id,
   };
 }
 
-// ── Helpers ──
+// ── Helpers ────────────────────────────────────────────────────────────
 
 function gradientFillProps(
   fill: string | undefined,
@@ -2688,115 +2631,21 @@ function gradientStrokeProps(
   };
 }
 
-function previewText(t: string): string {
-  return t
-    .replace(/\{username\}/g, "NewUser")
-    .replace(/\{displayname\}/g, "New User")
-    .replace(/\{tag\}/g, "NewUser#0001")
-    .replace(/\{server_name\}/g, "My Server")
-    .replace(/\{member_count\}/g, "42");
-}
+const previewText = (t: string) => previewTextWith(t, props.profile);
 
-function elementLabel(el: TemplateElement): string {
-  return el.type === "text"
-    ? (el.text || "Text").substring(0, 16)
-    : el.type.charAt(0).toUpperCase() + el.type.slice(1);
-}
-
-function elementTypeIcon(type: string): string {
-  const map: Record<string, string> = {
-    text: "i-heroicons-bars-3-bottom-left",
-    rect: "i-heroicons-stop",
-    circle: "i-heroicons-sun",
-    avatar: "i-heroicons-user-circle",
-    image: "i-heroicons-photo",
-    triangle: "i-heroicons-play",
-    star: "i-heroicons-star",
-    line: "i-heroicons-minus",
-  };
-  return map[type] || "i-heroicons-square-3-stack-3d";
-}
-
-// ── Element CRUD ──
+// ── Element CRUD ───────────────────────────────────────────────────────
 
 let elementCounter = 0;
 
-function addElement(type: TemplateElement["type"]) {
+function addElement(type: CanvasElement["type"]) {
   elementCounter++;
   const id = `${type}-${Date.now()}-${elementCounter}`;
   const cx = template.value.canvasWidth / 2,
     cy = template.value.canvasHeight / 2;
-  const defs: Record<string, Partial<TemplateElement>> = {
-    text: {
-      type: "text",
-      x: cx,
-      y: cy,
-      text: "New Text",
-      fontSize: 24,
-      fontFamily: "sans-serif",
-      fontStyle: "",
-      fill: "#ffffff",
-      align: "center",
-      opacity: 1,
-    },
-    rect: {
-      type: "rect",
-      x: cx - 75,
-      y: cy - 50,
-      width: 150,
-      height: 100,
-      fill: "#374151",
-      opacity: 1,
-      cornerRadius: 8,
-    },
-    circle: {
-      type: "circle",
-      x: cx,
-      y: cy,
-      radius: 50,
-      fill: "#4f46e5",
-      opacity: 1,
-    },
-    triangle: {
-      type: "triangle",
-      x: cx,
-      y: cy,
-      radius: 50,
-      fill: "#374151",
-      opacity: 1,
-    },
-    star: {
-      type: "star",
-      x: cx,
-      y: cy,
-      numPoints: 5,
-      innerRadius: 25,
-      outerRadius: 50,
-      fill: "#374151",
-      opacity: 1,
-    },
-    line: {
-      type: "line",
-      x: cx,
-      y: cy,
-      points: [-60, 0, 60, 0],
-      stroke: "#e4e4e7",
-      strokeWidth: 3,
-      opacity: 1,
-      arrow: false,
-    },
-    avatar: {
-      type: "avatar",
-      x: cx,
-      y: cy - 80,
-      radius: 64,
-      borderColor: "#a78bfa",
-      borderWidth: 3,
-      opacity: 1,
-    },
-  };
-  if (!defs[type]) return;
-  template.value.elements.push({ id, ...defs[type] } as TemplateElement);
+
+  const def = props.profile.newElement(type, cx, cy);
+  if (!def) return;
+  template.value.elements.push({ id, ...def } as CanvasElement);
   selectedElementIds.value = new Set([id]);
 }
 
@@ -2837,12 +2686,16 @@ function deleteSelectedElement() {
 function duplicateSelectedElement() {
   if (selectedElementIds.value.size === 0) return;
   const imageDuplicates = [...selectedElementIds.value].filter(
-    (id) => template.value.elements.find((el) => el.id === id)?.type === "image",
+    (id) =>
+      template.value.elements.find((el) => el.id === id)?.type === "image",
   ).length;
-  if (imageLayerCount(template.value.elements) + imageDuplicates > MAX_IMAGE_LAYERS) {
+  if (
+    imageLayerCount(template.value.elements) + imageDuplicates >
+    MAX_IMAGE_LAYERS
+  ) {
     toast.add({
       title: "Image layer limit reached",
-      description: "A welcome template can contain up to 10 images.",
+      description: `A ${props.profile.noun} can contain up to 10 images.`,
       color: "error",
     });
     return;
@@ -2852,7 +2705,7 @@ function duplicateSelectedElement() {
     const src = template.value.elements.find((el) => el.id === id);
     if (!src) continue;
     elementCounter++;
-    const newEl: TemplateElement = {
+    const newEl: CanvasElement = {
       ...JSON.parse(JSON.stringify(src)),
       id: `${src.type}-${Date.now()}-${elementCounter}`,
       x: src.x + 20,
@@ -2864,15 +2717,14 @@ function duplicateSelectedElement() {
   selectedElementIds.value = newIds;
 }
 
-function moveLayer(direction: 'up' | 'down') {
+function moveLayer(direction: "up" | "down") {
   if (!selectedElementId.value) return;
   const els = template.value.elements;
   const i = els.findIndex((el) => el.id === selectedElementId.value);
   if (i === -1) return;
-  // 'up' in layer panel = higher index (rendered later = on top)
-  const target = direction === 'up' ? i + 1 : i - 1;
+  const target = direction === "up" ? i + 1 : i - 1;
   if (target < 0 || target >= els.length) return;
-  [els[i], els[target]] = [els[target], els[i]];
+  [els[i], els[target]] = [els[target]!, els[i]!];
 }
 
 function selectElement(id: string, e?: MouseEvent) {
@@ -2886,7 +2738,7 @@ function selectElement(id: string, e?: MouseEvent) {
   }
 }
 
-// ── Font Change Handler ──
+// ── Font Change Handler ────────────────────────────────────────────────
 
 async function handleFontChange(family: string) {
   if (!selectedElement.value) return;
@@ -2896,53 +2748,35 @@ async function handleFontChange(family: string) {
   void rebindTransformer();
 }
 
-// ── Keyboard Shortcuts ──
+// ── Keyboard Shortcuts ─────────────────────────────────────────────────
 
 function handleKeyDown(e: KeyboardEvent) {
-  // Shift is a pure modifier with no side effects when typing (unlike Space,
-  // which must reach text inputs), so track it before the input-focus guard —
-  // rotation-snap should still work even if a properties-panel input happens
-  // to still have focus.
-  if (e.key === 'Shift' && !isShiftHeld.value) {
+  if (e.key === "Shift" && !isShiftHeld.value) {
     isShiftHeld.value = true;
   }
 
-  // Don't intercept native text-editing (including the browser's own
-  // undo/redo) while the user is typing in a field.
   const target = e.target as HTMLElement;
   const isTextEntry =
-    target.tagName === 'INPUT' ||
-    target.tagName === 'TEXTAREA' ||
-    target.tagName === 'SELECT' ||
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.tagName === "SELECT" ||
     target.isContentEditable;
-  if (isTextEntry) {
-    return;
-  }
+  if (isTextEntry) return;
 
-  // Undo/redo should fire even when a toolbar button (e.g. the Undo/Redo
-  // buttons themselves) holds focus, so check it before the button-focus
-  // guard below — only text entry should suppress it.
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
     e.preventDefault();
-    if (e.shiftKey) {
-      redo();
-    } else {
-      undo();
-    }
+    if (e.shiftKey) redo();
+    else undo();
     return;
   }
 
-  // Don't intercept when a focused control needs Space for its own native
-  // activation (buttons, [role="button"])
-  if (target.closest('button, [role="button"]')) {
-    return;
-  }
+  if (target.closest("button, [role='button']")) return;
 
-  if (e.key === 'Delete' || e.key === 'Backspace') {
+  if (e.key === "Delete" || e.key === "Backspace") {
     e.preventDefault();
     deleteSelectedElement();
   }
-  if (e.key === ' ' && !isSpaceHeld.value) {
+  if (e.key === " " && !isSpaceHeld.value) {
     e.preventDefault();
     isSpaceHeld.value = true;
     stageRef.value?.getNode()?.listening(false);
@@ -2950,10 +2784,8 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 function handleKeyUp(e: KeyboardEvent) {
-  if (e.key === 'Shift') {
-    isShiftHeld.value = false;
-  }
-  if (e.key === ' ') {
+  if (e.key === "Shift") isShiftHeld.value = false;
+  if (e.key === " ") {
     isSpaceHeld.value = false;
     isPanning.value = false;
     stageRef.value?.getNode()?.listening(true);
@@ -2994,19 +2826,7 @@ function handlePanEnd() {
   isPanning.value = false;
 }
 
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown);
-  window.addEventListener('keyup', handleKeyUp);
-  window.addEventListener('blur', handleWindowBlur);
-});
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown);
-  window.removeEventListener('keyup', handleKeyUp);
-  window.removeEventListener('blur', handleWindowBlur);
-  if (historyTimer) clearTimeout(historyTimer);
-});
-
-// ── Drag / Transform ──
+// ── Drag / Transform End Handlers ──────────────────────────────────────
 
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.25;
@@ -3024,14 +2844,14 @@ function handleStageClick(e: any) {
   if (e.target === e.target.getStage()) selectedElementIds.value = new Set();
 }
 
-function handleDragStart(e: any, el: TemplateElement) {
+function handleDragStart(e: any, el: CanvasElement) {
   if (!selectedElementIds.value.has(el.id)) {
     selectedElementIds.value = new Set([el.id]);
   }
 }
 
 function moveOtherSelectedElements(
-  movedEl: TemplateElement,
+  movedEl: CanvasElement,
   newX: number,
   newY: number,
 ) {
@@ -3051,7 +2871,7 @@ function moveOtherSelectedElements(
   }
 }
 
-function handleDragEnd(e: any, el: TemplateElement) {
+function handleDragEnd(e: any, el: CanvasElement) {
   const newX = Math.round(e.target.x());
   const newY = Math.round(e.target.y());
   moveOtherSelectedElements(el, newX, newY);
@@ -3059,14 +2879,14 @@ function handleDragEnd(e: any, el: TemplateElement) {
   el.y = newY;
 }
 
-function handleLineHandleDrag(e: any, el: TemplateElement, pointIndex: number) {
+function handleLineHandleDrag(e: any, el: CanvasElement, pointIndex: number) {
   const pts = el.points ? [...el.points] : [-60, 0, 60, 0];
   pts[pointIndex] = Math.round(e.target.x() - el.x);
   pts[pointIndex + 1] = Math.round(e.target.y() - el.y);
   el.points = pts;
 }
 
-function handleTextDragEnd(e: any, el: TemplateElement) {
+function handleTextDragEnd(e: any, el: CanvasElement) {
   const newX = Math.round(e.target.x());
   const newY = Math.round(e.target.y());
   moveOtherSelectedElements(el, newX, newY);
@@ -3074,19 +2894,19 @@ function handleTextDragEnd(e: any, el: TemplateElement) {
   el.y = newY;
 }
 
-function handleTransformEnd(e: any, el: TemplateElement) {
+function handleTransformEnd(e: any, el: CanvasElement) {
   const node = e.target;
   el.x = Math.round(node.x());
   el.y = Math.round(node.y());
   el.rotation = Math.round(node.rotation());
-  if (el.type === "rect" || el.type === "image") {
+  if (el.type === "rect" || el.type === "progressbar" || el.type === "image") {
     el.width = Math.round(Math.max(5, node.width() * node.scaleX()));
     el.height = Math.round(Math.max(5, node.height() * node.scaleY()));
     node.scaleX(1);
     node.scaleY(1);
   } else if (el.type === "avatar") {
     el.radius = Math.round(
-      Math.max(5, (el.radius || 64) * ((node.scaleX() + node.scaleY()) / 2)),
+      Math.max(5, (el.radius || props.profile.fallback.avatarRadius) * ((node.scaleX() + node.scaleY()) / 2)),
     );
     node.scaleX(1);
     node.scaleY(1);
@@ -3101,390 +2921,311 @@ function handleTransformEnd(e: any, el: TemplateElement) {
 }
 
 function resetTemplate() {
-  template.value = JSON.parse(JSON.stringify(DEFAULT_TEMPLATE));
+  replaceTemplate(props.profile.defaultTemplate());
   selectedElementIds.value = new Set();
 }
 
-// ── Load / Save ──
+// ── Lifecycle ──────────────────────────────────────────────────────────
 
-async function loadTemplate() {
-  try {
-    const cfg = await $fetch<{
-      enabled: boolean;
-      settings: Record<string, any>;
-    }>(
-      `/api/guild-configs/${encodeURIComponent(
-        props.guildId,
-      )}/${encodeURIComponent("welcome")}`,
-    );
-    if (cfg.settings && Object.keys(cfg.settings).length > 0) {
-      template.value = {
-        ...JSON.parse(JSON.stringify(DEFAULT_TEMPLATE)),
-        ...pickCanvas(cfg.settings),
-      };
-    }
-  } catch (err) {
-    console.error("[WelcomeEditor] load error:", err);
-  }
-}
+onMounted(async () => {
+  window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("keyup", handleKeyUp);
+  window.addEventListener("blur", handleWindowBlur);
 
-async function saveTemplate() {
-  if (imageLayerCount(template.value.elements) > MAX_IMAGE_LAYERS) {
-    toast.add({
-      title: "Image layer limit reached",
-      description: "A welcome template can contain up to 10 images.",
-      color: "error",
-    });
-    return;
-  }
-  saving.value = true;
-  try {
-    const url = `/api/guild-configs/${encodeURIComponent(
-      props.guildId,
-    )}/${encodeURIComponent("welcome")}`;
-    // PUT replaces the whole settings blob, so merge the canvas over the
-    // latest saved settings rather than a copy loaded when the page opened.
-    const current = await $fetch<{ settings: Record<string, any> | null }>(url);
-    await $fetch(url, {
-      method: "PUT",
-      body: {
-        settings: { ...(current.settings ?? {}), ...canvasPatch(template.value) },
-      },
-    });
-    toast.add({
-      title: "Saved!",
-      description: "Welcome template saved.",
-      color: "success",
-    });
-    savedCanvas.value = canvasSnapshot();
-    emit("saved");
-  } catch (err) {
-    console.error("[WelcomeEditor] save error:", err);
-    toast.add({
-      title: "Error",
-      description: "Failed to save.",
-      color: "error",
-    });
-  } finally {
-    saving.value = false;
-  }
-}
+  await loadTemplateFonts(template.value.elements);
+  remeasureText(stageRef.value?.getNode());
+  undoStack.value = [JSON.stringify(template.value)];
+});
 
-// ── Unsaved changes ──
-// The canvas is compared with what was last loaded or saved so the page can
-// warn before its state is thrown away (switching tabs, leaving).
-const savedCanvas = ref<string | null>(null);
-const canvasSnapshot = () => JSON.stringify(canvasPatch(template.value));
-const dirty = computed(() => savedCanvas.value !== null && canvasSnapshot() !== savedCanvas.value);
-watch(dirty, (value) => emit("dirty", value));
-
-onMounted(() => {
-  loadTemplate().then(async () => {
-    savedCanvas.value = canvasSnapshot();
-    // Load Google Fonts used in the template, then repaint once every
-    // one of them is actually ready to draw (fixes flash-of-fallback).
-    await loadTemplateFonts(template.value.elements);
-    remeasureText(stageRef.value?.getNode());
-    undoStack.value = [JSON.stringify(template.value)];
-  });
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+  window.removeEventListener("keyup", handleKeyUp);
+  window.removeEventListener("blur", handleWindowBlur);
+  if (historyTimer) clearTimeout(historyTimer);
 });
 </script>
 
 <style scoped>
-/* ── Foundation ── */
-.we {
+/* ── Foundation & Dark Glass Surface ── */
+.rce {
   font-family:
     "Inter",
     system-ui,
     -apple-system,
     sans-serif;
-  background: #181818;
-  color: #d4d4d8;
+  color: #cbd5e1;
+  border-radius: 16px;
 }
 
-/* ── Glass surface (matches app/assets/css/main.css .glass-card, minus `overflow`
-   so it composes safely with panels that need overflow-y-auto) ── */
-.we-glass-panel {
-  background: rgba(20, 20, 26, 0.7);
+.rce-glass-panel {
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  border-radius: 16px;
 }
 
 /* ── Toolbar ── */
-.we-toolbar {
+.rce-toolbar {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
   height: 44px;
 }
-.we-toolbar-group {
+.rce-toolbar-group {
   display: flex;
   align-items: center;
   gap: 4px;
 }
-.we-toolbar-sep {
+.rce-toolbar-sep {
   width: 1px;
   height: 18px;
-  background: #3f3f46;
+  background: rgba(255, 255, 255, 0.1);
   margin: 0 2px;
 }
 
 /* ── Labels ── */
-.we-label {
+.rce-label {
   font-size: 11px;
-  color: #a1a1aa;
+  color: #94a3b8;
   font-weight: 600;
   letter-spacing: 0.02em;
   min-width: 14px;
   text-align: right;
 }
-.we-panel-label {
+.rce-panel-label {
   font-size: 11px;
   font-weight: 600;
-  color: #71717a;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+.rce-prop-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+}
 
 /* ── Inputs ── */
-.we-num-input {
-  background: #1a1a1a;
-  border: 1px solid #333;
+.rce-num-input {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  color: #d4d4d8;
-  font-size: 14px;
-  padding: 6px 8px;
+  color: #e2e8f0;
+  font-size: 13px;
+  padding: 5px 8px;
   font-variant-numeric: tabular-nums;
   outline: none;
   transition: border-color 0.15s;
 }
-.we-num-input:focus {
-  border-color: #7c6ef6;
+.rce-num-input:focus {
+  border-color: #6366f1;
 }
-.we-hex-input {
-  background: #1a1a1a;
-  border: 1px solid #333;
+.rce-textarea {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  color: #d4d4d8;
+  color: #e2e8f0;
   font-size: 13px;
-  padding: 6px 8px;
-  font-family: "JetBrains Mono", monospace;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.we-hex-input:focus {
-  border-color: #7c6ef6;
-}
-.we-textarea {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 6px;
-  color: #d4d4d8;
-  font-size: 14px;
   padding: 6px 8px;
   width: 100%;
   resize: vertical;
   outline: none;
   transition: border-color 0.15s;
 }
-.we-textarea:focus {
-  border-color: #7c6ef6;
+.rce-textarea:focus {
+  border-color: #6366f1;
 }
-.we-select {
-  background: #1a1a1a;
-  border: 1px solid #333;
+.rce-select {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  color: #d4d4d8;
-  font-size: 14px;
-  padding: 6px 8px;
+  color: #e2e8f0;
+  font-size: 13px;
+  padding: 5px 8px;
   outline: none;
 }
 
 /* ── Buttons ── */
-.we-tool-btn {
+.rce-tool-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  color: #a1a1aa;
+  color: #94a3b8;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.15s;
 }
-.we-tool-btn:hover {
+.rce-tool-btn:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: #e4e4e7;
+  color: #f1f5f9;
 }
-.we-tool-btn-sm {
+.rce-tool-btn-sm {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 26px;
   height: 26px;
   border-radius: 6px;
-  color: #71717a;
+  color: #64748b;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.15s;
 }
-.we-tool-btn-sm:hover {
+.rce-tool-btn-sm:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: #e4e4e7;
+  color: #f1f5f9;
 }
-.we-tool-btn-sm[aria-disabled='true'] {
+.rce-tool-btn-sm[aria-disabled="true"] {
   opacity: 0.35;
   cursor: not-allowed;
 }
-.we-tool-btn-sm[aria-disabled='true']:hover {
+.rce-tool-btn-sm[aria-disabled="true"]:hover {
   background: transparent;
-  color: #71717a;
+  color: #64748b;
 }
-.we-tool-row {
+.rce-tool-row {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
   transition: all 0.15s;
-  color: #e4e4e7;
+  color: #cbd5e1;
 }
-.we-tool-row:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.16);
+.rce-tool-row:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #ffffff;
 }
 
 /* ── Color Chips ── */
-.we-color-chip-lg {
+.rce-color-chip-lg {
   width: 28px;
   height: 28px;
-  border-radius: 4px;
-  border: 1px solid #555;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   flex-shrink: 0;
   transition: transform 0.1s;
 }
-.we-color-chip-lg:hover {
+.rce-color-chip-lg:hover {
   transform: scale(1.05);
 }
 
 /* ── Layers ── */
-.we-layer {
+.rce-layer {
   display: flex;
   align-items: center;
   gap: 6px;
   width: 100%;
-  padding: 6px 6px;
+  padding: 6px 8px;
   border-radius: 8px;
   font-size: 12px;
-  color: #a1a1aa;
+  color: #94a3b8;
   background: transparent;
   border: 1px solid transparent;
   border-left-width: 3px;
   cursor: pointer;
   transition: all 0.1s;
 }
-.we-layer:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #d4d4d8;
+.rce-layer:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
 }
-.we-layer-active {
-  background: rgba(124, 110, 246, 0.22);
-  border-color: rgba(124, 110, 246, 0.5);
-  border-left-color: #7c6ef6;
-  color: #e4e4e7;
+.rce-layer-active {
+  background: rgba(99, 102, 241, 0.18) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  border-left-color: #6366f1 !important;
+  color: #818cf8 !important;
   font-weight: 500;
 }
 
 /* ── Property Sections ── */
-.we-prop-section {
+.rce-prop-section {
   padding: 8px 10px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-.we-prop-title {
+.rce-prop-title {
   font-size: 11px;
   font-weight: 600;
-  color: #71717a;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 6px;
 }
-.we-prop-row {
+.rce-prop-row {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.we-placeholder-chip {
+.rce-placeholder-chip {
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  padding: 4px 8px;
+  font-size: 10px;
+  padding: 3px 6px;
   border-radius: 6px;
-  background: rgba(139, 92, 246, 0.1);
-  color: #a78bfa;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(99, 102, 241, 0.1);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.2);
   cursor: pointer;
   transition: all 0.15s;
 }
-.we-placeholder-chip:hover {
-  background: rgba(139, 92, 246, 0.2);
-  border-color: rgba(139, 92, 246, 0.4);
-}
-.we-prop-label {
-  font-size: 11px;
-  color: #a1a1aa;
-  font-weight: 600;
+.rce-placeholder-chip:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #ffffff;
 }
 
-
-/* ── Konva overrides ── */
-.we :deep(.konvajs-content) {
+/* ── Konva Overrides ── */
+.rce :deep(.konvajs-content) {
   border-radius: 0 !important;
 }
 
 /* Hide number input spinners */
-.we-num-input::-webkit-inner-spin-button,
-.we-num-input::-webkit-outer-spin-button {
+.rce-num-input::-webkit-inner-spin-button,
+.rce-num-input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-.we-num-input {
+.rce-num-input {
   -moz-appearance: textfield;
   appearance: textfield;
 }
 
 /* ── Preset Buttons ── */
-.we-preset-btn {
+.rce-preset-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
   padding: 4px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
   transition: all 0.15s;
-  color: #a1a1aa;
+  color: #94a3b8;
 }
-.we-preset-btn:hover {
+.rce-preset-btn:hover {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.16);
-  color: #e4e4e7;
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #e2e8f0;
 }
-.we-preset-swatch {
+.rce-preset-swatch {
   width: 100%;
   height: 28px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 </style>
