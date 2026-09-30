@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.25.0...modus-v1.26.0) (2026-09-30)
+
+
+### ✨ Features
+
+* **web:** redesign auth, Terms and Privacy pages on the Glide system ([#92](https://github.com/PPO-GG/MODUS/issues/92)) ([6b20c56](https://github.com/PPO-GG/MODUS/commit/6b20c56b306ee634047f52cc057282f616d2aa1c))
+
 ## [1.25.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.24.2...modus-v1.25.0) (2026-09-29)
 
 
