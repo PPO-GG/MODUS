@@ -26,6 +26,10 @@
       "types": "./src/rank-cards.ts",
       "default": "./dist/rank-cards.js"
     },
+    "./recording-limits": {
+      "types": "./src/recording-limits.ts",
+      "default": "./dist/recording-limits.js"
+    },
     "./repositories/recordings": {
       "types": "./src/repositories/recordings.ts",
       "default": "./dist/repositories/recordings.js"

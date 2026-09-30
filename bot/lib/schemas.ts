@@ -22,13 +22,26 @@ import {
   RANK_CARD_IMAGE_COUNT_ERROR,
   RANK_CARD_IMAGE_SOURCE_ERROR,
 } from "@modus/db/rank-cards";
+import {
+  MAX_RECORDING_BITRATE,
+  MIN_RECORDING_BITRATE,
+} from "@modus/db/recording-limits";
 
 // ── Recording ──────────────────────────────────────────────────────
 
+// Out-of-range values are clamped rather than rejected: a failed parse would
+// fall back to defaults for the whole blob and drop unrelated settings.
+const clampedNumber = (min: number, max: number, fallback: number) =>
+  z
+    .number()
+    .transform((v) => Math.min(Math.max(v, min), max))
+    .default(fallback);
+
 export const RecordingSettingsSchema = z.object({
-  maxDuration: z.number().default(14400), // 4 hours in seconds
-  bitrate: z.number().default(64), // kbps
-  maxConcurrentUsers: z.number().default(25), // cap FFmpeg processes per session
+  maxDuration: clampedNumber(300, 14400, 14400), // seconds, 5 min – 4 hours
+  // kbps. Premium tiers (>64) are enforced at session start, not here.
+  bitrate: clampedNumber(MIN_RECORDING_BITRATE, MAX_RECORDING_BITRATE, 64),
+  maxConcurrentUsers: clampedNumber(1, 99, 25), // cap FFmpeg processes per session
   announceMode: z
     .literal(["none", "tts", "textTts", "soundClip"])
     .default("tts"),

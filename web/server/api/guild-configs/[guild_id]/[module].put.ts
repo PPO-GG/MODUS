@@ -7,7 +7,9 @@
  * Body: { enabled?: boolean, settings?: object }
  *   - Either field is optional; omit what you don't want to change.
  *   - Unknown fields are ignored.
+ *   - Module "recording": premium-only bitrates are clamped for non-premium guilds.
  */
+import { clampRecordingBitrate } from "@modus/db/recording-limits";
 import { validateWelcomeImageElements } from "@modus/db/welcome-images";
 import { getRepos } from "../../../utils/db";
 import { requireModuleAccess } from "../../../utils/session";
@@ -59,6 +61,22 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Bitrates above the free tier are premium-only. Clamp rather than reject so
+  // a lapsed-premium guild's stale form value doesn't make every save fail;
+  // the bot re-enforces this at session start regardless.
+  let bitrateClamped = false;
+  if (
+    moduleName.toLowerCase() === "recording" &&
+    typeof body?.settings?.bitrate === "number"
+  ) {
+    const premium = await repos.servers.isPremium(guildId);
+    const allowed = clampRecordingBitrate(body.settings.bitrate, premium);
+    if (allowed !== body.settings.bitrate) {
+      body.settings = { ...body.settings, bitrate: allowed };
+      bitrateClamped = true;
+    }
+  }
+
   let previousBackgroundImage: string | undefined;
   if (isWelcome && body?.settings !== undefined) {
     const current = await repos.guildConfigs.getModuleSettings(guildId, "welcome");
@@ -102,7 +120,9 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    return { success: true };
+    return bitrateClamped
+      ? { success: true, bitrateClamped: true }
+      : { success: true };
   } catch (error: any) {
     console.error(
       `[GuildConfigs API] put(${guildId}/${moduleName}) failed:`,
