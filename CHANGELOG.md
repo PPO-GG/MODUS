@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.27.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.26.1...modus-v1.27.0) (2026-09-30)
+
+
+### ✨ Features
+
+* **web:** make the Dashboard nav link an outlined pill ([#98](https://github.com/PPO-GG/MODUS/issues/98)) ([f5dba18](https://github.com/PPO-GG/MODUS/commit/f5dba18f1c61fd077a6430b38c89ba2eb1464668))
+* **web:** redesign XP leaderboards on the Glide system ([#95](https://github.com/PPO-GG/MODUS/issues/95)) ([abcbf91](https://github.com/PPO-GG/MODUS/commit/abcbf916bb36afe27005eedfcc6d160ae3bb6525))
+
+
+### 🐛 Bug Fixes
+
+* **web:** align landing chain labels to their icons ([#96](https://github.com/PPO-GG/MODUS/issues/96)) ([26799d9](https://github.com/PPO-GG/MODUS/commit/26799d92167be49df4e73976c4bbdd65642c5abe))
+* **web:** keep backdrop-filter in production CSS ([#97](https://github.com/PPO-GG/MODUS/issues/97)) ([e1c7f5c](https://github.com/PPO-GG/MODUS/commit/e1c7f5c0faa9851872d757cc51ce57faa9dec5ce))
+
 ## [1.26.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.26.0...modus-v1.26.1) (2026-09-30)
 
 
