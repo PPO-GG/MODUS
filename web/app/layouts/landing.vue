@@ -264,8 +264,8 @@ onMounted(() => {
 
 .landing-navbar.scrolled {
   background: rgba(3, 7, 18, 0.8);
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 

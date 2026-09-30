@@ -89,8 +89,8 @@ const emit = defineEmits<{ toggle: [value: boolean]; tag: [tag: string] }>();
   border-radius: 13px;
   border: 1px solid rgba(243, 244, 246, 0.16);
   background: rgba(229, 231, 235, 0.06);
-  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
