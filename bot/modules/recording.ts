@@ -33,6 +33,10 @@ import {
   type RecordingSettings,
 } from "../lib/schemas";
 import { parseSettings } from "../lib/validateSettings";
+import {
+  clampRecordingBitrate,
+  FREE_MAX_RECORDING_BITRATE,
+} from "@modus/db/recording-limits";
 import { speakInConnection, isTTSAvailable } from "../lib/tts";
 import { resolveVoice } from "../lib/ttsVoices";
 
@@ -1086,13 +1090,27 @@ async function handleStart(
     multitrack = true;
   }
 
+  // Bitrates above the free tier are premium-only. Enforced here (not just in
+  // the dashboard/API) so stale or hand-crafted saved values can't bypass it.
+  let bitrate = settings.bitrate;
+  let bitrateNotice = "";
+  if (bitrate > FREE_MAX_RECORDING_BITRATE) {
+    const isPremium =
+      await moduleManager.databaseService.isGuildPremium(guildId);
+    const allowed = clampRecordingBitrate(bitrate, isPremium);
+    if (allowed !== bitrate) {
+      bitrateNotice = `⚠️ ${bitrate} kbps recording is a **Premium** feature — recording at ${allowed} kbps instead.`;
+      bitrate = allowed;
+    }
+  }
+
   // Create recording metadata in Appwrite
   const recordingDocId = await moduleManager.databaseService.createRecording({
     guild_id: guildId,
     channel_name: voiceChannel.name,
     recorded_by: member.id,
     started_at: new Date().toISOString(),
-    bitrate: settings.bitrate,
+    bitrate,
     multitrack,
   });
 
@@ -1140,7 +1158,7 @@ async function handleStart(
       }
     }, settings.maxDuration * 1000),
     recordingDocId,
-    bitrate: settings.bitrate,
+    bitrate,
     multitrack,
   };
 
@@ -1161,7 +1179,7 @@ async function handleStart(
       session,
       userId,
       channelMember.displayName,
-      settings.bitrate,
+      bitrate,
     );
   }
 
@@ -1177,7 +1195,7 @@ async function handleStart(
       .then((m) => {
         if (m.user.bot) return;
         if (session.userStreams.size >= settings.maxConcurrentUsers) return;
-        startUserRecording(session, userId, m.displayName, settings.bitrate);
+        startUserRecording(session, userId, m.displayName, bitrate);
       })
       .catch(() => {});
   });
@@ -1205,7 +1223,7 @@ async function handleStart(
     .addFields(
       {
         name: "Bitrate",
-        value: `${settings.bitrate} kbps`,
+        value: `${bitrate} kbps`,
         inline: true,
       },
       {
@@ -1223,7 +1241,10 @@ async function handleStart(
       text: `Started by ${member.displayName} • Multi-track recording active`,
     });
 
-  await interaction.editReply({ embeds: [embed] });
+  await interaction.editReply({
+    content: bitrateNotice || undefined,
+    embeds: [embed],
+  });
 }
 
 async function handleStop(

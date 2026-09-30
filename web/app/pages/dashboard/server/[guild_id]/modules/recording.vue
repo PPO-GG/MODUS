@@ -218,15 +218,21 @@
       <!-- Quality -->
       <DashboardModuleSection
         title="Quality"
-        description="Higher bitrates sound better but make larger files."
+        description="Higher bitrates sound better but make larger files. 128 kbps and above require Premium."
       >
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Recording quality">
-          <label v-for="option in bitrateOptions" :key="option.value" class="block cursor-pointer">
+          <label
+            v-for="option in bitrateOptions"
+            :key="option.value"
+            class="block"
+            :class="isBitrateLocked(option.value) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'"
+          >
             <input
               v-model="recordingSettings.bitrate"
               type="radio"
               name="recording-bitrate"
               :value="option.value"
+              :disabled="isBitrateLocked(option.value)"
               class="peer sr-only"
             />
             <div
@@ -234,6 +240,14 @@
             >
               <div class="flex items-center justify-between gap-2">
                 <span class="text-sm font-semibold text-white">{{ option.label }}</span>
+                <UBadge
+                  v-if="isPremiumBitrate(option.value)"
+                  label="Premium"
+                  color="warning"
+                  variant="subtle"
+                  size="sm"
+                  icon="i-lucide-crown"
+                />
                 <UIcon
                   v-if="recordingSettings.bitrate === option.value"
                   name="i-lucide-circle-check"
@@ -749,6 +763,14 @@ const deletingAnnounce = ref(false);
 const isDraggingClip = ref(false);
 const clipFileInput = ref<HTMLInputElement | null>(null);
 
+const isPremium = ref(false);
+// Mirrors FREE_MAX_RECORDING_BITRATE in @modus/db/recording-limits (the bot and
+// PUT route enforce it; @modus/db ships CJS, so it isn't imported client-side).
+const FREE_MAX_BITRATE = 64;
+const isPremiumBitrate = (bitrate: number) => bitrate > FREE_MAX_BITRATE;
+const isBitrateLocked = (bitrate: number) =>
+  !isPremium.value && isPremiumBitrate(bitrate);
+
 const bitrateOptions = [
   {
     value: 32,
@@ -1112,6 +1134,25 @@ onMounted(async () => {
       allowedRoleIds: saved.allowedRoleIds ?? [],
       allowedUserIds: saved.allowedUserIds ?? [],
     };
+  }
+
+  // Premium flag lives on the servers row; by-guild-ids returns just the
+  // public projection. Non-fatal: falls back to the free tier.
+  try {
+    const rows = await $fetch<any[]>(
+      `/api/servers/by-guild-ids?ids=${encodeURIComponent(guildId)}`,
+    );
+    isPremium.value = rows[0]?.premium === true;
+  } catch {
+    // non-fatal — premium-only options stay locked
+  }
+  // A stale premium value on a free guild would otherwise stay selected (and
+  // be re-clamped on save); show what the bot will actually record at.
+  if (!isPremium.value) {
+    recordingSettings.value.bitrate = Math.min(
+      recordingSettings.value.bitrate,
+      FREE_MAX_BITRATE,
+    );
   }
   baseline.value = JSON.stringify(recordingSettings.value);
 
