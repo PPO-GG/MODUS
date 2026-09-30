@@ -107,6 +107,13 @@
   color: var(--glide-ink);
   border-color: transparent;
 }
+/* Secondary pill: visible border, no fill — sits beside a filled .glide-btn.
+   Hover colours come from .glide-btn:hover, which outranks this rule. */
+.glide-btn-outline {
+  background: transparent;
+  border-color: var(--glide-line);
+  color: var(--glide-ink);
+}
 
 /* Glass frame (Glide .glass-container) */
 .glide-glass {

@@ -20,7 +20,13 @@
           </li>
           <li><NuxtLink to="/docs" class="landing-link">Docs</NuxtLink></li>
           <li>
-            <NuxtLink to="/login" class="landing-link">Dashboard</NuxtLink>
+            <NuxtLink to="/login" class="glide-btn glide-btn-outline">
+              <UIcon
+                name="i-lucide-layout-dashboard"
+                class="hidden lg:block w-4 h-4"
+              />
+              Dashboard
+            </NuxtLink>
           </li>
           <li>
             <a
@@ -76,9 +82,14 @@
             <NuxtLink to="/docs" @click="isMenuOpen = false">Docs</NuxtLink>
           </li>
           <li>
-            <NuxtLink to="/login" @click="isMenuOpen = false"
-              >Dashboard</NuxtLink
+            <NuxtLink
+              to="/login"
+              class="glide-btn glide-btn-outline text-xl"
+              @click="isMenuOpen = false"
             >
+              <UIcon name="i-lucide-layout-dashboard" class="w-5 h-5" />
+              Dashboard
+            </NuxtLink>
           </li>
           <li>
             <a
@@ -286,20 +297,32 @@ onMounted(() => {
   letter-spacing: 0.02em;
   color: var(--glide-ink);
   z-index: 110;
+  flex-shrink: 0;
 }
 
 .landing-links {
   display: none;
   align-items: center;
-  gap: 1.75rem;
+  gap: 0.75rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
+/* Keep the pills on one line so a squeezed nav overflows the gap, not the label. */
+.landing-links .glide-btn {
+  white-space: nowrap;
+}
+
 @media (min-width: 820px) {
   .landing-links {
     display: flex;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-links {
+    gap: 1.75rem;
   }
 }
 
