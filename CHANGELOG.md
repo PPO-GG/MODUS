@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.26.0...modus-v1.26.1) (2026-09-30)
+
+
+### 🐛 Bug Fixes
+
+* **web:** bump undici and brace-expansion overrides ([49ae8d0](https://github.com/PPO-GG/MODUS/commit/49ae8d09fab028760caf287b80d869a5cbebd086))
+
 ## [1.26.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.25.0...modus-v1.26.0) (2026-09-30)
 
 
