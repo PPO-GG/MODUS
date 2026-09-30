@@ -1,101 +1,75 @@
 <template>
   <div>
     <!-- Loading spinner while checking session -->
-    <div v-if="!userStore.initialized" class="text-center">
+    <div v-if="!userStore.initialized" class="auth-status">
       <UIcon
-        name="i-heroicons-arrow-path"
-        class="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4"
+        name="i-lucide-loader-circle"
+        class="auth-status-icon animate-spin"
       />
-      <p class="text-gray-400 text-sm">Checking session...</p>
+      <p>Checking session...</p>
     </div>
 
     <!-- Main Login Card -->
-    <div v-else class="auth-card">
-      <!-- Welcome Text -->
+    <div v-else class="glide-glass auth-card">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-black text-white tracking-tight mb-2">
-          Welcome Back
+        <h1 class="auth-title">
+          Welcome <em class="glide-text">back</em>
         </h1>
-        <p class="text-sm text-gray-400">
+        <p class="auth-sub">
           Sign in with Discord to access your MODUS dashboard
         </p>
       </div>
 
       <!-- Discord Login Button -->
       <button
-        @click="loginWithDiscord"
+        type="button"
+        class="glide-btn auth-discord-btn"
         :disabled="userStore.loading"
-        class="discord-btn group relative w-full"
+        @click="loginWithDiscord"
       >
-        <!-- Animated glow effect -->
-        <div
-          class="absolute -inset-0.5 bg-gradient-to-r from-[#5865F2] to-[#7289DA] rounded-2xl opacity-0 group-hover:opacity-75 blur transition-opacity duration-300"
-        ></div>
-
-        <!-- Button content -->
-        <div
-          class="relative flex items-center justify-center gap-3 px-8 py-4 bg-[#5865F2] rounded-2xl font-bold text-white text-lg transition-all duration-200 group-hover:bg-[#4752C4] group-hover:scale-[1.02] group-hover:shadow-[0_0_40px_rgba(88,101,242,0.5)]"
-        >
-          <UIcon
-            v-if="!userStore.loading"
-            name="i-simple-icons-discord"
-            class="w-6 h-6"
-          />
-          <UIcon
-            v-else
-            name="i-heroicons-arrow-path"
-            class="w-6 h-6 animate-spin"
-          />
-          <span>{{
-            userStore.loading ? "Connecting..." : "Continue with Discord"
-          }}</span>
-        </div>
+        <UIcon
+          v-if="!userStore.loading"
+          name="i-simple-icons-discord"
+          class="w-5 h-5"
+        />
+        <UIcon
+          v-else
+          name="i-lucide-loader-circle"
+          class="w-5 h-5 animate-spin"
+        />
+        <span>{{
+          userStore.loading ? "Connecting..." : "Continue with Discord"
+        }}</span>
       </button>
 
-      <!-- Info Text -->
-      <div class="mt-8 text-center">
-        <p class="text-xs text-gray-500">
-          By signing in, you agree to our
-          <NuxtLink to="/legal/terms" class="text-purple-400 hover:underline"
-            >Terms</NuxtLink
-          >
-          and
-          <NuxtLink to="/legal/privacy" class="text-purple-400 hover:underline"
-            >Privacy Policy</NuxtLink
-          >
-        </p>
-      </div>
+      <p class="auth-legal">
+        By signing in, you agree to our
+        <NuxtLink to="/legal/terms">Terms</NuxtLink>
+        and
+        <NuxtLink to="/legal/privacy">Privacy Policy</NuxtLink>
+      </p>
 
       <!-- Feature highlights -->
-      <div class="mt-10 space-y-3">
-        <div class="flex items-center gap-3 text-sm text-gray-400">
-          <div
-            class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0"
-          >
-            <UIcon
-              name="i-heroicons-shield-check"
-              class="w-4 h-4 text-purple-400"
-            />
-          </div>
-          <span>Secure authentication via Discord OAuth</span>
-        </div>
-        <div class="flex items-center gap-3 text-sm text-gray-400">
-          <div
-            class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0"
-          >
-            <UIcon name="i-heroicons-bolt" class="w-4 h-4 text-blue-400" />
-          </div>
-          <span>Instant access to your bot configurations</span>
-        </div>
-        <div class="flex items-center gap-3 text-sm text-gray-400">
-          <div
-            class="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center flex-shrink-0"
-          >
-            <UIcon name="i-heroicons-sparkles" class="w-4 h-4 text-pink-400" />
-          </div>
-          <span>Manage modules, commands, and permissions</span>
-        </div>
-      </div>
+      <ul class="auth-features">
+        <li>
+          <span class="auth-feature-icon">
+            <UIcon name="i-lucide-shield-check" class="w-4 h-4" />
+          </span>
+          Secure authentication via Discord OAuth
+        </li>
+        <li>
+          <span class="auth-feature-icon">
+            <UIcon name="i-lucide-zap" class="w-4 h-4" />
+          </span>
+          Instant access to your bot configurations
+        </li>
+        <li>
+          <span class="auth-feature-icon">
+            <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4" />
+          </span>
+          Manage modules, commands, and permissions
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -141,29 +115,81 @@ const loginWithDiscord = () => {
 </script>
 
 <style scoped>
+/* Leave room for the .glide-glass frame, which bleeds 10px outside. */
 .auth-card {
-  background: rgba(13, 13, 16, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-  border-radius: 24px;
-  padding: 40px;
-  max-width: 480px;
-  margin: 0 auto;
+  margin: 10px;
+  padding: 0.5rem 0.25rem;
 }
 
-.discord-btn {
-  position: relative;
-  transition: all 0.2s ease;
+.auth-title {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--glide-ink);
+  margin-bottom: 0.5rem;
 }
 
-.discord-btn:disabled {
+.auth-sub {
+  font-size: 0.9375rem;
+  color: var(--glide-ink-3);
+}
+
+.auth-discord-btn {
+  width: 100%;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.auth-discord-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.discord-btn:disabled:hover {
-  transform: none !important;
+.auth-legal {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--glide-ink-4);
+}
+
+.auth-legal a {
+  color: var(--glide-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth-legal a:hover {
+  color: var(--glide-a1);
+}
+
+.auth-features {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 1.5rem 0 0;
+  border-top: 1px solid var(--glide-line);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.auth-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--glide-ink-3);
+}
+
+.auth-feature-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: var(--glide-icon-bg);
+  color: var(--glide-a1);
 }
 </style>

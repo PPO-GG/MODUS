@@ -1,24 +1,17 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-900">
-    <div class="text-center">
-      <div class="relative inline-block mb-6">
-        <div
-          class="absolute inset-0 bg-purple-500 rounded-full blur-2xl opacity-30 animate-pulse"
-        ></div>
-        <UIcon
-          name="i-heroicons-arrow-path"
-          class="relative w-12 h-12 text-purple-400 animate-spin"
-        />
-      </div>
-      <p class="text-gray-300 font-semibold">Completing login...</p>
-      <p v-if="error" class="text-red-400 mt-4 text-sm">{{ error }}</p>
-    </div>
+  <div class="auth-status">
+    <UIcon
+      name="i-lucide-loader-circle"
+      class="auth-status-icon animate-spin"
+    />
+    <p class="text-[var(--glide-ink-2)] font-medium">Completing login...</p>
+    <p v-if="error" class="text-red-400 text-sm">{{ error }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({
-  layout: false, // No sidebar layout during auth callback
+  layout: "auth",
 });
 
 const userStore = useUserStore();
