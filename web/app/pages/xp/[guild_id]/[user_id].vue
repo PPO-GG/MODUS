@@ -6,11 +6,11 @@
     <div class="flex items-center justify-between gap-4 mb-8">
       <NuxtLink
         :to="`/xp/${guildId}`"
-        class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-300 hover:text-white border border-white/5 transition-all shadow-sm group"
+        class="glide-btn glide-btn-ghost !min-h-0 !px-3.5 !py-1.5 text-xs font-semibold group"
       >
         <UIcon
           name="i-heroicons-arrow-left"
-          class="w-4 h-4 text-zinc-400 group-hover:-translate-x-0.5 transition-transform"
+          class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform"
         />
         Back to {{ data?.guild?.name || "Leaderboard" }}
       </NuxtLink>
@@ -30,14 +30,12 @@
 
     <!-- Loading State -->
     <div v-if="pending" class="space-y-6">
-      <div
-        class="h-64 rounded-3xl bg-white/5 border border-white/10 animate-pulse"
-      />
+      <div class="glide-tile h-64 rounded-3xl animate-pulse" />
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div
           v-for="i in 4"
           :key="i"
-          class="h-28 rounded-2xl bg-white/5 border border-white/10 animate-pulse"
+          class="glide-tile h-28 rounded-2xl animate-pulse"
         />
       </div>
     </div>
@@ -45,7 +43,7 @@
     <!-- Error State / Not Found -->
     <div
       v-else-if="error || !data?.user"
-      class="text-center py-20 px-6 rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl max-w-lg mx-auto space-y-4"
+      class="glide-glass text-center py-20 px-6 max-w-lg mx-auto space-y-4"
     >
       <div
         class="w-16 h-16 mx-auto rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center"
@@ -53,41 +51,29 @@
         <UIcon name="i-heroicons-user-minus" class="w-8 h-8 text-red-400" />
       </div>
       <h2 class="text-xl font-bold text-white">Member Profile Unavailable</h2>
-      <p class="text-sm text-zinc-400">
+      <p class="text-sm glide-ink-3">
         {{
           (error?.data as { statusMessage?: string } | undefined)?.statusMessage ||
           error?.statusMessage ||
           "This member has no recorded XP or has chosen to keep their profile private."
         }}
       </p>
-      <NuxtLink :to="`/xp/${guildId}`">
-        <UButton color="primary" variant="solid" class="mt-2">
-          Return to Leaderboard
-        </UButton>
+      <NuxtLink :to="`/xp/${guildId}`" class="glide-btn mt-2">
+        Return to Leaderboard
       </NuxtLink>
     </div>
 
     <!-- Main Profile Content -->
-    <div v-else class="space-y-8">
+    <div v-else class="space-y-12">
       <!-- Profile Header Hero Banner -->
-      <div
-        class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-indigo-950/40 via-zinc-900/70 to-zinc-950/90 backdrop-blur-2xl p-6 sm:p-10 shadow-2xl shadow-indigo-950/40"
-      >
-        <!-- Background Ambient Glow -->
-        <div
-          class="absolute -right-20 -top-20 w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"
-        />
-        <div
-          class="absolute -left-20 -bottom-20 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"
-        />
-
+      <div class="glide-glass p-6 sm:p-10">
         <div
           class="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 text-center md:text-left"
         >
           <!-- Avatar with Rank Border -->
           <div class="relative shrink-0">
             <div
-              class="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1.5 bg-zinc-900 ring-4 overflow-hidden shadow-2xl transition-transform hover:scale-105"
+              class="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1.5 bg-[var(--glide-bg)] overflow-hidden transition-transform hover:scale-105"
               :class="avatarRingClass(data.user.rank)"
             >
               <img
@@ -98,8 +84,8 @@
             </div>
             <!-- Rank Ribbon -->
             <div
-              class="absolute -bottom-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1 whitespace-nowrap border"
-              :class="rankBadgeClass(data.user.rank)"
+              class="glide-podium-medal absolute -bottom-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-black flex items-center gap-1 whitespace-nowrap"
+              :class="rankMetalClass(data.user.rank)"
             >
               <span v-if="data.user.rank === 1">👑 Rank #1</span>
               <span v-else-if="data.user.rank === 2">🥈 Rank #2</span>
@@ -120,17 +106,17 @@
                   {{ data.user.username }}
                 </h1>
                 <span
-                  class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                  class="glide-chip px-2.5 py-0.5 text-xs font-bold"
                 >
                   Level {{ data.user.level }}
                 </span>
               </div>
               <p
-                class="text-xs sm:text-sm text-zinc-400 flex items-center justify-center md:justify-start gap-1.5"
+                class="text-xs sm:text-sm glide-ink-3 flex items-center justify-center md:justify-start gap-1.5"
               >
                 <span class="w-2 h-2 rounded-full bg-emerald-500" />
                 Active member in
-                <strong class="text-zinc-200">{{ data.guild.name }}</strong>
+                <strong class="glide-ink-2">{{ data.guild.name }}</strong>
               </p>
             </div>
 
@@ -139,20 +125,18 @@
               <div
                 class="flex justify-between items-center text-xs font-semibold"
               >
-                <span class="text-zinc-400">Level Progression</span>
-                <span class="text-indigo-400 font-bold"
+                <span class="glide-ink-3">Level Progression</span>
+                <span class="glide-a1 font-bold"
                   >{{ data.user.progressPercent }}% Complete</span
                 >
               </div>
-              <div
-                class="w-full h-3 rounded-full bg-white/10 overflow-hidden p-0.5 border border-white/5"
-              >
+              <div class="glide-bar-track w-full h-3 p-0.5">
                 <div
-                  class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-700 shadow-sm"
+                  class="glide-bar-fill transition-all duration-700"
                   :style="{ width: `${data.user.progressPercent}%` }"
                 />
               </div>
-              <div class="flex justify-between text-[11px] text-zinc-500">
+              <div class="flex justify-between text-[11px] glide-ink-4">
                 <span
                   >{{ formatNumber(data.user.xpInCurrentLevel) }} XP
                   earned</span
@@ -169,101 +153,33 @@
 
       <!-- Stats Grid -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <!-- Rank Card -->
         <div
-          class="p-5 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl space-y-1 text-center sm:text-left hover:border-white/20 transition-colors"
+          v-for="stat in profileStats"
+          :key="stat.label"
+          class="glide-tile glide-tile-hover p-5 rounded-2xl space-y-1 text-center sm:text-left"
         >
           <div
-            class="flex items-center justify-center sm:justify-between text-zinc-400 mb-2"
+            class="flex items-center justify-center sm:justify-between glide-ink-3 mb-2"
           >
-            <span class="text-xs font-bold uppercase tracking-wider"
-              >Server Rank</span
-            >
+            <span class="text-xs font-bold uppercase tracking-wider">{{
+              stat.label
+            }}</span>
             <UIcon
-              name="i-heroicons-trophy"
-              class="w-4 h-4 text-amber-400 hidden sm:block"
+              :name="stat.icon"
+              class="w-4 h-4 glide-a1 hidden sm:block"
             />
           </div>
           <p class="text-2xl sm:text-3xl font-black text-white">
-            #{{ data.user.rank }}
+            {{ stat.value }}
           </p>
-          <p class="text-[11px] text-zinc-500 truncate">
-            Top
-            {{ calculateTopPercent(data.user.rank, data.totalTrackedMembers) }}%
-            of members
+          <p class="text-[11px] glide-ink-4 truncate">
+            {{ stat.caption }}
           </p>
-        </div>
-
-        <!-- Level Card -->
-        <div
-          class="p-5 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl space-y-1 text-center sm:text-left hover:border-white/20 transition-colors"
-        >
-          <div
-            class="flex items-center justify-center sm:justify-between text-zinc-400 mb-2"
-          >
-            <span class="text-xs font-bold uppercase tracking-wider"
-              >Level</span
-            >
-            <UIcon
-              name="i-heroicons-sparkles"
-              class="w-4 h-4 text-indigo-400 hidden sm:block"
-            />
-          </div>
-          <p class="text-2xl sm:text-3xl font-black text-white">
-            {{ data.user.level }}
-          </p>
-          <p class="text-[11px] text-zinc-500 truncate">
-            {{ formatNumber(data.user.xp) }} Lifetime XP
-          </p>
-        </div>
-
-        <!-- Messages Card -->
-        <div
-          class="p-5 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl space-y-1 text-center sm:text-left hover:border-white/20 transition-colors"
-        >
-          <div
-            class="flex items-center justify-center sm:justify-between text-zinc-400 mb-2"
-          >
-            <span class="text-xs font-bold uppercase tracking-wider"
-              >Messages</span
-            >
-            <UIcon
-              name="i-heroicons-chat-bubble-left-right"
-              class="w-4 h-4 text-purple-400 hidden sm:block"
-            />
-          </div>
-          <p class="text-2xl sm:text-3xl font-black text-white">
-            {{ formatNumber(data.user.messageCount) }}
-          </p>
-          <p class="text-[11px] text-zinc-500 truncate">Messages recorded</p>
-        </div>
-
-        <!-- Characters Card -->
-        <div
-          class="p-5 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl space-y-1 text-center sm:text-left hover:border-white/20 transition-colors"
-        >
-          <div
-            class="flex items-center justify-center sm:justify-between text-zinc-400 mb-2"
-          >
-            <span class="text-xs font-bold uppercase tracking-wider"
-              >Characters</span
-            >
-            <UIcon
-              name="i-heroicons-document-text"
-              class="w-4 h-4 text-pink-400 hidden sm:block"
-            />
-          </div>
-          <p class="text-2xl sm:text-3xl font-black text-white">
-            {{ formatNumber(data.user.charCount) }}
-          </p>
-          <p class="text-[11px] text-zinc-500 truncate">Characters typed</p>
         </div>
       </div>
 
       <!-- Visual Discord Rank Card Preview -->
-      <div
-        class="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-6 sm:p-8 space-y-6"
-      >
+      <div class="glide-glass p-6 sm:p-8 space-y-6">
         <div
           class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         >
@@ -271,20 +187,20 @@
             <h2 class="text-lg font-bold text-white flex items-center gap-2">
               <UIcon
                 name="i-heroicons-sparkles"
-                class="w-5 h-5 text-indigo-400"
+                class="w-5 h-5 glide-a1"
               />
               Discord Visual Rank Card
             </h2>
-            <p class="text-xs text-zinc-400 mt-0.5">
+            <p class="text-xs glide-ink-3 mt-0.5">
               Rendered visual banner generated for
-              <code class="text-indigo-300">/rank</code> in Discord
+              <code class="glide-a1">/rank</code> in Discord
             </p>
           </div>
           <a
             :href="rankCardRenderUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-300 hover:text-white border border-white/5 transition-all self-start sm:self-auto"
+            class="glide-btn glide-btn-ghost !min-h-0 !px-3.5 !py-1.5 text-xs font-semibold self-start sm:self-auto"
           >
             <UIcon
               name="i-heroicons-arrow-top-right-on-square"
@@ -295,7 +211,7 @@
         </div>
 
         <div
-          class="rounded-2xl border border-white/10 bg-black/40 overflow-hidden flex items-center justify-center p-2 shadow-inner"
+          class="glide-tile rounded-2xl overflow-hidden flex items-center justify-center p-2"
         >
           <img
             :src="rankCardRenderUrl"
@@ -398,31 +314,45 @@ function calculateTopPercent(rank: number, total: number) {
   return Math.max(1, Math.min(100, pct));
 }
 
-function avatarRingClass(rank: number) {
-  switch (rank) {
-    case 1:
-      return "ring-amber-400 shadow-amber-500/20";
-    case 2:
-      return "ring-slate-300 shadow-slate-400/20";
-    case 3:
-      return "ring-amber-700 shadow-amber-800/20";
-    default:
-      return "ring-indigo-500/40 shadow-indigo-500/10";
-  }
+// Top three take a metal; everyone else falls back to the teal accent.
+function rankMetalClass(rank: number) {
+  return rank >= 1 && rank <= 3 ? `glide-metal-${rank}` : "";
 }
 
-function rankBadgeClass(rank: number) {
-  switch (rank) {
-    case 1:
-      return "bg-amber-400/20 text-amber-300 border-amber-400/50 shadow-amber-500/30";
-    case 2:
-      return "bg-slate-300/20 text-slate-200 border-slate-300/50 shadow-slate-400/30";
-    case 3:
-      return "bg-amber-700/20 text-amber-500 border-amber-700/50 shadow-amber-800/30";
-    default:
-      return "bg-zinc-900/90 text-zinc-300 border-white/10 shadow-black/40";
-  }
+function avatarRingClass(rank: number) {
+  return `glide-podium-ring ${rankMetalClass(rank)}`;
 }
+
+const profileStats = computed(() => {
+  const user = data.value?.user;
+  if (!user) return [];
+  return [
+    {
+      label: "Server Rank",
+      icon: "i-heroicons-trophy",
+      value: `#${user.rank}`,
+      caption: `Top ${calculateTopPercent(user.rank, data.value?.totalTrackedMembers ?? 0)}% of members`,
+    },
+    {
+      label: "Level",
+      icon: "i-heroicons-sparkles",
+      value: user.level,
+      caption: `${formatNumber(user.xp)} Lifetime XP`,
+    },
+    {
+      label: "Messages",
+      icon: "i-heroicons-chat-bubble-left-right",
+      value: formatNumber(user.messageCount),
+      caption: "Messages recorded",
+    },
+    {
+      label: "Characters",
+      icon: "i-heroicons-document-text",
+      value: formatNumber(user.charCount),
+      caption: "Characters typed",
+    },
+  ];
+});
 
 useHead(() => {
   const username = data.value?.user?.username || "Member";

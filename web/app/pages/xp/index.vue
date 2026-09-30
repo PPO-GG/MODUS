@@ -3,16 +3,16 @@
     <!-- HERO SECTION -->
     <div class="text-center space-y-4 pt-4">
       <div
-        class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider shadow-lg"
+        class="glide-chip px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider"
       >
         <UIcon name="i-heroicons-globe-alt" class="w-4 h-4" />
         Public Server Directory
       </div>
 
       <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight">
-        Server XP Leaderboards
+        Server XP <span class="glide-text">Leaderboards</span>
       </h1>
-      <p class="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto">
+      <p class="text-sm sm:text-base glide-ink-3 max-w-2xl mx-auto">
         Discover top Discord communities powered by MODUS ranked by cumulative
         server XP, active leveling members, and community message activity.
       </p>
@@ -20,87 +20,23 @@
       <!-- Global Stats Cards -->
       <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
         <div
-          class="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl flex items-center gap-3 shadow-xl"
+          v-for="stat in globalStats"
+          :key="stat.label"
+          class="glide-tile px-5 py-3 rounded-2xl flex items-center gap-3"
         >
           <div
-            class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center"
+            class="glide-icon w-10 h-10 rounded-xl flex items-center justify-center"
           >
-            <UIcon
-              name="i-heroicons-server-stack"
-              class="text-indigo-400 text-xl"
-            />
+            <UIcon :name="stat.icon" class="text-xl" />
           </div>
           <div class="text-left">
             <p
-              class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider"
+              class="text-[10px] glide-ink-4 font-bold uppercase tracking-wider"
             >
-              Public Servers
+              {{ stat.label }}
             </p>
             <p class="text-lg font-black text-white">
-              {{ formatNumber(data?.stats?.totalGuilds || 0) }}
-            </p>
-          </div>
-        </div>
-
-        <div
-          class="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl flex items-center gap-3 shadow-xl"
-        >
-          <div
-            class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center"
-          >
-            <UIcon name="i-heroicons-bolt" class="text-purple-400 text-xl" />
-          </div>
-          <div class="text-left">
-            <p
-              class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider"
-            >
-              Cumulative Server XP
-            </p>
-            <p class="text-lg font-black text-white">
-              {{ formatNumber(data?.stats?.totalXp || 0) }}
-            </p>
-          </div>
-        </div>
-
-        <div
-          class="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl flex items-center gap-3 shadow-xl"
-        >
-          <div
-            class="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center"
-          >
-            <UIcon name="i-heroicons-users" class="text-pink-400 text-xl" />
-          </div>
-          <div class="text-left">
-            <p
-              class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider"
-            >
-              Active Members
-            </p>
-            <p class="text-lg font-black text-white">
-              {{ formatNumber(data?.stats?.totalUsers || 0) }}
-            </p>
-          </div>
-        </div>
-
-        <div
-          class="px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl flex items-center gap-3 shadow-xl"
-        >
-          <div
-            class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center"
-          >
-            <UIcon
-              name="i-heroicons-chat-bubble-left-right"
-              class="text-amber-400 text-xl"
-            />
-          </div>
-          <div class="text-left">
-            <p
-              class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider"
-            >
-              Messages Tracked
-            </p>
-            <p class="text-lg font-black text-white">
-              {{ formatNumber(data?.stats?.totalMessages || 0) }}
+              {{ formatNumber(stat.value) }}
             </p>
           </div>
         </div>
@@ -113,14 +49,14 @@
     <ClientOnly>
     <div v-if="myServersLoading" class="space-y-4">
       <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-        <UIcon name="i-heroicons-user-circle" class="w-5 h-5 text-indigo-400" />
+        <UIcon name="i-heroicons-user-circle" class="w-5 h-5 glide-a1" />
         Your Servers
       </h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
           v-for="n in 3"
           :key="n"
-          class="flex items-center gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/10 animate-pulse"
+          class="glide-tile flex items-center gap-3 p-4 rounded-2xl animate-pulse"
         >
           <div class="w-11 h-11 rounded-xl bg-white/10 shrink-0" />
           <div class="min-w-0 flex-1 space-y-2">
@@ -134,7 +70,7 @@
     <!-- YOUR SERVERS -->
     <div v-else-if="userStore.initialized && userStore.isLoggedIn && myServers.length > 0" class="space-y-4">
       <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-        <UIcon name="i-heroicons-user-circle" class="w-5 h-5 text-indigo-400" />
+        <UIcon name="i-heroicons-user-circle" class="w-5 h-5 glide-a1" />
         Your Servers
       </h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -142,10 +78,10 @@
           v-for="server in myServers"
           :key="server.guildId"
           :to="`/xp/${server.guildId}`"
-          class="flex items-center gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-indigo-500/30 hover:bg-white/[0.06] transition-all group"
+          class="glide-tile flex items-center gap-3 p-4 rounded-2xl group"
         >
           <div
-            class="w-11 h-11 rounded-xl bg-zinc-800 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center"
+            class="w-11 h-11 rounded-xl glide-icon overflow-hidden shrink-0 flex items-center justify-center"
           >
             <img
               v-if="server.icon"
@@ -156,14 +92,14 @@
             <UIcon
               v-else
               name="i-heroicons-server-stack"
-              class="w-5 h-5 text-indigo-400"
+              class="w-5 h-5"
             />
           </div>
           <div class="min-w-0 flex-1">
-            <p class="font-bold text-white text-sm truncate group-hover:text-indigo-300 transition-colors">
+            <p class="font-bold text-white text-sm truncate group-hover:text-teal-300 transition-colors">
               {{ server.name }}
             </p>
-            <p class="text-xs text-zinc-400">
+            <p class="text-xs glide-ink-3">
               <template v-if="server.rankedYet">
                 Level {{ server.level }} • {{ formatNumber(server.xp) }} XP
               </template>
@@ -193,7 +129,7 @@
           name="i-heroicons-exclamation-triangle"
           class="w-6 h-6 text-amber-400 shrink-0"
         />
-        <p class="text-sm text-zinc-300">
+        <p class="text-sm glide-ink-2">
           <template v-if="myServersError === 'reauth'">
             Your Discord connection has expired. Log in again to see the
             servers you're ranked in.
@@ -232,13 +168,13 @@
     <!-- YOUR SERVERS: NONE RUNNING MODUS XP -->
     <div
       v-else-if="userStore.initialized && userStore.isLoggedIn"
-      class="flex items-center gap-3 p-5 rounded-2xl bg-white/[0.02] border border-white/10"
+      class="glide-tile flex items-center gap-3 p-5 rounded-2xl"
     >
       <UIcon
         name="i-heroicons-user-circle"
-        class="w-6 h-6 text-indigo-400 shrink-0"
+        class="w-6 h-6 glide-a1 shrink-0"
       />
-      <p class="text-sm text-zinc-400">
+      <p class="text-sm glide-ink-3">
         None of the servers you're in are running MODUS XP yet. Browse the
         public leaderboards below, or add MODUS to a server you manage.
       </p>
@@ -247,44 +183,40 @@
     <!-- YOUR SERVERS: LOGGED OUT PROMPT -->
     <div
       v-else-if="userStore.initialized && !userStore.isLoggedIn"
-      class="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/10"
+      class="glide-tile flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl"
     >
       <div class="flex items-center gap-3">
-        <UIcon name="i-heroicons-user-circle" class="w-6 h-6 text-indigo-400 shrink-0" />
-        <p class="text-sm text-zinc-300">
+        <UIcon name="i-heroicons-user-circle" class="w-6 h-6 glide-a1 shrink-0" />
+        <p class="text-sm glide-ink-2">
           Log in with Discord to jump straight to the servers you're already ranked in.
         </p>
       </div>
-      <UButton
+      <a
         :href="`/api/auth/discord?returnTo=${encodeURIComponent('/xp')}`"
-        external
-        color="primary"
-        variant="soft"
-        size="sm"
-        icon="i-simple-icons-discord"
-        class="shrink-0"
+        class="glide-btn shrink-0"
       >
+        <UIcon name="i-simple-icons-discord" class="w-4 h-4" />
         Log In with Discord
-      </UButton>
+      </a>
     </div>
     </ClientOnly>
 
     <!-- TOP 3 SERVERS PODIUM (if page === 1 and no active search) -->
     <div
       v-if="page === 1 && !searchQuery && podium.length >= 3"
-      class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-4"
+      class="grid grid-cols-1 md:grid-cols-3 gap-8 items-end pt-4"
     >
       <!-- 2nd Place (Silver) -->
       <div
-        class="order-2 md:order-1 relative rounded-2xl p-6 border border-slate-400/20 bg-gradient-to-b from-slate-800/40 via-slate-900/60 to-zinc-950/80 backdrop-blur-xl space-y-4 text-center hover:scale-[1.02] transition-all shadow-xl hover:shadow-slate-500/10"
+        class="glide-glass glide-podium glide-metal-2 order-2 md:order-1 p-6 space-y-4 text-center"
       >
         <div
-          class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-slate-400/20 border border-slate-400/40 text-slate-300 text-xs font-bold flex items-center gap-1"
+          class="glide-podium-medal absolute -top-5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 whitespace-nowrap"
         >
           🥈 #2 Server
         </div>
         <div
-          class="w-20 h-20 mx-auto rounded-2xl ring-4 ring-slate-400/40 p-1 bg-zinc-900 overflow-hidden mt-2 flex items-center justify-center"
+          class="glide-podium-ring w-20 h-20 mx-auto rounded-2xl p-1 bg-[var(--glide-bg)] overflow-hidden mt-2 flex items-center justify-center"
         >
           <img
             v-if="podium[1]?.icon"
@@ -295,48 +227,45 @@
           <UIcon
             v-else
             name="i-heroicons-server-stack"
-            class="w-10 h-10 text-slate-400"
+            class="w-10 h-10 glide-ink-3"
           />
         </div>
         <div>
           <h3 class="font-bold text-white text-lg truncate">
             {{ podium[1]?.name }}
           </h3>
-          <p class="text-xs text-slate-400 font-semibold">
+          <p class="text-xs font-semibold" style="color: var(--metal)">
             {{ formatNumber(podium[1]?.totalXp) }} XP
           </p>
           <span
-            class="inline-block mt-1.5 px-2.5 py-0.5 rounded-full bg-white/5 text-[11px] text-zinc-400 font-medium"
+            class="glide-chip mt-1.5 px-2.5 py-0.5 text-[11px] font-medium"
           >
             {{ formatNumber(podium[1]?.activeMembers) }} members •
             {{ formatNumber(podium[1]?.totalMessages) }} msgs
           </span>
         </div>
         <div class="pt-2">
-          <UButton
+          <NuxtLink
             :to="`/xp/${podium[1]?.guildId}`"
-            color="neutral"
-            variant="outline"
-            size="sm"
-            class="w-full justify-center"
+            class="glide-btn glide-btn-ghost w-full justify-center text-sm"
           >
             View Server Leaderboard
-          </UButton>
+          </NuxtLink>
         </div>
       </div>
 
       <!-- 1st Place (Gold) -->
       <div
-        class="order-1 md:order-2 relative rounded-2xl p-7 border-2 border-amber-400/50 bg-gradient-to-b from-amber-500/20 via-zinc-900/80 to-zinc-950/95 backdrop-blur-xl space-y-4 text-center hover:scale-[1.03] transition-all shadow-2xl shadow-amber-500/10 md:-translate-y-4"
+        class="glide-glass glide-podium glide-podium-first glide-metal-1 order-1 md:order-2 p-7 space-y-4 text-center md:-translate-y-4"
       >
         <div
-          class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-zinc-950 text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-lg shadow-amber-500/30"
+          class="glide-podium-medal absolute -top-6 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1 whitespace-nowrap"
         >
           <UIcon name="i-heroicons-trophy" class="w-3.5 h-3.5" />
           🏆 #1 Champion
         </div>
         <div
-          class="w-24 h-24 mx-auto rounded-2xl ring-4 ring-amber-400 p-1 bg-zinc-900 overflow-hidden mt-3 shadow-lg shadow-amber-500/20 flex items-center justify-center"
+          class="glide-podium-ring w-24 h-24 mx-auto rounded-2xl p-1 bg-[var(--glide-bg)] overflow-hidden mt-3 flex items-center justify-center"
         >
           <img
             v-if="podium[0]?.icon"
@@ -347,46 +276,44 @@
           <UIcon
             v-else
             name="i-heroicons-server-stack"
-            class="w-12 h-12 text-amber-400"
+            class="w-12 h-12 glide-a1"
           />
         </div>
         <div>
           <h3 class="font-black text-white text-xl truncate">
             {{ podium[0]?.name }}
           </h3>
-          <p class="text-sm text-amber-300 font-bold">
+          <p class="text-sm font-bold" style="color: var(--metal)">
             {{ formatNumber(podium[0]?.totalXp) }} Total XP
           </p>
           <span
-            class="inline-block mt-1.5 px-3 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20 text-xs text-amber-300 font-semibold"
+            class="glide-chip mt-1.5 px-3 py-0.5 text-xs font-semibold"
           >
             {{ formatNumber(podium[0]?.activeMembers) }} members •
             {{ formatNumber(podium[0]?.totalMessages) }} msgs
           </span>
         </div>
         <div class="pt-2">
-          <UButton
+          <NuxtLink
             :to="`/xp/${podium[0]?.guildId}`"
-            color="primary"
-            size="md"
-            class="w-full justify-center font-bold shadow-lg shadow-indigo-500/20"
+            class="glide-btn w-full justify-center font-bold"
           >
             View Server Leaderboard
-          </UButton>
+          </NuxtLink>
         </div>
       </div>
 
       <!-- 3rd Place (Bronze) -->
       <div
-        class="order-3 relative rounded-2xl p-6 border border-amber-700/30 bg-gradient-to-b from-amber-950/20 via-zinc-900/60 to-zinc-950/80 backdrop-blur-xl space-y-4 text-center hover:scale-[1.02] transition-all shadow-xl hover:shadow-amber-900/10"
+        class="glide-glass glide-podium glide-metal-3 order-3 p-6 space-y-4 text-center"
       >
         <div
-          class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-amber-700/20 border border-amber-700/40 text-amber-500 text-xs font-bold flex items-center gap-1"
+          class="glide-podium-medal absolute -top-5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 whitespace-nowrap"
         >
           🥉 #3 Server
         </div>
         <div
-          class="w-20 h-20 mx-auto rounded-2xl ring-4 ring-amber-700/40 p-1 bg-zinc-900 overflow-hidden mt-2 flex items-center justify-center"
+          class="glide-podium-ring w-20 h-20 mx-auto rounded-2xl p-1 bg-[var(--glide-bg)] overflow-hidden mt-2 flex items-center justify-center"
         >
           <img
             v-if="podium[2]?.icon"
@@ -397,50 +324,45 @@
           <UIcon
             v-else
             name="i-heroicons-server-stack"
-            class="w-10 h-10 text-amber-600"
+            class="w-10 h-10 glide-ink-3"
           />
         </div>
         <div>
           <h3 class="font-bold text-white text-lg truncate">
             {{ podium[2]?.name }}
           </h3>
-          <p class="text-xs text-amber-400 font-semibold">
+          <p class="text-xs font-semibold" style="color: var(--metal)">
             {{ formatNumber(podium[2]?.totalXp) }} XP
           </p>
           <span
-            class="inline-block mt-1.5 px-2.5 py-0.5 rounded-full bg-white/5 text-[11px] text-zinc-400 font-medium"
+            class="glide-chip mt-1.5 px-2.5 py-0.5 text-[11px] font-medium"
           >
             {{ formatNumber(podium[2]?.activeMembers) }} members •
             {{ formatNumber(podium[2]?.totalMessages) }} msgs
           </span>
         </div>
         <div class="pt-2">
-          <UButton
+          <NuxtLink
             :to="`/xp/${podium[2]?.guildId}`"
-            color="neutral"
-            variant="outline"
-            size="sm"
-            class="w-full justify-center"
+            class="glide-btn glide-btn-ghost w-full justify-center text-sm"
           >
             View Server Leaderboard
-          </UButton>
+          </NuxtLink>
         </div>
       </div>
     </div>
 
     <!-- SERVER LEADERBOARD DIRECTORY & SEARCH -->
-    <div
-      class="rounded-3xl border border-white/10 bg-zinc-900/50 backdrop-blur-2xl p-6 sm:p-8 space-y-6 shadow-2xl"
-    >
+    <div class="glide-glass p-6 sm:p-8 space-y-6">
       <!-- Table Header & Controls -->
       <div
-        class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6"
+        class="glide-rule flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6"
       >
         <div>
           <h2 class="text-xl font-bold text-white tracking-tight">
             All Public Discord Servers
           </h2>
-          <p class="text-xs text-zinc-400">
+          <p class="text-xs glide-ink-3">
             Click any server to browse its individual member leaderboard
           </p>
         </div>
@@ -464,11 +386,11 @@
           v-for="server in data?.servers || []"
           :key="server.guildId"
           :to="`/xp/${server.guildId}`"
-          class="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 hover:bg-white/[0.05] transition-all duration-150 group"
+          class="glide-tile flex items-center gap-4 p-4 rounded-2xl group"
         >
           <!-- Rank Badge -->
           <div
-            class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 border"
+            class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
             :class="rankBadgeClass(server.rank)"
           >
             #{{ server.rank }}
@@ -476,7 +398,7 @@
 
           <!-- Server Icon -->
           <div
-            class="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center"
+            class="w-12 h-12 rounded-xl glide-icon overflow-hidden shrink-0 flex items-center justify-center"
           >
             <img
               v-if="server.icon"
@@ -487,7 +409,7 @@
             <UIcon
               v-else
               name="i-heroicons-server-stack"
-              class="w-6 h-6 text-indigo-400"
+              class="w-6 h-6"
             />
           </div>
 
@@ -495,7 +417,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
               <span
-                class="font-bold text-white text-base truncate group-hover:text-indigo-300 transition-colors"
+                class="font-bold text-white text-base truncate group-hover:text-teal-300 transition-colors"
               >
                 {{ server.name }}
               </span>
@@ -508,16 +430,16 @@
                 Public
               </UBadge>
             </div>
-            <div class="flex items-center gap-3 text-xs text-zinc-400 mt-0.5">
+            <div class="flex items-center gap-3 text-xs glide-ink-3 mt-0.5">
               <span class="flex items-center gap-1">
-                <UIcon name="i-heroicons-users" class="w-3.5 h-3.5 text-zinc-500" />
+                <UIcon name="i-heroicons-users" class="w-3.5 h-3.5 glide-ink-4" />
                 {{ formatNumber(server.activeMembers) }} members
               </span>
               <span>•</span>
               <span class="flex items-center gap-1">
                 <UIcon
                   name="i-heroicons-chat-bubble-left-right"
-                  class="w-3.5 h-3.5 text-zinc-500"
+                  class="w-3.5 h-3.5 glide-ink-4"
                 />
                 {{ formatNumber(server.totalMessages) }} messages
               </span>
@@ -528,32 +450,32 @@
           <div class="text-right shrink-0">
             <p class="font-black text-white text-sm sm:text-base tabular-nums">
               {{ formatNumber(server.totalXp) }}
-              <span class="text-[10px] font-bold text-indigo-400 uppercase ml-0.5"
+              <span class="text-[10px] font-bold glide-a1 uppercase ml-0.5"
                 >XP</span
               >
             </p>
-            <p class="text-[10px] text-zinc-500">
+            <p class="text-[10px] glide-ink-4">
               Total Community XP
             </p>
           </div>
 
           <UIcon
             name="i-heroicons-chevron-right"
-            class="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors shrink-0"
+            class="w-4 h-4 glide-ink-4 group-hover:text-white transition-colors shrink-0"
           />
         </NuxtLink>
 
         <div
           v-if="!data?.servers?.length"
-          class="text-center py-16 text-zinc-500 space-y-3"
+          class="text-center py-16 glide-ink-4 space-y-3"
         >
           <UIcon
             name="i-heroicons-server-stack"
-            class="w-12 h-12 mx-auto text-zinc-600"
+            class="w-12 h-12 mx-auto glide-ink-4"
           />
           <div class="space-y-1">
-            <p class="text-base font-bold text-zinc-300">No public servers found</p>
-            <p class="text-xs text-zinc-500 max-w-sm mx-auto">
+            <p class="text-base font-bold glide-ink-2">No public servers found</p>
+            <p class="text-xs glide-ink-4 max-w-sm mx-auto">
               Server owners can opt their server in by setting Leaderboard Visibility to <strong>Public</strong> in the MODUS dashboard!
             </p>
           </div>
@@ -563,7 +485,7 @@
       <!-- Pagination -->
       <div
         v-if="data && data.totalPages > 1"
-        class="flex items-center justify-between pt-4 border-t border-white/10"
+        class="glide-rule flex items-center justify-between pt-4 border-t"
       >
         <UButton
           color="neutral"
@@ -576,7 +498,7 @@
           Previous
         </UButton>
 
-        <span class="text-xs font-semibold text-zinc-400">
+        <span class="text-xs font-semibold glide-ink-3">
           Page <strong class="text-white">{{ page }}</strong> of
           <strong class="text-white">{{ data.totalPages }}</strong>
         </span>
@@ -595,6 +517,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
@@ -718,17 +641,36 @@ function formatNumber(n?: number | null) {
   return (n || 0).toLocaleString("en-US");
 }
 
+const globalStats = computed(() => {
+  const stats = data.value?.stats;
+  return [
+    {
+      label: "Public Servers",
+      icon: "i-heroicons-server-stack",
+      value: stats?.totalGuilds,
+    },
+    {
+      label: "Cumulative Server XP",
+      icon: "i-heroicons-bolt",
+      value: stats?.totalXp,
+    },
+    {
+      label: "Active Members",
+      icon: "i-heroicons-users",
+      value: stats?.totalUsers,
+    },
+    {
+      label: "Messages Tracked",
+      icon: "i-heroicons-chat-bubble-left-right",
+      value: stats?.totalMessages,
+    },
+  ];
+});
+
 function rankBadgeClass(rank: number) {
-  switch (rank) {
-    case 1:
-      return "bg-amber-400/20 text-amber-300 border-amber-400/40";
-    case 2:
-      return "bg-slate-300/20 text-slate-200 border-slate-300/40";
-    case 3:
-      return "bg-amber-700/20 text-amber-500 border-amber-700/40";
-    default:
-      return "bg-white/5 text-zinc-400 border border-white/5";
-  }
+  return rank >= 1 && rank <= 3
+    ? `glide-rank glide-metal-${rank}`
+    : "glide-rank";
 }
 
 const XP_DESCRIPTION =
