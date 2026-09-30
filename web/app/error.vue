@@ -271,8 +271,8 @@ async function handleClearError(to?: string) {
 
 .error-card {
   background: rgba(13, 13, 16, 0.75);
-  backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: blur(28px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow:
     0 8px 48px rgba(0, 0, 0, 0.8),
