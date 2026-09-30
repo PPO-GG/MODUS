@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.28.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.27.0...modus-v1.28.0) (2026-09-30)
+
+
+### ✨ Features
+
+* **web:** draft automod rules from plain English ([#102](https://github.com/PPO-GG/MODUS/issues/102)) ([4118d51](https://github.com/PPO-GG/MODUS/commit/4118d51c69117f3870782e41056f8f7d1999a98b))
+
+
+### 🐛 Bug Fixes
+
+* **bot:** make 128+ kbps recording bitrates premium-only ([#100](https://github.com/PPO-GG/MODUS/issues/100)) ([2a3a5f0](https://github.com/PPO-GG/MODUS/commit/2a3a5f006c26405f9b2f6260ec3ae4e1d2d6c8e0))
+
 ## [1.27.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.26.1...modus-v1.27.0) (2026-09-30)
 
 
