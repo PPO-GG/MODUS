@@ -8,6 +8,14 @@
       :enabled="isModuleEnabled('automod')"
     />
 
+    <!-- ── Draft with AI ── -->
+    <DashboardModuleSection
+      title="Draft with AI"
+      description="Describe a rule in plain English. You review and edit the draft before anything is saved."
+    >
+      <AutomodDraftBox :guild-id="guildId" @draft="applyDraft" />
+    </DashboardModuleSection>
+
     <!-- ── Rules ── -->
     <DashboardModuleSection
       title="Rules"
@@ -133,6 +141,37 @@
     >
       <template #body>
         <div class="space-y-6">
+          <template v-if="draftInfo">
+            <UAlert
+              color="info"
+              variant="subtle"
+              icon="i-lucide-sparkles"
+              title="AI draft: review before saving"
+              description="Check the trigger, conditions and actions below. Nothing is saved until you click Save."
+            />
+            <UAlert
+              v-for="warning in draftInfo.warnings"
+              :key="warning"
+              color="warning"
+              variant="subtle"
+              icon="i-lucide-triangle-alert"
+              :title="warning"
+            />
+            <UAlert
+              v-if="draftInfo.notes.length"
+              color="neutral"
+              variant="subtle"
+              icon="i-lucide-info"
+              title="Notes from the AI"
+            >
+              <template #description>
+                <ul class="mt-1 list-disc space-y-0.5 pl-4 text-[13px]">
+                  <li v-for="note in draftInfo.notes" :key="note">{{ note }}</li>
+                </ul>
+              </template>
+            </UAlert>
+          </template>
+
           <UFormField label="Rule name" class="w-full">
             <UInput
               v-model="form.name"
@@ -342,6 +381,8 @@
 import { ref, computed, onMounted } from "vue";
 import RuleTimeline from "~/components/automod/RuleTimeline.vue";
 import QuickCreateForm from "~/components/automod/QuickCreateForm.vue";
+import AutomodDraftBox from "~/components/automod/AutomodDraftBox.vue";
+import { draftToFormState, type DraftResult } from "~/utils/automod-draft";
 import {
   triggerGroups,
   actionOptions,
@@ -374,6 +415,7 @@ const showDeleteModal = ref(false);
 const editingRule = ref<any>(null);
 const deletingRule = ref<any>(null);
 const quickCreateMode = ref(true);
+const draftInfo = ref<{ warnings: string[]; notes: string[] } | null>(null);
 const quickCreateRef = ref<InstanceType<typeof QuickCreateForm> | null>(null);
 
 const rulesSummary = computed(() => {
@@ -517,6 +559,7 @@ const fetchRules = async () => {
 };
 
 const openCreateModal = () => {
+  draftInfo.value = null;
   editingRule.value = null;
   quickCreateMode.value = true;
   form.value = {
@@ -545,7 +588,16 @@ const promoteToFullEditor = (payload: {
   quickCreateMode.value = false;
 };
 
+const applyDraft = (result: DraftResult) => {
+  editingRule.value = null;
+  quickCreateMode.value = false;
+  form.value = draftToFormState(result.rule);
+  draftInfo.value = { warnings: result.warnings, notes: result.notes };
+  showModal.value = true;
+};
+
 const openEditModal = (rule: any) => {
+  draftInfo.value = null;
   editingRule.value = rule;
   quickCreateMode.value = false;
   const conditions = JSON.parse(rule.conditions);

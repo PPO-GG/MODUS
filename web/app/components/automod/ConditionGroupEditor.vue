@@ -283,6 +283,7 @@ const fieldOptions = [
   { label: "Account Age (days)", value: "user.account_age_days" },
   { label: "Server Age (days)", value: "user.join_age_days" },
   { label: "Is Bot", value: "user.is_bot" },
+  { label: "Role IDs (use with has role)", value: "user.role_ids" },
   // Channel
   { label: "Channel ID", value: "channel.id" },
   { label: "Channel Name", value: "channel.name" },
