@@ -262,8 +262,11 @@
                 </div>
                 <div class="chain-signal is-rev"></div>
               </template>
-              <div class="chain-node">
-                <UIcon :name="node.icon" class="chain-node-icon" />
+              <div class="chain-item">
+                <div class="chain-node">
+                  <UIcon :name="node.icon" class="chain-node-icon" />
+                </div>
+                <span class="chain-label">{{ node.label }}</span>
               </div>
               <div
                 v-if="i !== chainNodes.length - 1"
@@ -271,9 +274,6 @@
                 :class="{ 'is-rev': i >= chainMid }"
               ></div>
             </template>
-          </div>
-          <div class="chain-caption">
-            <span v-for="node in chainNodes" :key="node.label">{{ node.label }}</span>
           </div>
         </div>
       </section>
@@ -1103,16 +1103,40 @@ onUnmounted(() => ctx?.revert());
 .chain-signal.is-rev {
   transform: rotate(180deg);
 }
-.chain-caption {
+/* Label is out of flow so it never shifts the icon row; it hangs off its own
+   icon — beside it in the vertical (mobile) chain, below it in the row. */
+.chain-item {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem 1.25rem;
-  margin-top: 1.75rem;
-  font: 400 0.75rem/1 var(--glide-mono);
+  flex-shrink: 0;
+}
+.chain-label {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 0.75rem);
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font: 400 0.75rem/1.3 var(--glide-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--glide-ink-4);
+}
+@media (min-width: 768px) {
+  .chain-label {
+    top: calc(100% + 1rem);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 5.5rem;
+    white-space: normal;
+    text-align: center;
+  }
+}
+@media (min-width: 1024px) {
+  .chain-label {
+    max-width: none;
+    white-space: nowrap;
+  }
 }
 
 /* ── Showcase ── */
