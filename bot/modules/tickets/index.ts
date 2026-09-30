@@ -34,7 +34,10 @@ import {
   handleRename,
   handlePriority,
   handleTranscript,
+  applyPriority,
+  buildPriorityPicker,
 } from "./handlers/manage";
+import type { TicketPriority } from "./lib/types";
 import { startInactivitySweep } from "./lib/inactivity";
 import { scanOpenTickets } from "./lib/sync";
 
@@ -273,6 +276,7 @@ const ticketsModule: BotModule = {
   // ── Button handler ────────────────────────────────────────────────────────
   // customId formats: tickets:open  |  tickets:open:<typeId>
   //                   tickets:close |  tickets:claim  |  tickets:priority
+  //                   tickets:setpriority:<low|normal|high|critical>
   handleButton: async (
     interaction: ButtonInteraction,
     moduleManager: ModuleManager,
@@ -289,14 +293,18 @@ const ticketsModule: BotModule = {
       case "claim":
         return handleClaim(interaction, moduleManager);
       case "priority": {
-        // "Set Priority" button — for now reply with a prompt
-        // (full button-based priority picker is Phase 2 alongside modals)
+        // "Set Priority" button — ephemeral picker; staff check happens on apply
         await interaction.reply({
-          content:
-            "Use `/ticket priority` to set the priority level:\n`/ticket priority level:high`",
+          content: "🏷️ Choose a priority level:",
+          components: [buildPriorityPicker()],
           flags: [MessageFlags.Ephemeral],
         });
         break;
+      }
+      case "setpriority": {
+        // Picker button — edits the ephemeral picker message with the result
+        await interaction.deferUpdate();
+        return applyPriority(interaction, moduleManager, typeId as TicketPriority);
       }
     }
   },

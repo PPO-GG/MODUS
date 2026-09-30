@@ -1,4 +1,8 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonInteraction,
+  ButtonStyle,
   ChatInputCommandInteraction,
   ChannelType,
   ThreadChannel,
@@ -151,35 +155,67 @@ export async function handlePriority(
   interaction: ChatInputCommandInteraction,
   moduleManager: ModuleManager,
 ): Promise<void> {
+  const priority = interaction.options.getString("level", true) as TicketPriority;
+  return applyPriority(interaction, moduleManager, priority);
+}
+
+/** Ephemeral picker row shown by the "Set Priority" button. */
+export function buildPriorityPicker(): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    (Object.keys(PRIORITY_CONFIG) as TicketPriority[]).map((level) =>
+      new ButtonBuilder()
+        .setCustomId(`tickets:setpriority:${level}`)
+        .setLabel(PRIORITY_CONFIG[level].label)
+        .setEmoji(PRIORITY_CONFIG[level].emoji)
+        .setStyle(ButtonStyle.Secondary),
+    ),
+  );
+}
+
+/**
+ * Shared by `/ticket priority` and the priority picker buttons. The
+ * interaction must already be deferred (deferReply / deferUpdate).
+ */
+export async function applyPriority(
+  interaction: ChatInputCommandInteraction | ButtonInteraction,
+  moduleManager: ModuleManager,
+  priority: TicketPriority,
+): Promise<void> {
   const { guildId, guild, channel } = interaction;
   if (!guildId || !guild || !channel) return;
+
+  // components: [] also clears the picker buttons when invoked from one.
+  const reply = (content: string) => interaction.editReply({ content, components: [] });
+
   if (!isTicketThread(channel.type)) {
-    await interaction.editReply("❌ Use this command inside a ticket thread.");
+    await reply("❌ Use this command inside a ticket thread.");
     return;
   }
 
   const thread = channel as ThreadChannel;
-  const priority = interaction.options.getString("level", true) as TicketPriority;
 
-  if (!["low", "normal", "high", "critical"].includes(priority)) {
-    await interaction.editReply("❌ Invalid priority level.");
+  if (!Object.hasOwn(PRIORITY_CONFIG, priority)) {
+    await reply("❌ Invalid priority level.");
     return;
   }
 
   const db = moduleManager.databaseService;
   const rawSettings = await db.getModuleSettings(guildId, "tickets");
   const settings = parseSettings(TicketsSettingsSchema, rawSettings, "tickets", guildId);
-  if (!settings) return;
+  if (!settings) {
+    await reply("❌ Ticket system not configured.");
+    return;
+  }
 
   const member = await guild.members.fetch(interaction.user.id).catch(() => null);
   const metaResult = await getThreadMeta(thread);
   if (!member || !metaResult) {
-    await interaction.editReply("❌ This doesn't appear to be a valid ticket thread.");
+    await reply("❌ This doesn't appear to be a valid ticket thread.");
     return;
   }
 
   if (!isStaff(member, settings, metaResult.meta.typeId)) {
-    await interaction.editReply("❌ Only staff can set ticket priority.");
+    await reply("❌ Only staff can set ticket priority.");
     return;
   }
 
@@ -233,9 +269,7 @@ export async function handlePriority(
 
   await moduleManager.databaseService.upsertTicket(ticketUpsertFromMeta(guildId, thread.id, updatedMeta));
 
-  await interaction.editReply(
-    `${conf.emoji} Priority set to **${conf.label}**.`,
-  );
+  await reply(`${conf.emoji} Priority set to **${conf.label}**.`);
 }
 
 // ── /ticket transcript ───────────────────────────────────────────────────────
