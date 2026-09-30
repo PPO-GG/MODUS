@@ -28,9 +28,9 @@ const medals = ["#facc15", "#d4d4d8", "#d97706"];
       flex-direction: column;
       justify-content: space-between;
       padding: 64px 80px;
-      background-color: #0a0a0f;
-      background-image: radial-gradient(circle at 85% 15%, rgba(124, 58, 237, 0.45), transparent 55%),
-        radial-gradient(circle at 10% 100%, rgba(99, 102, 241, 0.3), transparent 50%);
+      background-color: #030712;
+      background-image: radial-gradient(circle at 85% 15%, rgba(13, 148, 136, 0.5), transparent 55%),
+        radial-gradient(circle at 10% 100%, rgba(3, 105, 161, 0.5), transparent 50%);
       color: #ffffff;
     "
   >
@@ -43,7 +43,7 @@ const medals = ["#facc15", "#d4d4d8", "#d97706"];
         style="border-radius: 24px"
       />
       <div style="display: flex; flex-direction: column; margin-left: 32px">
-        <div style="display: flex; font-size: 28px; color: #92d4dc; letter-spacing: 3px; text-transform: uppercase">
+        <div style="display: flex; font-size: 28px; color: #5eead4; letter-spacing: 3px; text-transform: uppercase">
           XP Leaderboard
         </div>
         <div style="display: flex; font-size: 60px; font-weight: 700; line-height: 1.1; max-width: 900px">
@@ -54,7 +54,7 @@ const medals = ["#facc15", "#d4d4d8", "#d97706"];
 
     <div
       v-if="!top.length"
-      style="display: flex; font-size: 36px; color: #a1a1aa"
+      style="display: flex; font-size: 36px; color: #9ca3af"
     >
       Levels, ranks and the most active members — powered by MODUS.
     </div>
@@ -65,20 +65,20 @@ const medals = ["#facc15", "#d4d4d8", "#d97706"];
         style="display: flex; align-items: center; margin-top: 16px; font-size: 36px"
       >
         <div
-          :style="`display: flex; width: 56px; height: 56px; border-radius: 28px; align-items: center; justify-content: center; font-weight: 700; color: #0a0a0f; background-color: ${medals[i]}`"
+          :style="`display: flex; width: 56px; height: 56px; border-radius: 28px; align-items: center; justify-content: center; font-weight: 700; color: #030712; background-color: ${medals[i]}`"
         >
           {{ i + 1 }}
         </div>
         <div style="display: flex; margin-left: 24px; font-weight: 700">
           {{ member.username }}
         </div>
-        <div style="display: flex; margin-left: 20px; color: #a1a1aa">
+        <div style="display: flex; margin-left: 20px; color: #9ca3af">
           Level {{ member.level }}
         </div>
       </div>
     </div>
 
-    <div style="display: flex; align-items: center; font-size: 26px; color: #71717a">
+    <div style="display: flex; align-items: center; font-size: 26px; color: #6b7280">
       <img src="/modus2.svg" width="40" height="40" />
       <div style="display: flex; margin-left: 14px">MODUS · modus.ppo.gg</div>
     </div>

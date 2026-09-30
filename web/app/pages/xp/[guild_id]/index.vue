@@ -6,41 +6,30 @@
       class="py-20 text-center space-y-6 max-w-lg mx-auto"
     >
       <div
-        class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto shadow-xl"
+        class="glide-icon w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"
       >
         <UIcon name="i-heroicons-lock-closed" class="w-8 h-8" />
       </div>
-      
+
       <!-- Gated: Requires Discord Login -->
       <div v-if="data?.requiresAuth" class="space-y-4">
         <div class="space-y-2">
           <h2 class="text-2xl font-bold text-white tracking-tight">
             Members-Only Leaderboard
           </h2>
-          <p class="text-sm text-zinc-400 leading-relaxed">
+          <p class="text-sm glide-ink-3 leading-relaxed">
             This server's leaderboard is private and only visible to verified server members. Log in with Discord to verify your membership and view your server's rankings.
           </p>
         </div>
         <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <UButton
-            :href="discordLoginUrl"
-            external
-            color="primary"
-            size="lg"
-            icon="i-simple-icons-discord"
-            class="font-semibold shadow-lg shadow-indigo-500/20"
-          >
+          <a :href="discordLoginUrl" class="glide-btn font-semibold">
+            <UIcon name="i-simple-icons-discord" class="w-4 h-4" />
             Log In with Discord
-          </UButton>
-          <UButton
-            to="/xp"
-            color="neutral"
-            variant="ghost"
-            size="lg"
-            icon="i-heroicons-arrow-left"
-          >
+          </a>
+          <NuxtLink to="/xp" class="glide-btn glide-btn-ghost">
+            <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
             Explore Public Leaderboards
-          </UButton>
+          </NuxtLink>
         </div>
       </div>
 
@@ -50,19 +39,15 @@
           <h2 class="text-2xl font-bold text-white tracking-tight">
             Server Membership Required
           </h2>
-          <p class="text-sm text-zinc-400 leading-relaxed">
+          <p class="text-sm glide-ink-3 leading-relaxed">
             You are logged in, but you don't have active XP or membership in this server. Join the Discord server and chat to earn XP and view member rankings!
           </p>
         </div>
         <div class="pt-2">
-          <UButton
-            to="/xp"
-            color="neutral"
-            variant="outline"
-            icon="i-heroicons-arrow-left"
-          >
+          <NuxtLink to="/xp" class="glide-btn">
+            <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
             Explore Public Leaderboards
-          </UButton>
+          </NuxtLink>
         </div>
       </div>
 
@@ -72,19 +57,15 @@
           <h2 class="text-2xl font-bold text-white tracking-tight">
             This Leaderboard is Private
           </h2>
-          <p class="text-sm text-zinc-400 leading-relaxed">
-            The server owner has configured this leaderboard to be viewable only by server members internally via bot commands (<code class="text-indigo-300 font-mono">/rank</code>, <code class="text-indigo-300 font-mono">/xp leaderboard</code>).
+          <p class="text-sm glide-ink-3 leading-relaxed">
+            The server owner has configured this leaderboard to be viewable only by server members internally via bot commands (<code class="glide-a1 font-mono">/rank</code>, <code class="glide-a1 font-mono">/xp leaderboard</code>).
           </p>
         </div>
         <div class="pt-2">
-          <UButton
-            to="/xp"
-            color="neutral"
-            variant="outline"
-            icon="i-heroicons-arrow-left"
-          >
+          <NuxtLink to="/xp" class="glide-btn">
+            <UIcon name="i-heroicons-arrow-left" class="w-4 h-4" />
             Explore Public Leaderboards
-          </UButton>
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -93,11 +74,9 @@
     <template v-else>
       <!-- HERO SECTION -->
       <div class="text-center space-y-4 pt-4">
-        <div
-          class="inline-flex items-center justify-center p-1.5 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 border border-white/10 shadow-2xl backdrop-blur-xl mb-2"
-        >
+        <div class="glide-glass w-24 h-24 mx-auto mb-4">
           <div
-            class="w-20 h-20 rounded-xl bg-zinc-900 border border-white/10 overflow-hidden flex items-center justify-center"
+            class="glide-icon w-24 h-24 rounded-xl overflow-hidden flex items-center justify-center"
           >
             <img
               v-if="data?.guild?.icon"
@@ -108,7 +87,7 @@
             <UIcon
               v-else
               name="i-heroicons-server-stack"
-              class="w-10 h-10 text-indigo-400"
+              class="w-10 h-10"
             />
           </div>
         </div>
@@ -116,7 +95,7 @@
         <div class="space-y-2">
           <div class="flex items-center justify-center gap-2">
             <div
-              class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider"
+              class="glide-chip px-3 py-1 text-xs font-semibold uppercase tracking-wider"
             >
               <UIcon name="i-heroicons-trophy" class="w-3.5 h-3.5" />
               Server Leaderboard
@@ -132,61 +111,28 @@
           <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
             {{ data?.guild?.name || "Server Leaderboard" }}
           </h1>
-          <p class="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+          <p class="text-sm sm:text-base glide-ink-3 max-w-xl mx-auto">
             Top active members ranked by message activity and XP. Chat in the
-            server to climb the leaderboard!
+            server to <span class="glide-text">climb the leaderboard</span>!
           </p>
         </div>
 
       <!-- Quick Stats Badges -->
       <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
         <div
-          class="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex items-center gap-2.5"
+          v-for="stat in quickStats"
+          :key="stat.label"
+          class="glide-tile px-4 py-2 rounded-xl flex items-center gap-2.5"
         >
-          <UIcon name="i-heroicons-users" class="text-indigo-400 text-lg" />
+          <UIcon :name="stat.icon" class="glide-a1 text-lg" />
           <div class="text-left">
             <p
-              class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider"
+              class="text-[10px] glide-ink-4 font-bold uppercase tracking-wider"
             >
-              Ranked Members
+              {{ stat.label }}
             </p>
             <p class="text-sm font-black text-white">
-              {{ formatNumber(data?.stats?.totalTrackedMembers || 0) }}
-            </p>
-          </div>
-        </div>
-
-        <div
-          class="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex items-center gap-2.5"
-        >
-          <UIcon name="i-heroicons-bolt" class="text-purple-400 text-lg" />
-          <div class="text-left">
-            <p
-              class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider"
-            >
-              Total XP Earned
-            </p>
-            <p class="text-sm font-black text-white">
-              {{ formatNumber(data?.stats?.totalXp || 0) }}
-            </p>
-          </div>
-        </div>
-
-        <div
-          class="px-4 py-2 rounded-xl bg-white/[0.03] border border-white/10 backdrop-blur-md flex items-center gap-2.5"
-        >
-          <UIcon
-            name="i-heroicons-chat-bubble-left-right"
-            class="text-pink-400 text-lg"
-          />
-          <div class="text-left">
-            <p
-              class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider"
-            >
-              Messages Counted
-            </p>
-            <p class="text-sm font-black text-white">
-              {{ formatNumber(data?.stats?.totalMessages || 0) }}
+              {{ formatNumber(stat.value || 0) }}
             </p>
           </div>
         </div>
@@ -196,20 +142,20 @@
     <!-- TOP 3 PODIUM (if page === 1 and no active search) -->
     <div
       v-if="page === 1 && !searchQuery && podium.length >= 3"
-      class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-4"
+      class="grid grid-cols-1 md:grid-cols-3 gap-8 items-end pt-4"
     >
       <!-- 2nd Place (Silver) -->
       <NuxtLink
         :to="`/xp/${guildId}/${podium[1]?.userId}`"
-        class="order-2 md:order-1 relative rounded-2xl p-6 border border-slate-400/20 bg-gradient-to-b from-slate-800/40 via-slate-900/60 to-zinc-950/80 backdrop-blur-xl space-y-4 text-center cursor-pointer hover:scale-[1.02] transition-all shadow-xl hover:shadow-slate-500/10"
+        class="glide-glass glide-podium glide-metal-2 order-2 md:order-1 p-6 space-y-4 text-center cursor-pointer"
       >
         <div
-          class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-slate-400/20 border border-slate-400/40 text-slate-300 text-xs font-bold flex items-center gap-1"
+          class="glide-podium-medal absolute -top-5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 whitespace-nowrap"
         >
           🥈 #2 Silver
         </div>
         <div
-          class="w-20 h-20 mx-auto rounded-full ring-4 ring-slate-400/40 p-1 bg-zinc-900 overflow-hidden mt-2"
+          class="glide-podium-ring w-20 h-20 mx-auto rounded-full p-1 bg-[var(--glide-bg)] overflow-hidden mt-2"
         >
           <img
             :src="getAvatarUrl(podium[1]?.userId, podium[1]?.avatar)"
@@ -221,18 +167,18 @@
           <h3 class="font-bold text-white text-lg truncate">
             {{ podium[1]?.username }}
           </h3>
-          <p class="text-xs text-slate-400 font-semibold">
+          <p class="text-xs font-semibold" style="color: var(--metal)">
             Level {{ podium[1]?.level }} • {{ formatNumber(podium[1]?.xp) }} XP
           </p>
         </div>
         <div class="space-y-1">
-          <div class="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+          <div class="glide-bar-track w-full h-2">
             <div
-              class="h-full bg-slate-300 rounded-full"
+              class="glide-bar-fill"
               :style="{ width: `${podium[1]?.progressPercent}%` }"
             />
           </div>
-          <p class="text-[10px] text-zinc-500">
+          <p class="text-[10px] glide-ink-4">
             {{ podium[1]?.progressPercent }}% to Level
             {{ (podium[1]?.level || 0) + 1 }}
           </p>
@@ -242,15 +188,15 @@
       <!-- 1st Place (Gold) -->
       <NuxtLink
         :to="`/xp/${guildId}/${podium[0]?.userId}`"
-        class="order-1 md:order-2 relative rounded-2xl p-8 border border-amber-400/30 bg-gradient-to-b from-amber-900/30 via-zinc-900/80 to-zinc-950/90 backdrop-blur-2xl space-y-5 text-center cursor-pointer hover:scale-[1.03] transition-all shadow-2xl shadow-amber-500/10 hover:shadow-amber-500/20 md:-translate-y-4"
+        class="glide-glass glide-podium glide-podium-first glide-metal-1 order-1 md:order-2 p-8 space-y-5 text-center cursor-pointer md:-translate-y-4"
       >
         <div
-          class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-300 text-sm font-black flex items-center gap-1.5 shadow-lg shadow-amber-500/20"
+          class="glide-podium-medal absolute -top-6 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-sm font-black flex items-center gap-1.5 whitespace-nowrap"
         >
           👑 #1 Champion
         </div>
         <div
-          class="w-24 h-24 mx-auto rounded-full ring-4 ring-amber-400/60 p-1 bg-zinc-900 overflow-hidden mt-3 shadow-lg shadow-amber-400/20"
+          class="glide-podium-ring w-24 h-24 mx-auto rounded-full p-1 bg-[var(--glide-bg)] overflow-hidden mt-3"
         >
           <img
             :src="getAvatarUrl(podium[0]?.userId, podium[0]?.avatar)"
@@ -263,19 +209,19 @@
             {{ podium[0]?.username }}
           </h3>
           <span
-            class="inline-block px-2.5 py-0.5 mt-1 rounded-md bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-bold"
+            class="glide-chip px-2.5 py-0.5 mt-1 text-xs font-bold"
           >
             Level {{ podium[0]?.level }} • {{ formatNumber(podium[0]?.xp) }} XP
           </span>
         </div>
         <div class="space-y-1.5">
-          <div class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
+          <div class="glide-bar-track w-full h-2.5">
             <div
-              class="h-full bg-gradient-to-r from-amber-400 to-amber-200 rounded-full"
+              class="glide-bar-fill"
               :style="{ width: `${podium[0]?.progressPercent}%` }"
             />
           </div>
-          <p class="text-xs text-amber-400/80 font-medium">
+          <p class="text-xs glide-ink-3 font-medium">
             {{ podium[0]?.progressPercent }}% to Level
             {{ (podium[0]?.level || 0) + 1 }}
           </p>
@@ -285,15 +231,15 @@
       <!-- 3rd Place (Bronze) -->
       <NuxtLink
         :to="`/xp/${guildId}/${podium[2]?.userId}`"
-        class="order-3 relative rounded-2xl p-6 border border-amber-700/30 bg-gradient-to-b from-amber-950/30 via-zinc-900/60 to-zinc-950/80 backdrop-blur-xl space-y-4 text-center cursor-pointer hover:scale-[1.02] transition-all shadow-xl hover:shadow-amber-900/10"
+        class="glide-glass glide-podium glide-metal-3 order-3 p-6 space-y-4 text-center cursor-pointer"
       >
         <div
-          class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-amber-700/20 border border-amber-700/40 text-amber-500 text-xs font-bold flex items-center gap-1"
+          class="glide-podium-medal absolute -top-5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 whitespace-nowrap"
         >
           🥉 #3 Bronze
         </div>
         <div
-          class="w-20 h-20 mx-auto rounded-full ring-4 ring-amber-700/40 p-1 bg-zinc-900 overflow-hidden mt-2"
+          class="glide-podium-ring w-20 h-20 mx-auto rounded-full p-1 bg-[var(--glide-bg)] overflow-hidden mt-2"
         >
           <img
             :src="getAvatarUrl(podium[2]?.userId, podium[2]?.avatar)"
@@ -305,18 +251,18 @@
           <h3 class="font-bold text-white text-lg truncate">
             {{ podium[2]?.username }}
           </h3>
-          <p class="text-xs text-amber-600 font-semibold">
+          <p class="text-xs font-semibold" style="color: var(--metal)">
             Level {{ podium[2]?.level }} • {{ formatNumber(podium[2]?.xp) }} XP
           </p>
         </div>
         <div class="space-y-1">
-          <div class="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+          <div class="glide-bar-track w-full h-2">
             <div
-              class="h-full bg-amber-600 rounded-full"
+              class="glide-bar-fill"
               :style="{ width: `${podium[2]?.progressPercent}%` }"
             />
           </div>
-          <p class="text-[10px] text-zinc-500">
+          <p class="text-[10px] glide-ink-4">
             {{ podium[2]?.progressPercent }}% to Level
             {{ (podium[2]?.level || 0) + 1 }}
           </p>
@@ -325,9 +271,7 @@
     </div>
 
     <!-- MAIN LEADERBOARD CARD -->
-    <div
-      class="relative rounded-3xl border border-white/10 bg-gradient-to-b from-zinc-900/80 via-zinc-950/90 to-black backdrop-blur-2xl p-6 sm:p-8 shadow-2xl space-y-6"
-    >
+    <div class="glide-glass p-6 sm:p-8 space-y-6">
       <!-- Search & Filters -->
       <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="w-full sm:w-80 relative">
@@ -337,13 +281,10 @@
             placeholder="Search member by username or ID..."
             size="md"
             class="w-full"
-            :ui="{
-              base: 'bg-white/5 border-white/10 focus:border-indigo-500 text-white placeholder-zinc-500 rounded-xl',
-            }"
           />
         </div>
 
-        <div class="text-xs text-zinc-400 flex items-center gap-2">
+        <div class="text-xs glide-ink-3 flex items-center gap-2">
           <span
             >Showing <strong>{{ data?.users?.length || 0 }}</strong> of
             <strong>{{ formatNumber(data?.total || 0) }}</strong> ranked
@@ -358,7 +299,7 @@
           v-for="user in data?.users"
           :key="user.id"
           :to="`/xp/${guildId}/${user.userId}`"
-          class="flex items-center gap-4 p-3.5 sm:p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-indigo-500/30 transition-all cursor-pointer group"
+          class="glide-tile flex items-center gap-4 p-3.5 sm:p-4 rounded-2xl cursor-pointer group"
         >
           <!-- Rank Badge -->
           <div
@@ -373,7 +314,7 @@
 
           <!-- Avatar -->
           <div
-            class="w-10 h-10 sm:w-11 sm:h-11 rounded-full ring-2 ring-white/10 group-hover:ring-indigo-500/50 p-0.5 bg-zinc-900 shrink-0 overflow-hidden transition-colors"
+            class="w-10 h-10 sm:w-11 sm:h-11 rounded-full ring-2 ring-white/10 group-hover:ring-teal-400/50 p-0.5 bg-[var(--glide-bg)] shrink-0 overflow-hidden transition-colors"
           >
             <img
               :src="getAvatarUrl(user.userId, user.avatar)"
@@ -386,7 +327,7 @@
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
               <p
-                class="font-bold text-white text-sm sm:text-base truncate group-hover:text-indigo-300 transition-colors"
+                class="font-bold text-white text-sm sm:text-base truncate group-hover:text-teal-300 transition-colors"
               >
                 {{ user.username }}
               </p>
@@ -399,7 +340,7 @@
                 Level {{ user.level }}
               </UBadge>
             </div>
-            <p class="text-xs text-zinc-500 truncate sm:hidden">
+            <p class="text-xs glide-ink-4 truncate sm:hidden">
               Level {{ user.level }} • {{ formatNumber(user.xp) }} XP
             </p>
           </div>
@@ -407,14 +348,14 @@
           <!-- Progress Bar (Desktop) -->
           <div class="hidden md:block w-48 space-y-1">
             <div
-              class="flex justify-between text-[11px] text-zinc-400 font-medium"
+              class="flex justify-between text-[11px] glide-ink-3 font-medium"
             >
               <span>Progress</span>
               <span>{{ user.progressPercent }}%</span>
             </div>
-            <div class="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+            <div class="glide-bar-track w-full h-2">
               <div
-                class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                class="glide-bar-fill"
                 :style="{ width: `${user.progressPercent}%` }"
               />
             </div>
@@ -424,31 +365,31 @@
           <div class="text-right shrink-0">
             <p class="font-black text-white text-sm sm:text-base tabular-nums">
               {{ formatNumber(user.xp) }}
-              <span class="text-[10px] font-bold text-zinc-500 uppercase ml-0.5"
+              <span class="text-[10px] font-bold glide-a1 uppercase ml-0.5"
                 >XP</span
               >
             </p>
-            <p class="text-[10px] text-zinc-500 hidden sm:block">
+            <p class="text-[10px] glide-ink-4 hidden sm:block">
               {{ formatNumber(user.messageCount) }} messages
             </p>
           </div>
 
           <UIcon
             name="i-heroicons-chevron-right"
-            class="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors shrink-0"
+            class="w-4 h-4 glide-ink-4 group-hover:text-white transition-colors shrink-0"
           />
         </NuxtLink>
 
         <div
           v-if="!data?.users?.length"
-          class="text-center py-12 text-zinc-500"
+          class="text-center py-12 glide-ink-4"
         >
           <UIcon
             name="i-heroicons-trophy"
             class="w-10 h-10 mx-auto mb-2 opacity-40"
           />
-          <p class="text-base font-bold text-zinc-400">No members found</p>
-          <p class="text-xs text-zinc-600">
+          <p class="text-base font-bold glide-ink-3">No members found</p>
+          <p class="text-xs glide-ink-4">
             Try adjusting your search query or start chatting in the server
           </p>
         </div>
@@ -457,7 +398,7 @@
       <!-- Pagination -->
       <div
         v-if="data && data.totalPages > 1"
-        class="flex items-center justify-between pt-4 border-t border-white/10"
+        class="glide-rule flex items-center justify-between pt-4 border-t"
       >
         <UButton
           color="neutral"
@@ -470,7 +411,7 @@
           Previous
         </UButton>
 
-        <span class="text-xs font-semibold text-zinc-400">
+        <span class="text-xs font-semibold glide-ink-3">
           Page <strong class="text-white">{{ page }}</strong> of
           <strong class="text-white">{{ data.totalPages }}</strong>
         </span>
@@ -492,11 +433,11 @@
     <UModal v-model="isModalOpen">
       <template #content>
         <div
-          class="p-6 bg-zinc-950 border border-white/10 rounded-2xl space-y-6 text-center"
+          class="glide-rule p-6 bg-[var(--glide-bg)] border rounded-2xl space-y-6 text-center"
         >
           <div v-if="selectedUser" class="space-y-4">
             <div
-              class="w-20 h-20 mx-auto rounded-full ring-4 ring-indigo-500/40 p-1 bg-zinc-900 overflow-hidden"
+              class="w-20 h-20 mx-auto rounded-full ring-4 ring-teal-400/40 p-1 bg-[var(--glide-bg)] overflow-hidden"
             >
               <img
                 :src="getAvatarUrl(selectedUser.userId, selectedUser.avatar)"
@@ -508,56 +449,52 @@
               <h3 class="text-xl font-black text-white">
                 {{ selectedUser.username }}
               </h3>
-              <p class="text-xs text-zinc-400">
+              <p class="text-xs glide-ink-3">
                 Rank #{{ selectedUser.rank }} in {{ data?.guild?.name }}
               </p>
             </div>
 
             <div class="grid grid-cols-3 gap-2 py-2">
-              <div class="p-3 rounded-xl bg-white/5 border border-white/5">
-                <p class="text-[10px] text-zinc-500 font-bold uppercase">
+              <div class="glide-tile p-3 rounded-xl">
+                <p class="text-[10px] glide-ink-4 font-bold uppercase">
                   Level
                 </p>
-                <p class="text-lg font-black text-indigo-400">
+                <p class="text-lg font-black glide-a1">
                   {{ selectedUser.level }}
                 </p>
               </div>
-              <div class="p-3 rounded-xl bg-white/5 border border-white/5">
-                <p class="text-[10px] text-zinc-500 font-bold uppercase">
+              <div class="glide-tile p-3 rounded-xl">
+                <p class="text-[10px] glide-ink-4 font-bold uppercase">
                   Total XP
                 </p>
-                <p class="text-lg font-black text-purple-400">
+                <p class="text-lg font-black glide-a2">
                   {{ formatNumber(selectedUser.xp) }}
                 </p>
               </div>
-              <div class="p-3 rounded-xl bg-white/5 border border-white/5">
-                <p class="text-[10px] text-zinc-500 font-bold uppercase">
+              <div class="glide-tile p-3 rounded-xl">
+                <p class="text-[10px] glide-ink-4 font-bold uppercase">
                   Messages
                 </p>
-                <p class="text-lg font-black text-pink-400">
+                <p class="text-lg font-black text-white">
                   {{ formatNumber(selectedUser.messageCount) }}
                 </p>
               </div>
             </div>
 
-            <div
-              class="space-y-2 text-left p-4 rounded-xl bg-white/[0.02] border border-white/5"
-            >
+            <div class="glide-tile space-y-2 text-left p-4 rounded-xl">
               <div class="flex justify-between text-xs font-semibold">
-                <span class="text-zinc-400">Next Level Progress</span>
-                <span class="text-indigo-400"
+                <span class="glide-ink-3">Next Level Progress</span>
+                <span class="glide-a1"
                   >{{ selectedUser.progressPercent }}%</span
                 >
               </div>
-              <div
-                class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden"
-              >
+              <div class="glide-bar-track w-full h-2.5">
                 <div
-                  class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                  class="glide-bar-fill"
                   :style="{ width: `${selectedUser.progressPercent}%` }"
                 />
               </div>
-              <p class="text-[11px] text-zinc-500">
+              <p class="text-[11px] glide-ink-4">
                 {{ formatNumber(selectedUser.xpInCurrentLevel) }} /
                 {{ formatNumber(selectedUser.xpNeededForNextLevel) }} XP to
                 Level {{ selectedUser.level + 1 }}
@@ -567,7 +504,7 @@
             <div class="pt-2">
               <NuxtLink
                 :to="`/xp/${guildId}/${selectedUser.userId}`"
-                class="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-white border border-indigo-500/30 font-semibold text-xs transition-all shadow-sm group"
+                class="glide-btn w-full justify-center text-xs font-semibold group"
               >
                 <span>View Full Member Profile</span>
                 <UIcon name="i-heroicons-arrow-right" class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -580,6 +517,7 @@
     </template>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
@@ -641,17 +579,31 @@ function formatNumber(n: number) {
   return (n || 0).toLocaleString("en-US");
 }
 
+const quickStats = computed(() => {
+  const stats = data.value?.stats;
+  return [
+    {
+      label: "Ranked Members",
+      icon: "i-heroicons-users",
+      value: stats?.totalTrackedMembers,
+    },
+    {
+      label: "Total XP Earned",
+      icon: "i-heroicons-bolt",
+      value: stats?.totalXp,
+    },
+    {
+      label: "Messages Counted",
+      icon: "i-heroicons-chat-bubble-left-right",
+      value: stats?.totalMessages,
+    },
+  ];
+});
+
 function rankBadgeClass(rank: number) {
-  switch (rank) {
-    case 1:
-      return "bg-amber-400/20 text-amber-300 border border-amber-400/40";
-    case 2:
-      return "bg-slate-300/20 text-slate-200 border border-slate-300/40";
-    case 3:
-      return "bg-amber-700/20 text-amber-500 border border-amber-700/40";
-    default:
-      return "bg-white/5 text-zinc-400 border border-white/5";
-  }
+  return rank >= 1 && rank <= 3
+    ? `glide-rank glide-metal-${rank}`
+    : "glide-rank";
 }
 
 function openUserCard(user: any) {
