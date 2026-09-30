@@ -1,78 +1,142 @@
 <template>
-  <div
-    class="min-h-screen w-full flex items-center justify-center bg-[#050507] text-slate-200 selection:bg-purple-500/30 relative overflow-hidden"
-  >
-    <!-- Background Ambient Glows -->
-    <div
-      class="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] -z-10 pointer-events-none animate-pulse"
-    ></div>
-    <div
-      class="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] -z-10 pointer-events-none animate-pulse"
-      style="animation-delay: 1s"
-    ></div>
+  <div class="auth-layout glide-grain">
+    <!-- Ambient glows -->
+    <div class="auth-glow auth-glow-a" aria-hidden="true"></div>
+    <div class="auth-glow auth-glow-b" aria-hidden="true"></div>
 
-    <!-- Subtle Grid Pattern -->
-    <div
-      class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"
-    ></div>
+    <div class="auth-shell">
+      <NuxtLink to="/" class="auth-brand" aria-label="MODUS home">
+        <img src="/modus2-animated.svg" alt="" class="w-14 h-14" />
+        <span>MODUS</span>
+      </NuxtLink>
 
-    <div class="w-full max-w-md p-6 z-10">
-      <div class="flex flex-col items-center mb-10">
-        <div class="relative -mb-6">
-          <img
-            src="/modus2-animated.svg"
-            alt="MODUS Logo"
-            class="w-40 logo-glow"
-          />
-        </div>
-        <h1 class="text-3xl font-black text-white tracking-tighter mt-2">
-          MODUS
-        </h1>
-        <p
-          class="text-xs font-bold uppercase tracking-[0.3em] text-gray-500 mt-1"
-        >
-          Modular Discord Utility System
-        </p>
-      </div>
+      <main class="auth-main">
+        <slot />
+      </main>
 
-      <slot />
-
-      <div class="mt-12 text-center">
-        <p
-          class="text-[10px] font-bold uppercase tracking-widest text-gray-600"
-        >
-          Powered by <span class="text-purple-500/80">MODUS Engine</span>
-        </p>
-      </div>
+      <footer class="auth-footer">
+        <NuxtLink to="/legal/terms">Terms</NuxtLink>
+        <NuxtLink to="/legal/privacy">Privacy</NuxtLink>
+      </footer>
     </div>
   </div>
 </template>
 
 <style>
-/* Global auth styles if needed */
-.auth-glass-card {
-  background: rgba(13, 13, 16, 0.7) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8) !important;
+/* ============================================
+   AUTH LAYOUT — "Glide" visual system
+   Shares the landing ground (grain, DM Sans,
+   teal→sky accents) and the .glide-glass frame.
+   ============================================ */
+
+.auth-layout {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  color: var(--glide-ink);
+  font-family: var(--glide-sans);
+  overflow: hidden;
 }
 
-.logo-glow {
-  filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.4))
-    drop-shadow(0 0 40px rgba(99, 102, 241, 0.2));
-  animation: logo-pulse 3s ease-in-out infinite;
+.auth-layout ::selection {
+  background: rgba(45, 212, 191, 0.3);
 }
 
-@keyframes logo-pulse {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.3))
-      drop-shadow(0 0 30px rgba(99, 102, 241, 0.15));
-  }
-  50% {
-    filter: drop-shadow(0 0 25px rgba(139, 92, 246, 0.5))
-      drop-shadow(0 0 50px rgba(99, 102, 241, 0.3));
+.auth-glow {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.auth-glow-a {
+  top: -12rem;
+  left: 50%;
+  width: 40rem;
+  height: 26rem;
+  transform: translateX(-50%);
+  background: var(--glide-glow-1);
+  filter: blur(140px);
+  opacity: 0.35;
+}
+
+.auth-glow-b {
+  bottom: -10rem;
+  right: -6rem;
+  width: 28rem;
+  height: 22rem;
+  background: var(--glide-glow-2);
+  filter: blur(130px);
+  opacity: 0.25;
+}
+
+.auth-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem;
+}
+
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--glide-ink);
+}
+
+.auth-main {
+  flex: 1;
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.auth-footer {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.8125rem;
+  color: var(--glide-ink-4);
+}
+
+.auth-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  transition: color 0.2s ease;
+}
+
+.auth-footer a:hover {
+  color: var(--glide-ink);
+}
+
+/* Shared by login, register and callback status screens. */
+.auth-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  color: var(--glide-ink-3);
+  font-size: 0.875rem;
+}
+
+.auth-status-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--glide-a1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-status-icon {
+    animation: none;
   }
 }
 </style>
