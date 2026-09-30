@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.28.0...modus-v1.28.1) (2026-09-30)
+
+
+### 🐛 Bug Fixes
+
+* **bot:** guard ticket close and add priority buttons ([#103](https://github.com/PPO-GG/MODUS/issues/103)) ([559c666](https://github.com/PPO-GG/MODUS/commit/559c6669636c4890aa9a1a41bdaf57920c1ffc83))
+
 ## [1.28.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.27.0...modus-v1.28.0) (2026-09-30)
 
 
