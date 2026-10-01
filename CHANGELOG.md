@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.29.0...modus-v1.29.1) (2026-10-01)
+
+
+### 🐛 Bug Fixes
+
+* **web:** load voice channels on temp voice page ([#107](https://github.com/PPO-GG/MODUS/issues/107)) ([e1e16d3](https://github.com/PPO-GG/MODUS/commit/e1e16d32d95be7cd46a833c6cf5fb82ac2e0d15b))
+
 ## [1.29.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.28.1...modus-v1.29.0) (2026-10-01)
 
 
