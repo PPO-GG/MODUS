@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.30.0...modus-v1.31.0) (2026-10-01)
+
+
+### ✨ Features
+
+* **web:** restyle OG image to Glide and move to modusbot.io ([#111](https://github.com/PPO-GG/MODUS/issues/111)) ([508a999](https://github.com/PPO-GG/MODUS/commit/508a99946a7902b1c7000688868135cd053f0b6f))
+
 ## [1.30.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.29.1...modus-v1.30.0) (2026-10-01)
 
 
