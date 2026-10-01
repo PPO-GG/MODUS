@@ -3,6 +3,7 @@ export * from "./client";
 export * from "./repositories/recordings";
 export * from "./repositories/guild-configs";
 export * from "./repositories/servers";
+export * from "./repositories/guild-entitlements";
 export * from "./repositories/modules";
 export * from "./repositories/bot-status";
 export * from "./repositories/logs";
