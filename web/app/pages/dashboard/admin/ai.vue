@@ -1,27 +1,17 @@
 <template>
   <div class="p-8 space-y-8">
     <!-- Header -->
-    <div class="flex items-start gap-4">
-      <div
-        class="p-2.5 rounded-xl bg-gradient-to-br from-primary-500/10 to-secondary-500/10 border border-primary-500/20 flex-shrink-0 mt-0.5"
-      >
-        <UIcon name="i-heroicons-cpu-chip" class="w-5 h-5 text-primary-400" />
-      </div>
-      <div>
-        <h1 class="text-2xl font-black text-white tracking-tight gradient-text">
-          Global AI Settings
-        </h1>
-        <p class="text-gray-400 text-sm mt-1">
-          Default provider, key &amp; token limits used by all Premium guilds
-          that haven't configured their own key. Falls back to
-          <code class="text-xs bg-gray-800 px-1 rounded">.env</code> if not set
-          here.
-        </p>
-      </div>
-    </div>
+    <AdminPageHeader icon="i-heroicons-cpu-chip" title="Global AI Settings">
+      <template #description>
+        Default provider, key &amp; token limits used by all Premium guilds
+        that haven't configured their own key. Falls back to
+        <code class="text-xs bg-gray-800 px-1 rounded">.env</code> if not set
+        here.
+      </template>
+    </AdminPageHeader>
 
     <!-- Settings card -->
-    <div class="glass-card rounded-2xl border border-white/8 overflow-hidden">
+    <div class="glide-tile rounded-2xl overflow-hidden">
       <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
         <UFormField label="Default Provider">
           <USelectMenu
@@ -352,12 +342,3 @@ watch(
 
 onMounted(() => loadGlobalAI());
 </script>
-
-<style scoped>
-.gradient-text {
-  background: linear-gradient(to bottom right, #ffffff 30%, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>

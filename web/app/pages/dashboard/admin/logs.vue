@@ -1,11 +1,18 @@
 <template>
   <main class="log-explorer flex h-full min-h-0 flex-col gap-4 p-4 sm:p-6 lg:p-8">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div><p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary-300/80">Fleet evidence</p><h1 class="mt-1 text-2xl font-black tracking-tight text-white gradient-text">Log explorer</h1><p class="mt-1 text-sm text-gray-400">Search retained history while live events continue to stream.</p></div>
-      <div class="flex flex-wrap gap-2"><UButton icon="i-lucide-trash-2" color="neutral" variant="ghost" class="border border-white/8" @click="clearView">Clear view</UButton><UButton icon="i-lucide-refresh-cw" color="neutral" variant="ghost" class="border border-white/8" :loading="historyLoading" @click="refreshHistory">Refresh</UButton></div>
-    </header>
+    <AdminPageHeader
+      icon="i-heroicons-document-text"
+      eyebrow="Fleet evidence"
+      title="Log explorer"
+      description="Search retained history while live events continue to stream."
+    >
+      <template #actions>
+        <UButton icon="i-lucide-trash-2" color="neutral" variant="ghost" class="border border-white/8" @click="clearView">Clear view</UButton>
+        <UButton icon="i-lucide-refresh-cw" color="neutral" variant="ghost" class="border border-white/8" :loading="historyLoading" @click="refreshHistory">Refresh</UButton>
+      </template>
+    </AdminPageHeader>
 
-    <section class="glass-card rounded-2xl border border-white/8 p-4" aria-label="Log search filters">
+    <section class="glide-tile rounded-2xl border border-white/8 p-4" aria-label="Log search filters">
       <div class="grid gap-3 lg:grid-cols-[minmax(16rem,1fr)_10rem_10rem_auto]">
         <UInput v-model="filters.search" name="log-search" autocomplete="off" icon="i-lucide-search" placeholder="Search log messages" aria-label="Search log messages" />
         <USelect v-model="filters.level" name="log-level" :items="levelItems" aria-label="Log level" />
@@ -196,6 +203,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.gradient-text { background: linear-gradient(to bottom right, #fff 30%, #a855f7); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 @media (prefers-reduced-motion: reduce) { .log-explorer *, .log-explorer *::before, .log-explorer *::after { scroll-behavior: auto !important; transition: none !important; animation-duration: 0.01ms !important; } }
 </style>
