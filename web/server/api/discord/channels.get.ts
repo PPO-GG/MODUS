@@ -4,8 +4,15 @@
  *
  * Query params:
  *   - guild_id: The Discord guild ID
+ *   - types: Optional comma-separated kinds to return: text (default), voice, category
  */
 import { getAccessibleModules } from "../../utils/session";
+
+const CHANNEL_TYPE_GROUPS: Record<string, number[]> = {
+  text: [0, 5], // GUILD_TEXT, GUILD_ANNOUNCEMENT
+  voice: [2], // GUILD_VOICE
+  category: [4], // GUILD_CATEGORY
+};
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -45,9 +52,14 @@ export default defineEventHandler(async (event) => {
       },
     );
 
-    // Filter to text-based channels only and sort by position
+    // Text-based channels by default; callers opt in to other kinds via `types`
+    const requested = String(query.types ?? "text")
+      .split(",")
+      .map((t) => t.trim());
+    const allowedTypes = requested.flatMap((t) => CHANNEL_TYPE_GROUPS[t] ?? []);
+
     const textChannels = channels
-      .filter((c) => [0, 5].includes(c.type)) // 0 = GUILD_TEXT, 5 = GUILD_ANNOUNCEMENT
+      .filter((c) => allowedTypes.includes(c.type))
       .sort((a, b) => a.position - b.position)
       .map((c) => ({
         id: c.id,
