@@ -25,4 +25,5 @@ export * from "./repositories/xp";
 export * from "./repositories/system-flags";
 export * from "./repositories/moderation-cases";
 export * from "./repositories/tickets";
+export * from "./repositories/autorole-grants";
 export * from "./rank-cards";

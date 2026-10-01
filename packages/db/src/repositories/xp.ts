@@ -4,7 +4,7 @@
  * Rank query uses a single COUNT for O(log n) performance with the
  * (guild_id, xp DESC) index.
  */
-import { and, count, desc, eq, gt, ilike, or, sql, sum } from "drizzle-orm";
+import { and, count, desc, eq, gt, gte, ilike, or, sql, sum } from "drizzle-orm";
 import { requireReturningRow } from "../client";
 import type { Database } from "../client";
 import { xpUsers, guildConfigs, servers, type XpUser } from "../schema";
@@ -56,6 +56,23 @@ export class XpUserRepository {
       )
       .limit(1);
     return rows[0] ? toXpDoc(rows[0]) : null;
+  }
+
+  /** Opted-in members at or above `minLevel` — used by the autoroles sweep. */
+  async listOptedInLevels(
+    guildId: string,
+    minLevel: number,
+  ): Promise<Array<{ userId: string; level: number }>> {
+    return this.db
+      .select({ userId: xpUsers.userId, level: xpUsers.level })
+      .from(xpUsers)
+      .where(
+        and(
+          eq(xpUsers.guildId, guildId),
+          eq(xpUsers.optedIn, true),
+          gte(xpUsers.level, minLevel),
+        ),
+      );
   }
 
   async create(data: {

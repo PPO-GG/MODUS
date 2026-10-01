@@ -1189,3 +1189,29 @@ export const ticketRecords = pgTable(
   }),
 );
 export type TicketRow = typeof ticketRecords.$inferSelect;
+
+// ── Auto roles ───────────────────────────────────────────────────────
+// One row per (guild, member, rule) once the autoroles module has granted
+// that rule's role. Grant-only semantics: the row is what stops the sweep
+// from re-adding a role an admin removed by hand. Rows are deleted when the
+// member leaves, or when the rule is removed from the module settings.
+export const autoroleGrants = pgTable(
+  "autorole_grants",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    guildId: text("guild_id").notNull(),
+    userId: text("user_id").notNull(),
+    ruleId: text("rule_id").notNull(),
+    grantedAt: timestamp("granted_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byGuildUserRule: uniqueIndex("autorole_grants_guild_user_rule_idx").on(
+      t.guildId,
+      t.userId,
+      t.ruleId,
+    ),
+    byGuildRule: index("autorole_grants_guild_rule_idx").on(t.guildId, t.ruleId),
+  }),
+);
+export type AutoroleGrantRow = typeof autoroleGrants.$inferSelect;
+export type NewAutoroleGrantRow = typeof autoroleGrants.$inferInsert;

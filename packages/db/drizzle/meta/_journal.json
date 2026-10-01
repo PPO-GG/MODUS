@@ -120,6 +120,13 @@
       "when": 1790815332192,
       "tag": "0016_red_nebula",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790897496116,
+      "tag": "0017_rare_shinobi_shaw",
+      "breakpoints": true
     }
   ]
 }
