@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.31.0...modus-v1.31.1) (2026-10-01)
+
+
+### 🐛 Bug Fixes
+
+* **bot:** pin youtube-plugin to the 1.18.2 commit snapshot ([#114](https://github.com/PPO-GG/MODUS/issues/114)) ([1d4d5ca](https://github.com/PPO-GG/MODUS/commit/1d4d5cae64c791f394e813e4258add7b27263ac3))
+
 ## [1.31.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.30.0...modus-v1.31.0) (2026-10-01)
 
 
