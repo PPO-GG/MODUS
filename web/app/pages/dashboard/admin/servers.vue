@@ -125,6 +125,8 @@ interface ServerRow {
   shard_id: number | null;
   status: boolean;
   premium: boolean;
+  premium_source: "manual" | "subscription" | "both" | null;
+  subscription_ends_at: string | null;
   createdAt: string | null;
 }
 
@@ -260,15 +262,28 @@ const columns: TableColumn<ServerRow>[] = [
   {
     id: "premium",
     header: "Premium",
-    cell: ({ row }) =>
-      h(USwitchEl, {
-        modelValue: row.original.premium === true,
-        "onUpdate:modelValue": (v: boolean) => requestPremiumToggle(row.original, Boolean(v)),
-        loading: updatingPremium.value === row.original.$id,
-        color: "warning",
-        "aria-label": `${row.original.premium ? "Disable" : "Enable"} premium for ${row.original.name}`,
-      }),
-    meta: { class: { th: "w-24", td: "w-24" } },
+    cell: ({ row }) => {
+      const r = row.original;
+      const source =
+        r.premium_source === "subscription" || r.premium_source === "both"
+          ? `${r.premium_source === "both" ? "Manual + subscription" : "Subscription"}${
+              r.subscription_ends_at
+                ? ` · ends ${new Date(r.subscription_ends_at).toLocaleDateString()}`
+                : ""
+            }`
+          : null;
+      return h("div", { class: "flex flex-col gap-1" }, [
+        h(USwitchEl, {
+          modelValue: r.premium === true,
+          "onUpdate:modelValue": (v: boolean) => requestPremiumToggle(r, Boolean(v)),
+          loading: updatingPremium.value === r.$id,
+          color: "warning",
+          "aria-label": `${r.premium ? "Disable" : "Enable"} premium for ${r.name}`,
+        }),
+        source ? h("span", { class: "text-xs text-gray-400" }, source) : null,
+      ]);
+    },
+    meta: { class: { th: "w-48", td: "w-48" } },
   },
 ];
 

@@ -3,8 +3,9 @@
  *
  * Admin-only. Paginated server rows for the admin servers page.
  * Query params: page (>=1, default 1), limit (1-100, default 25),
- * status (online|offline|all, default all), premium (true to narrow).
- * Returns { rows, total, page, limit }.
+ * status (online|offline|all, default all), premium (true to narrow; effective premium — manual grant or Discord subscription).
+ * Returns { rows, total, page, limit }. Each row's `premium` is the manual flag;
+ * `premium_source` / `subscription_ends_at` describe subscription state.
  */
 import { getRepos } from "../../utils/db";
 import { requireBotAdmin } from "../../utils/session";

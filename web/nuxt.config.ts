@@ -124,6 +124,7 @@ export default defineNuxtConfig({
       botAdminIds: "", // Comma-separated Discord IDs, set via NUXT_PUBLIC_BOT_ADMIN_IDS
       botUrl: "", // Bot health check URL, set via NUXT_PUBLIC_BOT_URL
       discordClientId: "", // Discord bot client ID, set via NUXT_PUBLIC_DISCORD_CLIENT_ID
+      premiumStoreUrl: "", // Discord store page for the Premium SKU — Set via NUXT_PUBLIC_PREMIUM_STORE_URL
     },
   },
   routeRules: {

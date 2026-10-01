@@ -8,6 +8,9 @@
  * (see server/utils/admin-audit).
  *
  * Body: { premium: boolean, reason: string }
+ *
+ * Controls only the manual grant. Guilds can also be Premium via a Discord
+ * subscription; that is read-only here.
  */
 import { ServerRepository } from "@modus/db";
 import type { H3Event } from "h3";
@@ -25,7 +28,7 @@ const handler = createEnabledToggleRouteHandler<H3Event>({
     if (!repos) return null;
     const guildId = getRouterParam(event, "guild_id")!;
     return {
-      getEnabled: () => repos.servers.isPremium(guildId),
+      getEnabled: () => repos.servers.isManualPremium(guildId),
       setEnabled: (tx, premium) => new ServerRepository(tx).setPremium(guildId, premium),
     };
   },

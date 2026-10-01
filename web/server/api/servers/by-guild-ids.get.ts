@@ -38,7 +38,9 @@ export default defineEventHandler(async (event) => {
       owner_id: doc.owner_id,
       admin_user_ids: doc.admin_user_ids,
       dashboard_role_ids: doc.dashboard_role_ids,
-      premium: doc.premium,
+      // Effective premium (manual grant OR active Discord subscription) so the
+      // dashboard unlocks premium-only options for subscribed guilds.
+      premium: doc.effective_premium,
     }));
   } catch (error: any) {
     console.error(

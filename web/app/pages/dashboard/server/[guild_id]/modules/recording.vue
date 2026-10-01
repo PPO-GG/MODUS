@@ -278,10 +278,15 @@
             <dd class="mt-1 text-sm font-semibold text-white">{{ MAX_RECORDING_USERS }} users</dd>
           </div>
         </dl>
-        <p v-if="!isPremium" class="mt-3 flex items-center gap-2 text-[13px] text-gray-400">
-          <UBadge label="Premium" color="warning" variant="subtle" size="sm" icon="i-lucide-crown" />
-          Premium servers can record for up to {{ formatDuration(PREMIUM_MAX_RECORDING_SECONDS) }} and
-          use per-user multi-track recording.
+        <p v-if="!isPremium && premiumStoreUrl" class="mt-3 text-[13px]">
+          <a
+            :href="premiumStoreUrl"
+            target="_blank"
+            rel="noopener"
+            class="text-sky-300 underline-offset-2 hover:underline"
+          >
+            Upgrade for longer recordings
+          </a>
         </p>
       </DashboardModuleSection>
 
@@ -740,6 +745,7 @@ const isDraggingClip = ref(false);
 const clipFileInput = ref<HTMLInputElement | null>(null);
 
 const isPremium = ref(false);
+const premiumStoreUrl = (useRuntimeConfig().public.premiumStoreUrl as string) || "";
 // Mirrors FREE_MAX_RECORDING_BITRATE in @modus/db/recording-limits (the bot and
 // PUT route enforce it; @modus/db ships CJS, so it isn't imported client-side).
 const FREE_MAX_BITRATE = 64;
