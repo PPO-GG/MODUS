@@ -182,3 +182,37 @@ export async function subscribe<T = unknown>(
     }
   };
 }
+
+/**
+ * Read every string value stored under `prefix*` (SCAN + MGET). Used by the
+ * admin Resources page to collect the per-shard samples the bot writes with a
+ * TTL. Returns [] when Redis isn't configured. SCAN rather than KEYS so a large
+ * shared keyspace never blocks Redis.
+ */
+export async function readStoredValues(prefix: string): Promise<string[]> {
+  const c = getClients();
+  if (!c) return [];
+  // The clients queue commands forever while disconnected (maxRetriesPerRequest:
+  // null). Fail fast instead of piling up one SCAN per dashboard tick.
+  if (c.primary.status === "reconnecting" || c.primary.status === "end") {
+    throw new Error("Redis is not connected.");
+  }
+
+  const keys: string[] = [];
+  let cursor = "0";
+  do {
+    const [next, batch] = await c.primary.scan(
+      cursor,
+      "MATCH",
+      `${prefix}*`,
+      "COUNT",
+      100,
+    );
+    cursor = next;
+    keys.push(...batch);
+  } while (cursor !== "0");
+
+  if (keys.length === 0) return [];
+  const values = await c.primary.mget(keys);
+  return values.filter((v): v is string => typeof v === "string");
+}

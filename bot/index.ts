@@ -15,6 +15,8 @@ import { GiveawayDrawWorker } from "./GiveawayDrawWorker";
 import { PremiumEntitlementSync } from "./PremiumEntitlementSync";
 import { fetchActiveGuildEntitlements } from "./lib/entitlements";
 import { LavalinkHealthCheckWorker } from "./LavalinkHealthCheckWorker";
+import { ResourceReporter } from "./ResourceReporter";
+import { createProcessSampler } from "./lib/process-sampler";
 import { Logger } from "./Logger";
 
 import {
@@ -73,6 +75,7 @@ const databaseService = new DatabaseService({ eventBus });
 const shardId = client.shard?.ids[0] ?? 0;
 const logger = new Logger(databaseService, shardId);
 const moduleManager = new ModuleManager(client, logger);
+let resourceReporter: ResourceReporter | null = null;
 
 // Lavalink music control plane. Built after the client, Redis, database, and
 // event bus exist; it connects and recovers dormant sessions once the gateway
@@ -498,6 +501,22 @@ client.once("ready", async () => {
 
   updateHeartbeat();
   setInterval(updateHeartbeat, 60000); // Pulse every minute
+
+  // Report this shard's own CPU/memory for the admin Resources page. The
+  // dashboard reads these from Redis, so without Redis there is nothing to do.
+  // Every shard reports itself — deliberately not leader-gated.
+  if (redisClients) {
+    resourceReporter = new ResourceReporter({
+      shardId: typeof shardId === "number" ? shardId : 0,
+      version: botVersion,
+      sample: createProcessSampler(),
+      guildCount: () => client.guilds.cache.size,
+      store: (key, value, ttlSeconds) =>
+        redisClients.primary.set(key, value, "EX", ttlSeconds),
+      logger,
+    });
+    resourceReporter.start();
+  }
 });
 
 // Health Check Server
@@ -610,6 +629,7 @@ async function gracefulShutdown(signal: string) {
   // Best-effort Redis quiesce. Matters most for leader election — quitting
   // lets the lease release via Lua CAS (inside LeaderElection.stop); without
   // this, the next leader waits the full TTL before picking up.
+  resourceReporter?.stop();
   closeRedisClients(redisClients).catch(() => {});
 }
 
