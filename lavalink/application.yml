@@ -22,17 +22,16 @@ server: # REST and WS server
 lavalink:
   plugins:
     # The built-in YouTube source is deprecated upstream and no longer updated;
-    # youtube-source replaces it. Pinned to a tagged release now that SABR +
-    # PoToken support has shipped in one — bump this, the version referenced
-    # in INSTALLATION.md, and the `clients:` list below together, since valid
-    # client names change between builds. Check latest at
-    # https://github.com/lavalink-devs/youtube-source/releases
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.2"
-      snapshot: false
-    # Unconfigured placeholder: no `plugins.lavasrc:` block below yet, so this
-    # is inert until Spotify/Apple Music/etc. source credentials are wired up.
-    - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.8.3"
-      snapshot: false
+    # youtube-source replaces it. Pinned to the commit tagged 1.18.2 (SABR +
+    # PoToken support): maven.lavalink.dev/releases no longer serves any
+    # youtube-plugin version, but the snapshots repo still has a build per
+    # commit. Bump this, the version referenced in INSTALLATION.md, and the
+    # `clients:` list below together, since valid client names change between
+    # builds. Tags live at
+    # https://github.com/lavalink-devs/youtube-source/releases — resolve one to
+    # its commit with `gh api repos/lavalink-devs/youtube-source/commits/<tag>`.
+    - dependency: "dev.lavalink.youtube:youtube-plugin:158726dc7d570e8ff32512d6ab15736d561040b7"
+      snapshot: true
   server:
     # Injected by Docker Compose from LAVALINK_SERVER_PASSWORD. Never write a
     # literal password here: this file is committed. The bot presents the same
