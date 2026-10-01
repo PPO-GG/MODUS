@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.28.1...modus-v1.29.0) (2026-10-01)
+
+
+### ✨ Features
+
+* tiered recording limits and Discord Premium subscriptions ([#105](https://github.com/PPO-GG/MODUS/issues/105)) ([f737871](https://github.com/PPO-GG/MODUS/commit/f737871fa1784fcfadf4abe83b3c6a6fd700d0bf))
+
 ## [1.28.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.28.0...modus-v1.28.1) (2026-09-30)
 
 
