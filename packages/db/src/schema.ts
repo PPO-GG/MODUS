@@ -229,6 +229,37 @@ export const servers = pgTable(
 export type Server = typeof servers.$inferSelect;
 export type NewServer = typeof servers.$inferInsert;
 
+// ── guild_entitlements ────────────────────────────────────────────────────
+// Mirror of Discord guild-subscription entitlements for the Modus Premium SKU.
+// No FK to `servers`: an entitlement can predate the bot joining the guild.
+// "Active" is evaluated by the clock (see repositories/guild-entitlements.ts),
+// so a cancelled subscription lapses at ends_at without needing an event.
+
+export const guildEntitlements = pgTable(
+  "guild_entitlements",
+  {
+    id: text("id").primaryKey(), // Discord entitlement snowflake
+    guildId: text("guild_id").notNull(),
+    skuId: text("sku_id").notNull(),
+    type: integer("type"),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    deleted: boolean("deleted").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    byGuildId: index("guild_entitlements_guild_id_idx").on(t.guildId),
+  }),
+);
+
+export type GuildEntitlement = typeof guildEntitlements.$inferSelect;
+export type NewGuildEntitlement = typeof guildEntitlements.$inferInsert;
+
 // ── guild_configs ─────────────────────────────────────────────────────────
 // Per-(guild, module) settings. In Appwrite, `settings` was a 16 KB JSON
 // string; here it's JSONB so we gain containment queries (`@>`) and can

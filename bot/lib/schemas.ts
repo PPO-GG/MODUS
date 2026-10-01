@@ -38,10 +38,10 @@ const clampedNumber = (min: number, max: number, fallback: number) =>
     .default(fallback);
 
 export const RecordingSettingsSchema = z.object({
-  maxDuration: clampedNumber(300, 14400, 14400), // seconds, 5 min – 4 hours
+  // Session length and user cap are fixed per tier (see @modus/db/recording-limits),
+  // not per-guild settings.
   // kbps. Premium tiers (>64) are enforced at session start, not here.
   bitrate: clampedNumber(MIN_RECORDING_BITRATE, MAX_RECORDING_BITRATE, 64),
-  maxConcurrentUsers: clampedNumber(1, 99, 25), // cap FFmpeg processes per session
   announceMode: z
     .literal(["none", "tts", "textTts", "soundClip"])
     .default("tts"),

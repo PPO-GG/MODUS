@@ -4,7 +4,12 @@
 import { and, asc, count, eq, inArray, or, sql } from "drizzle-orm";
 import { requireReturningRow } from "../client";
 import type { Database } from "../client";
-import { servers, type Server } from "../schema";
+import { guildEntitlements, servers, type Server } from "../schema";
+import {
+  activeEntitlementEndsAt,
+  entitlementIsLive,
+  hasActiveEntitlement,
+} from "./guild-entitlements";
 
 export type ServerDoc = Server & {
   $id: string;
@@ -38,6 +43,58 @@ function toDoc(row: Server): ServerDoc {
   };
 }
 
+export type PremiumSource = "manual" | "subscription" | "both" | null;
+
+export interface PremiumStatus {
+  premium: boolean;
+  source: PremiumSource;
+  subscriptionEndsAt: Date | null;
+}
+
+export function derivePremiumSource(
+  manual: boolean,
+  subscribed: boolean,
+): PremiumSource {
+  if (manual && subscribed) return "both";
+  if (manual) return "manual";
+  if (subscribed) return "subscription";
+  return null;
+}
+
+/** ServerDoc plus effective-premium fields. `premium` stays the raw manual flag. */
+export type ServerDocWithPremium = ServerDoc & {
+  effective_premium: boolean;
+  premium_source: PremiumSource;
+  subscription_ends_at: string | null;
+};
+
+type PremiumRow = {
+  server: Server;
+  subscribed: boolean;
+  subscriptionEndsAt: Date | null;
+};
+
+function toPremiumDoc(r: PremiumRow): ServerDocWithPremium {
+  const manual = r.server.premium === true;
+  return {
+    ...toDoc(r.server),
+    effective_premium: manual || r.subscribed,
+    premium_source: derivePremiumSource(manual, r.subscribed),
+    subscription_ends_at:
+      r.subscribed && r.subscriptionEndsAt
+        ? r.subscriptionEndsAt.toISOString()
+        : null,
+  };
+}
+
+/** Extra select columns carrying subscription state for a `servers` query. */
+function premiumColumns() {
+  return {
+    subscribed: hasActiveEntitlement(servers.guildId).mapWith(Boolean),
+    subscriptionEndsAt: activeEntitlementEndsAt(servers.guildId),
+  };
+}
+
 /** Structural executor type so audited mutations can pass a transaction. */
 export type ServerExecutor = Pick<Database, "select" | "insert" | "update" | "delete">;
 
@@ -60,19 +117,21 @@ export class ServerRepository {
     premium?: boolean;
     offset: number;
     limit: number;
-  }): Promise<{ rows: ServerDoc[]; total: number }> {
+  }): Promise<{ rows: ServerDocWithPremium[]; total: number }> {
     const conditions = [];
     if (opts.status) {
       conditions.push(eq(servers.status, opts.status === "online"));
     }
     if (opts.premium !== undefined) {
-      conditions.push(eq(servers.premium, opts.premium));
+      // Effective premium: manual flag OR an active Discord subscription.
+      const effective = sql`(${servers.premium} or ${hasActiveEntitlement(servers.guildId)})`;
+      conditions.push(opts.premium ? effective : sql`not ${effective}`);
     }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [rows, totalRows] = await Promise.all([
       this.db
-        .select()
+        .select({ server: servers, ...premiumColumns() })
         .from(servers)
         .where(where)
         .orderBy(asc(sql`lower(${servers.name})`), asc(servers.id))
@@ -80,7 +139,7 @@ export class ServerRepository {
         .offset(opts.offset),
       this.db.select({ c: count() }).from(servers).where(where),
     ]);
-    return { rows: rows.map(toDoc), total: totalRows[0]?.c ?? 0 };
+    return { rows: rows.map(toPremiumDoc), total: totalRows[0]?.c ?? 0 };
   }
 
   async getByGuildId(guildId: string): Promise<ServerDoc | null> {
@@ -141,9 +200,42 @@ export class ServerRepository {
       .where(eq(servers.guildId, guildId));
   }
 
+  /** Effective premium: the manual flag OR an active Discord subscription. */
   async isPremium(guildId: string): Promise<boolean> {
+    return (await this.getPremiumStatus(guildId)).premium;
+  }
+
+  /** The raw admin-granted flag only (what the admin toggle and its audit trail control). */
+  async isManualPremium(guildId: string): Promise<boolean> {
     const row = await this.getByGuildId(guildId);
     return row?.premium === true;
+  }
+
+  async getPremiumStatus(guildId: string): Promise<PremiumStatus> {
+    // Two plain queries rather than a join: a subscribed guild may not have a
+    // servers row yet (entitlement can predate the bot joining).
+    const [server] = await this.db
+      .select({ premium: servers.premium })
+      .from(servers)
+      .where(eq(servers.guildId, guildId))
+      .limit(1);
+    const [sub] = await this.db
+      .select({
+        n: count(),
+        endsAt: sql<Date | null>`max(${guildEntitlements.endsAt})`.mapWith(
+          guildEntitlements.endsAt,
+        ),
+      })
+      .from(guildEntitlements)
+      .where(and(eq(guildEntitlements.guildId, guildId), entitlementIsLive()));
+
+    const manual = server?.premium === true;
+    const subscribed = (sub?.n ?? 0) > 0;
+    return {
+      premium: manual || subscribed,
+      source: derivePremiumSource(manual, subscribed),
+      subscriptionEndsAt: subscribed ? (sub?.endsAt ?? null) : null,
+    };
   }
 
   async setPremium(guildId: string, premium: boolean): Promise<void> {
@@ -172,7 +264,7 @@ export class ServerRepository {
         total: sql<number>`count(*)::int`,
         online: sql<number>`count(*) filter (where ${servers.status})::int`,
         offline: sql<number>`count(*) filter (where not ${servers.status})::int`,
-        premium: sql<number>`count(*) filter (where ${servers.premium})::int`,
+        premium: sql<number>`count(*) filter (where ${servers.premium} or ${hasActiveEntitlement(servers.guildId)})::int`,
         registeredSince: sql<number>`count(*) filter (where ${servers.createdAt} >= ${since})::int`,
       })
       .from(servers);
@@ -208,13 +300,13 @@ export class ServerRepository {
    * Batch lookup by guild_id. Preserves the Appwrite-era response shape
    * used by the Discover page (trims to a small public projection).
    */
-  async listByGuildIds(guildIds: string[]): Promise<ServerDoc[]> {
+  async listByGuildIds(guildIds: string[]): Promise<ServerDocWithPremium[]> {
     if (guildIds.length === 0) return [];
     const rows = await this.db
-      .select()
+      .select({ server: servers, ...premiumColumns() })
       .from(servers)
       .where(inArray(servers.guildId, guildIds));
-    return rows.map(toDoc);
+    return rows.map(toPremiumDoc);
   }
 
   /**

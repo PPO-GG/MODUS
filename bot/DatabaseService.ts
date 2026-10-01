@@ -38,6 +38,8 @@ import {
   SystemFlagsRepository,
   ModerationCaseRepository,
   TicketRepository,
+  GuildEntitlementRepository,
+  type PremiumStatus,
   type CreateModerationCaseInput,
   type TicketUpsertInput,
   type ModerationCaseRow,
@@ -64,6 +66,7 @@ export class DatabaseService {
   public readonly recordings: RecordingRepository;
   public readonly guildConfigs: GuildConfigRepository;
   public readonly servers: ServerRepository;
+  public readonly entitlements: GuildEntitlementRepository;
   public readonly modules: ModuleRepository;
   public readonly botStatus: BotStatusRepository;
   public readonly logs: LogRepository;
@@ -140,6 +143,7 @@ export class DatabaseService {
     this.recordings = new RecordingRepository(db);
     this.guildConfigs = new GuildConfigRepository(db);
     this.servers = new ServerRepository(db);
+    this.entitlements = new GuildEntitlementRepository(db);
     this.modules = new ModuleRepository(db);
     this.botStatus = new BotStatusRepository(db);
     this.logs = new LogRepository(db);
@@ -431,6 +435,18 @@ export class DatabaseService {
         error,
       );
       return false;
+    }
+  }
+
+  async getGuildPremiumStatus(guildId: string): Promise<PremiumStatus> {
+    try {
+      return await this.servers.getPremiumStatus(guildId);
+    } catch (error) {
+      console.error(
+        `[DatabaseService] getPremiumStatus failed for ${guildId}:`,
+        error,
+      );
+      return { premium: false, source: null, subscriptionEndsAt: null };
     }
   }
 

@@ -26,3 +26,28 @@ export function clampRecordingBitrate(
 ): number {
   return premium ? bitrate : Math.min(bitrate, FREE_MAX_RECORDING_BITRATE);
 }
+
+/**
+ * Session limits are fixed per tier and set by the bot operator — server
+ * admins can't change them. Premium only changes how long a session may run
+ * and unlocks per-user multitrack; the user cap is the same for everyone.
+ */
+export const MAX_RECORDING_USERS = 5;
+export const FREE_MAX_RECORDING_SECONDS = 60 * 60;
+export const PREMIUM_MAX_RECORDING_SECONDS = 4 * 60 * 60;
+
+export interface RecordingLimits {
+  /** Hard stop for a single recording session, in seconds. */
+  maxDurationSeconds: number;
+  /** Users (and, in multitrack, tracks) recorded at once. */
+  maxUsers: number;
+}
+
+export function getRecordingLimits(premium: boolean): RecordingLimits {
+  return {
+    maxDurationSeconds: premium
+      ? PREMIUM_MAX_RECORDING_SECONDS
+      : FREE_MAX_RECORDING_SECONDS,
+    maxUsers: MAX_RECORDING_USERS,
+  };
+}

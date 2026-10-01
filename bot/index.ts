@@ -12,6 +12,8 @@ import { TranscriptRetentionWorker } from "./TranscriptRetentionWorker";
 import { LogRetentionWorker } from "./LogRetentionWorker";
 import { ReminderWorker } from "./ReminderWorker";
 import { GiveawayDrawWorker } from "./GiveawayDrawWorker";
+import { PremiumEntitlementSync } from "./PremiumEntitlementSync";
+import { fetchActiveGuildEntitlements } from "./lib/entitlements";
 import { LavalinkHealthCheckWorker } from "./LavalinkHealthCheckWorker";
 import { Logger } from "./Logger";
 
@@ -415,6 +417,60 @@ client.once("ready", async () => {
     }).start();
   } else if (typeof shardId !== "number" || shardId === 0) {
     reminderWorker.start();
+  }
+
+  // ── Discord Premium subscriptions ────────────────────────────────────
+  // Optional: with no SKU configured, Premium stays manual-only and no
+  // Premium buttons are shown. Events can land on any shard (writes are
+  // idempotent); the hourly reconcile runs on one leader only.
+  const premiumSkuId = process.env.MODUS_PREMIUM_SKU_ID?.trim();
+  if (premiumSkuId) {
+    const premiumSync = new PremiumEntitlementSync({
+      skuId: premiumSkuId,
+      store: databaseService.entitlements,
+      fetchActive: (skuId) =>
+        fetchActiveGuildEntitlements(client.application!, skuId),
+      logger,
+    });
+    const onSyncError = (err: unknown) =>
+      logger.error("Premium entitlement event failed", undefined, err, "premium");
+
+    client.on(Events.EntitlementCreate, (e) => {
+      premiumSync.handleUpsert(e).catch(onSyncError);
+    });
+    client.on(Events.EntitlementUpdate, (_old, e) => {
+      premiumSync.handleUpsert(e).catch(onSyncError);
+    });
+    client.on(Events.EntitlementDelete, (e) => {
+      premiumSync.handleDelete(e).catch(onSyncError);
+    });
+
+    if (redisClients) {
+      const ownerId = `${process.pid}:shard-${shardId}`;
+      new LeaderElection({
+        redis: redisClients.primary,
+        key: "modus:leader:premium-sync",
+        ownerId,
+        onAcquired: () => {
+          logger.info(
+            `Premium sync: leader election won (${ownerId})`,
+            undefined,
+            "premium",
+          );
+          premiumSync.start();
+        },
+        onLost: () => {
+          logger.warn(
+            `Premium sync: lost leader lease (${ownerId}) — stopping worker`,
+            undefined,
+            "premium",
+          );
+          premiumSync.stop();
+        },
+      }).start();
+    } else if (typeof shardId !== "number" || shardId === 0) {
+      premiumSync.start();
+    }
   }
 
 

@@ -261,48 +261,33 @@
         </div>
       </DashboardModuleSection>
 
-      <!-- Limits -->
-      <DashboardModuleSection title="Limits" description="When a recording stops and how many people it covers.">
-        <div class="space-y-5">
-          <div>
-            <div class="mb-2 flex items-baseline justify-between gap-3">
-              <label class="text-sm font-medium text-white" for="rec-duration">Max recording length</label>
-              <span class="text-sm text-sky-200">{{ formatDuration(recordingSettings.maxDuration) }}</span>
-            </div>
-            <USlider
-              id="rec-duration"
-              v-model="recordingSettings.maxDuration"
-              :min="300"
-              :max="14400"
-              :step="300"
-            />
-            <p class="mt-2 text-[13px] text-gray-400">
-              Recordings stop automatically after this long (5 minutes to 4 hours).
-            </p>
+      <!-- Limits (fixed per tier by the bot operator; read-only here) -->
+      <DashboardModuleSection
+        title="Limits"
+        description="Recording limits are set by your plan and can't be changed per server."
+      >
+        <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div class="rounded-xl p-3.5 ring-1 ring-inset ring-white/10">
+            <dt class="text-[13px] text-gray-400">Max recording length</dt>
+            <dd class="mt-1 text-sm font-semibold text-white">
+              {{ formatDuration(maxRecordingSeconds) }}
+            </dd>
           </div>
-
-          <div class="border-t border-white/[0.06] pt-5">
-            <div class="mb-2 flex items-baseline justify-between gap-3">
-              <label class="text-sm font-medium text-white" for="rec-max-users">
-                Max users recorded at once
-              </label>
-              <span class="text-sm text-sky-200">{{ recordingSettings.maxConcurrentUsers }} users</span>
-            </div>
-            <UInput
-              id="rec-max-users"
-              v-model.number="recordingSettings.maxConcurrentUsers"
-              type="number"
-              :min="1"
-              :max="99"
-              icon="i-lucide-users"
-              class="w-full sm:w-48"
-            />
-            <p class="mt-2 text-[13px] text-gray-400">
-              Each recorded member runs one audio process. Members beyond this limit aren't
-              recorded, which protects smaller hosts.
-            </p>
+          <div class="rounded-xl p-3.5 ring-1 ring-inset ring-white/10">
+            <dt class="text-[13px] text-gray-400">Max users recorded at once</dt>
+            <dd class="mt-1 text-sm font-semibold text-white">{{ MAX_RECORDING_USERS }} users</dd>
           </div>
-        </div>
+        </dl>
+        <p v-if="!isPremium && premiumStoreUrl" class="mt-3 text-[13px]">
+          <a
+            :href="premiumStoreUrl"
+            target="_blank"
+            rel="noopener"
+            class="text-sky-300 underline-offset-2 hover:underline"
+          >
+            Upgrade for longer recordings
+          </a>
+        </p>
       </DashboardModuleSection>
 
       <!-- Announcement -->
@@ -619,9 +604,7 @@ const newUserId = ref("");
 // ── Settings ──
 
 interface RecordingForm {
-  maxDuration: number;
   bitrate: number;
-  maxConcurrentUsers: number;
   announceMode: "none" | "tts" | "textTts" | "soundClip";
   announceText: string;
   announceVoice: string;
@@ -631,9 +614,7 @@ interface RecordingForm {
 }
 
 const defaults = (): RecordingForm => ({
-  maxDuration: 14400,
   bitrate: 64,
-  maxConcurrentUsers: 25,
   announceMode: "tts",
   announceText: "",
   announceVoice: "",
@@ -764,9 +745,17 @@ const isDraggingClip = ref(false);
 const clipFileInput = ref<HTMLInputElement | null>(null);
 
 const isPremium = ref(false);
+const premiumStoreUrl = (useRuntimeConfig().public.premiumStoreUrl as string) || "";
 // Mirrors FREE_MAX_RECORDING_BITRATE in @modus/db/recording-limits (the bot and
 // PUT route enforce it; @modus/db ships CJS, so it isn't imported client-side).
 const FREE_MAX_BITRATE = 64;
+// Mirror the session limits in @modus/db/recording-limits (enforced by the bot).
+const MAX_RECORDING_USERS = 5;
+const FREE_MAX_RECORDING_SECONDS = 60 * 60;
+const PREMIUM_MAX_RECORDING_SECONDS = 4 * 60 * 60;
+const maxRecordingSeconds = computed(() =>
+  isPremium.value ? PREMIUM_MAX_RECORDING_SECONDS : FREE_MAX_RECORDING_SECONDS,
+);
 const isPremiumBitrate = (bitrate: number) => bitrate > FREE_MAX_BITRATE;
 const isBitrateLocked = (bitrate: number) =>
   !isPremium.value && isPremiumBitrate(bitrate);
@@ -1124,9 +1113,7 @@ onMounted(async () => {
     }
 
     recordingSettings.value = {
-      maxDuration: saved.maxDuration ?? 14400,
       bitrate: saved.bitrate ?? 64,
-      maxConcurrentUsers: saved.maxConcurrentUsers ?? 25,
       announceMode,
       announceText: saved.announceText ?? "",
       announceVoice: saved.announceVoice ?? "",
