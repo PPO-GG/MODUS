@@ -119,8 +119,7 @@ export default defineNuxtConfig({
     // return 503 rather than silently degrading.
     databaseUrl: "", // Set via NUXT_DATABASE_URL
     public: {
-      baseUrl: "https://modusbot.io", // Set via NUXT_PUBLIC_BASE_URL
-      webhookBaseUrl: "https://modusbot.io", // Public origin for webhook trigger URLs — Set via NUXT_PUBLIC_WEBHOOK_BASE_URL
+      baseUrl: "https://modusbot.io", // Public origin (also used for webhook trigger URLs) — Set via NUXT_PUBLIC_BASE_URL
       botAdminIds: "", // Comma-separated Discord IDs, set via NUXT_PUBLIC_BOT_ADMIN_IDS
       botUrl: "", // Bot health check URL, set via NUXT_PUBLIC_BOT_URL
       discordClientId: "", // Discord bot client ID, set via NUXT_PUBLIC_DISCORD_CLIENT_ID
