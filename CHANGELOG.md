@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.29.1...modus-v1.30.0) (2026-10-01)
+
+
+### ✨ Features
+
+* Glide admin section and live resource usage page ([#109](https://github.com/PPO-GG/MODUS/issues/109)) ([d5ee23d](https://github.com/PPO-GG/MODUS/commit/d5ee23da0dbfe769cf5d93a4ff69f77daeb3f64c))
+
 ## [1.29.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.29.0...modus-v1.29.1) (2026-10-01)
 
 
