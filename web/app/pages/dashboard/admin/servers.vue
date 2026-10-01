@@ -1,27 +1,24 @@
 <template>
   <div class="p-8 space-y-8">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-black text-white tracking-tight gradient-text">
-          Registered Servers
-        </h1>
-        <p class="text-gray-400 text-sm mt-1">
-          Manage premium status for all servers using the bot. Premium unlocks
-          hosted AI features.
-        </p>
-      </div>
-      <UButton
-        icon="i-heroicons-arrow-path"
-        variant="ghost"
-        color="neutral"
-        :loading="serversLoading"
-        aria-label="Refresh registered servers"
-        title="Refresh registered servers"
-        @click="fetchServers"
-        class="glass-card rounded-xl border border-white/8 hover:bg-white/10"
-      />
-    </div>
+    <AdminPageHeader
+      icon="i-heroicons-server-stack"
+      title="Registered Servers"
+      description="Manage premium status for all servers using the bot. Premium unlocks hosted AI features."
+    >
+      <template #actions>
+        <UButton
+          icon="i-heroicons-arrow-path"
+          variant="ghost"
+          color="neutral"
+          :loading="serversLoading"
+          aria-label="Refresh registered servers"
+          title="Refresh registered servers"
+          class="rounded-xl border border-white/8 hover:bg-white/10"
+          @click="fetchServers"
+        />
+      </template>
+    </AdminPageHeader>
 
     <!-- Filter bar -->
     <div class="flex items-center gap-6">
@@ -41,7 +38,7 @@
     </div>
 
     <!-- Table -->
-    <div class="glass-card rounded-2xl border border-white/8 overflow-hidden">
+    <div class="glide-tile rounded-2xl overflow-hidden">
       <UTable
         :data="servers"
         :columns="columns"
@@ -392,12 +389,3 @@ const submitPremiumToggle = async () => {
 
 onMounted(() => fetchServers());
 </script>
-
-<style scoped>
-.gradient-text {
-  background: linear-gradient(to bottom right, #ffffff 30%, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>

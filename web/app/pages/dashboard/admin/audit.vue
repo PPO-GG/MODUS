@@ -1,19 +1,14 @@
 <template>
   <div class="p-8 space-y-6">
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-black text-white tracking-tight gradient-text">
-        Audit Trail
-      </h1>
-      <p class="text-gray-400 text-sm mt-1">
-        Read-only history of bot-admin changes — module and music toggles,
-        AI config, and premium changes. Sensitive values are redacted before
-        they're ever stored.
-      </p>
-    </div>
+    <AdminPageHeader
+      icon="i-heroicons-clipboard-document-list"
+      title="Audit Trail"
+      description="Read-only history of bot-admin changes — module and music toggles, AI config, and premium changes. Sensitive values are redacted before they're ever stored."
+    />
 
     <!-- Filters -->
-    <div class="glass-card rounded-2xl border border-white/8 p-4 flex flex-wrap items-end gap-3">
+    <div class="glide-tile rounded-2xl p-4 flex flex-wrap items-end gap-3">
       <UFormField label="Actor ID" class="w-40">
         <UInput v-model="filters.actorId" placeholder="Discord user ID" />
       </UFormField>
@@ -58,14 +53,14 @@
     <!-- Empty -->
     <div
       v-else-if="events.length === 0"
-      class="glass-panel text-center py-16 rounded-3xl border-2 border-dashed border-white/8"
+      class="text-center py-16 rounded-3xl border-2 border-dashed border-white/8"
     >
       <UIcon name="i-heroicons-clipboard-document-list" class="w-12 h-12 text-gray-600 mx-auto mb-3" />
       <p class="text-gray-500">No audit events match these filters.</p>
     </div>
 
     <!-- Table -->
-    <div v-else class="glass-card rounded-2xl border border-white/8 overflow-hidden">
+    <div v-else class="glide-tile rounded-2xl overflow-hidden">
       <UTable
         :data="events"
         :columns="columns"
@@ -280,12 +275,3 @@ const loadOlder = () => fetchEvents(true);
 
 onMounted(() => fetchEvents(false));
 </script>
-
-<style scoped>
-.gradient-text {
-  background: linear-gradient(to bottom right, #ffffff 30%, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>

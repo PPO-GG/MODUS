@@ -1,33 +1,29 @@
 <template>
   <main class="operations-overview p-5 sm:p-8 space-y-6 sm:space-y-8">
-    <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary-300/80">
-          Fleet operations
-        </p>
-        <h1 class="mt-1 text-2xl font-black tracking-tight text-white gradient-text">
-          Operations overview
-        </h1>
-        <p class="mt-1 text-sm text-gray-400">
-          Review fleet state and address the signals that need action.
-        </p>
-      </div>
-      <UButton
-        icon="i-lucide-refresh-cw"
-        color="neutral"
-        variant="ghost"
-        :loading="loading"
-        :disabled="loading"
-        class="self-start border border-white/8 bg-white/[0.03]"
-        @click="loadOverview"
-      >
-        Refresh
-      </UButton>
-    </header>
+    <AdminPageHeader
+      icon="i-lucide-activity"
+      eyebrow="Fleet operations"
+      title="Operations overview"
+      description="Review fleet state and address the signals that need action."
+    >
+      <template #actions>
+        <UButton
+          icon="i-lucide-refresh-cw"
+          color="neutral"
+          variant="ghost"
+          :loading="loading"
+          :disabled="loading"
+          class="border border-white/8 bg-white/[0.03]"
+          @click="loadOverview"
+        >
+          Refresh
+        </UButton>
+      </template>
+    </AdminPageHeader>
 
     <section
       v-if="loading && !overview"
-      class="glass-card rounded-2xl border border-white/8 px-6 py-16 text-center"
+      class="glide-tile rounded-2xl border border-white/8 px-6 py-16 text-center"
       aria-live="polite"
       aria-busy="true"
     >
@@ -38,7 +34,7 @@
 
     <section
       v-else-if="requestError"
-      class="glass-card rounded-2xl border border-error/30 bg-error/5 px-6 py-10 text-center"
+      class="rounded-2xl border border-error/30 bg-error/5 px-6 py-10 text-center"
       role="alert"
     >
       <UIcon name="i-lucide-triangle-alert" class="mx-auto size-8 text-error" />
@@ -51,7 +47,7 @@
 
     <template v-else-if="overview">
       <section
-        class="glass-card relative overflow-hidden rounded-2xl border border-white/8 px-5 py-5 sm:px-6"
+        class="glide-tile relative overflow-hidden rounded-2xl border border-white/8 px-5 py-5 sm:px-6"
         aria-labelledby="fleet-signal-heading"
       >
         <div class="flex flex-col gap-1 border-b border-white/8 pb-4 sm:flex-row sm:items-baseline sm:justify-between">
@@ -78,8 +74,8 @@
       </section>
 
       <section
-        class="glass-card rounded-2xl border px-5 py-5 sm:px-6"
-        :class="attentionItems.length ? 'border-warning/50 bg-warning/10 ring-1 ring-warning/30' : 'border-white/8'"
+        class="rounded-2xl border px-5 py-5 sm:px-6"
+        :class="attentionItems.length ? 'border-warning/50 bg-warning/10 ring-1 ring-warning/30' : 'glide-tile'"
         aria-labelledby="attention-heading"
         aria-live="polite"
       >
@@ -129,7 +125,7 @@
       </section>
 
       <section aria-label="Fleet summary" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <article v-for="summary in fleetSummary" :key="summary.label" class="glass-card rounded-2xl border border-white/8 p-5 motion-reduce:hover:transform-none">
+        <article v-for="summary in fleetSummary" :key="summary.label" class="glide-tile rounded-2xl border border-white/8 p-5">
           <div class="flex items-start justify-between gap-3">
             <p class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-300">{{ summary.label }}</p>
             <UIcon :name="summary.icon" class="size-4 shrink-0 text-primary-300" aria-hidden="true" />
@@ -141,7 +137,7 @@
 
       <section class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.85fr)]">
         <div class="space-y-6">
-          <section class="glass-card rounded-2xl border border-white/8" aria-labelledby="dependency-heading">
+          <section class="glide-tile rounded-2xl border border-white/8" aria-labelledby="dependency-heading">
             <div class="flex items-center justify-between border-b border-white/8 px-5 py-4 sm:px-6">
               <div>
                 <h2 id="dependency-heading" class="text-sm font-bold text-white">Dependencies</h2>
@@ -175,7 +171,7 @@
             </div>
           </section>
 
-          <section class="glass-card rounded-2xl border border-white/8" aria-labelledby="storage-heading">
+          <section class="glide-tile rounded-2xl border border-white/8" aria-labelledby="storage-heading">
             <div class="flex items-center justify-between border-b border-white/8 px-5 py-4 sm:px-6">
               <div>
                 <h2 id="storage-heading" class="text-sm font-bold text-white">R2 usage</h2>
@@ -211,7 +207,7 @@
           </section>
         </div>
 
-        <section class="glass-card rounded-2xl border border-white/8" aria-labelledby="recent-heading">
+        <section class="glide-tile rounded-2xl border border-white/8" aria-labelledby="recent-heading">
           <div class="border-b border-white/8 px-5 py-4 sm:px-6">
             <h2 id="recent-heading" class="text-sm font-bold text-white">Recent activity</h2>
             <p class="mt-0.5 text-xs text-gray-300">Retained log and registration summaries</p>
@@ -425,22 +421,3 @@ onMounted(() => {
   void loadOverview()
 })
 </script>
-
-<style scoped>
-@media (prefers-reduced-motion: reduce) {
-  .operations-overview .glass-card,
-  .operations-overview .glass-card::before,
-  .operations-overview .group,
-  .operations-overview .group * {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .operations-overview .glass-card,
-  .operations-overview .glass-card:hover,
-  .operations-overview .glass-card::before,
-  .operations-overview .glass-card:hover::before {
-    transform: none !important;
-  }
-}
-</style>

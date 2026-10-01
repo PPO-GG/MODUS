@@ -41,6 +41,7 @@ const isBotAdmin = computed(() => userStore.isAdmin);
 const activeTab = computed(() => {
   const path = route.path;
   if (path.includes("/dashboard/admin/overview")) return "overview";
+  if (path.includes("/dashboard/admin/resources")) return "resources";
   if (path.includes("/dashboard/admin/ai")) return "ai";
   if (path.includes("/dashboard/admin/servers")) return "servers";
   if (path.includes("/dashboard/admin/logs")) return "logs";
@@ -56,6 +57,12 @@ const sidebarTabs = [
     label: "Operations Overview",
     icon: "i-lucide-activity",
     to: "/dashboard/admin/overview",
+  },
+  {
+    id: "resources",
+    label: "Resource Usage",
+    icon: "i-lucide-gauge",
+    to: "/dashboard/admin/resources",
   },
   {
     id: "modules",

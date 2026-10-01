@@ -1,16 +1,11 @@
 <template>
   <div class="p-8 space-y-8">
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-black text-white tracking-tight gradient-text">
-        Music System
-      </h1>
-      <p class="text-gray-400 text-sm mt-1">
-        Fleet-wide switch for music playback. The Lavalink health check
-        disables this automatically when YouTube extraction breaks across
-        every node; re-enabling here is the only way to turn it back on.
-      </p>
-    </div>
+    <AdminPageHeader
+      icon="i-heroicons-musical-note"
+      title="Music System"
+      description="Fleet-wide switch for music playback. The Lavalink health check disables this automatically when YouTube extraction breaks across every node; re-enabling here is the only way to turn it back on."
+    />
 
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-12">
@@ -23,7 +18,7 @@
     <!-- Status card -->
     <div
       v-else
-      class="glass-card rounded-2xl p-5 flex items-center gap-4 border border-white/8"
+      class="glide-tile rounded-2xl p-5 flex items-center gap-4"
     >
       <div class="flex-1 min-w-0">
         <p class="text-sm font-bold text-white">
@@ -175,12 +170,3 @@ const submitToggle = async () => {
 
 onMounted(() => fetchStatus());
 </script>
-
-<style scoped>
-.gradient-text {
-  background: linear-gradient(to bottom right, #ffffff 30%, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>

@@ -1,15 +1,11 @@
 <template>
   <div class="p-8 space-y-8">
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-black text-white tracking-tight gradient-text">
-        Global Modules
-      </h1>
-      <p class="text-gray-400 text-sm mt-1">
-        Enable or disable modules globally for all servers. Server-specific
-        settings can still override these if the module is enabled here.
-      </p>
-    </div>
+    <AdminPageHeader
+      icon="i-heroicons-squares-2x2"
+      title="Global Modules"
+      description="Enable or disable modules globally for all servers. Server-specific settings can still override these if the module is enabled here."
+    />
 
     <!-- Loading -->
     <div v-if="modulesLoading" class="flex justify-center py-12">
@@ -22,7 +18,7 @@
     <!-- Empty -->
     <div
       v-else-if="modules.length === 0"
-      class="glass-panel text-center py-16 rounded-3xl border-2 border-dashed border-white/8"
+      class="text-center py-16 rounded-3xl border-2 border-dashed border-white/8"
     >
       <UIcon
         name="i-lucide-package-open"
@@ -46,7 +42,7 @@
       <div
         v-for="module in modules"
         :key="module.$id"
-        class="glass-card rounded-2xl p-5 flex items-center gap-4 border border-white/8 hover:border-white/15 transition-all duration-200"
+        class="glide-tile glide-tile-hover rounded-2xl p-5 flex items-center gap-4"
       >
         <div
           class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -114,7 +110,7 @@
 
     <!-- Admin Access Info -->
     <div
-      class="glass-card rounded-2xl p-6 border border-primary-500/10 bg-primary-500/5"
+      class="rounded-2xl p-6 border border-primary-500/10 bg-primary-500/5"
     >
       <div class="flex items-center gap-3 mb-2">
         <UIcon
@@ -222,12 +218,3 @@ const submitToggle = async () => {
 
 onMounted(() => fetchModules());
 </script>
-
-<style scoped>
-.gradient-text {
-  background: linear-gradient(to bottom right, #ffffff 30%, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-</style>
