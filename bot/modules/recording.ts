@@ -36,6 +36,7 @@ import { parseSettings } from "../lib/validateSettings";
 import {
   clampRecordingBitrate,
   FREE_MAX_RECORDING_BITRATE,
+  getRecordingLimits,
 } from "@modus/db/recording-limits";
 import { speakInConnection, isTTSAvailable } from "../lib/tts";
 import { resolveVoice } from "../lib/ttsVoices";
@@ -1074,12 +1075,13 @@ async function handleStart(
     }
   }
 
+  const isPremium = await moduleManager.databaseService.isGuildPremium(guildId);
+  const limits = getRecordingLimits(isPremium);
+
   // Resolve multitrack mode — premium-gated
   const wantsMultitrack = interaction.options.getBoolean("multitrack") ?? false;
   let multitrack = false;
   if (wantsMultitrack) {
-    const isPremium =
-      await moduleManager.databaseService.isGuildPremium(guildId);
     if (!isPremium) {
       await interaction.editReply({
         content:
@@ -1095,8 +1097,6 @@ async function handleStart(
   let bitrate = settings.bitrate;
   let bitrateNotice = "";
   if (bitrate > FREE_MAX_RECORDING_BITRATE) {
-    const isPremium =
-      await moduleManager.databaseService.isGuildPremium(guildId);
     const allowed = clampRecordingBitrate(bitrate, isPremium);
     if (allowed !== bitrate) {
       bitrateNotice = `⚠️ ${bitrate} kbps recording is a **Premium** feature — recording at ${allowed} kbps instead.`;
@@ -1135,7 +1135,7 @@ async function handleStart(
             .setColor(0xed4245)
             .setTitle("⏹️ Recording Auto-Stopped")
             .setDescription(
-              `Maximum recording duration reached (${formatDuration(settings.maxDuration)}).`,
+              `Maximum recording duration reached (${formatDuration(limits.maxDurationSeconds)}).`,
             )
             .addFields(
               {
@@ -1156,7 +1156,7 @@ async function handleStart(
       } catch (err) {
         _moduleManager?.logger.error("Error during auto-stop", session?.guildId, err, "recording");
       }
-    }, settings.maxDuration * 1000),
+    }, limits.maxDurationSeconds * 1000),
     recordingDocId,
     bitrate,
     multitrack,
@@ -1167,9 +1167,9 @@ async function handleStart(
   // Start recording all users currently in the channel (up to the limit)
   for (const [userId, channelMember] of voiceChannel.members) {
     if (channelMember.user.bot) continue; // Don't record bots
-    if (session.userStreams.size >= settings.maxConcurrentUsers) {
+    if (session.userStreams.size >= limits.maxUsers) {
       _moduleManager?.logger.warn(
-        `Concurrent user limit reached (${settings.maxConcurrentUsers}), skipping remaining members`,
+        `Concurrent user limit reached (${limits.maxUsers}), skipping remaining members`,
         guildId,
         "recording",
       );
@@ -1186,7 +1186,7 @@ async function handleStart(
   // Listen for new users joining the channel
   connection.receiver.speaking.on("start", (userId: string) => {
     if (session.userStreams.has(userId)) return;
-    if (session.userStreams.size >= settings.maxConcurrentUsers) return; // at capacity
+    if (session.userStreams.size >= limits.maxUsers) return; // at capacity
     // Look up the member
     const guild = interaction.guild;
     if (!guild) return;
@@ -1194,7 +1194,7 @@ async function handleStart(
       .fetch(userId)
       .then((m) => {
         if (m.user.bot) return;
-        if (session.userStreams.size >= settings.maxConcurrentUsers) return;
+        if (session.userStreams.size >= limits.maxUsers) return;
         startUserRecording(session, userId, m.displayName, bitrate);
       })
       .catch(() => {});
@@ -1228,17 +1228,17 @@ async function handleStart(
       },
       {
         name: "Max Duration",
-        value: formatDuration(settings.maxDuration),
+        value: formatDuration(limits.maxDurationSeconds),
         inline: true,
       },
       {
         name: "Users Detected",
-        value: `${session.userStreams.size}`,
+        value: `${session.userStreams.size} / ${limits.maxUsers}`,
         inline: true,
       },
     )
     .setFooter({
-      text: `Started by ${member.displayName} • Multi-track recording active`,
+      text: `Started by ${member.displayName} • ${multitrack ? "Multi-track" : "Single-track (mixed)"} recording`,
     });
 
   await interaction.editReply({
