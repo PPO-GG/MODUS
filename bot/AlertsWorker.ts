@@ -381,7 +381,7 @@ async function listEventSubSubscriptions(token: string): Promise<any[]> {
 
 /**
  * Subscribe to `stream.online` and `stream.offline` for a Twitch broadcaster.
- * The callback URL is `https://modus-bot.ppo.gg/webhooks/alerts/twitch`.
+ * The callback URL is `https://bot.modusbot.io/webhooks/alerts/twitch`.
  * The shared secret is used by WebhookRouter to verify Twitch HMAC signatures.
  */
 async function subscribeTwitchEventSub(
@@ -389,7 +389,7 @@ async function subscribeTwitchEventSub(
   eventType: "stream.online" | "stream.offline",
   token: string,
 ): Promise<void> {
-  const publicUrl = process.env.BOT_PUBLIC_URL || "https://modus-bot.ppo.gg";
+  const publicUrl = process.env.BOT_PUBLIC_URL || "https://bot.modusbot.io";
   const secret = process.env.TWITCH_EVENTSUB_SECRET;
   if (!secret) {
     console.warn("[Alerts/Twitch] TWITCH_EVENTSUB_SECRET not set — skipping subscription");

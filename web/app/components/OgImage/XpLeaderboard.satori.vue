@@ -80,7 +80,7 @@ const medals = ["#facc15", "#d4d4d8", "#d97706"];
 
     <div style="display: flex; align-items: center; font-size: 26px; color: #6b7280">
       <img src="/modus2.svg" width="40" height="40" />
-      <div style="display: flex; margin-left: 14px">MODUS · modus.ppo.gg</div>
+      <div style="display: flex; margin-left: 14px">MODUS · modusbot.io</div>
     </div>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://modus.ppo.gg/modus2-animated.svg" alt="MODUS" width="280" />
+  <img src="https://modusbot.io/modus2-animated.svg" alt="MODUS" width="280" />
 </p>
 
 <h3 align="center">A modular Discord bot with a web dashboard.</h3>

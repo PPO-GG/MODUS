@@ -136,7 +136,7 @@ export function useTriggers(guildId: string) {
   // ── Build webhook URL ──
   const getWebhookUrl = (secret: string): string => {
     const config = useRuntimeConfig();
-    const baseUrl = config.public.webhookBaseUrl;
+    const baseUrl = String(config.public.baseUrl).replace(/\/$/, "");
     return `${baseUrl}/webhooks/trigger/${secret}`;
   };
 

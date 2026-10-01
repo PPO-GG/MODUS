@@ -56,9 +56,10 @@ function generateSecret(): string {
 }
 
 function buildWebhookUrl(secret: string): string {
-  const host =
-    process.env.WEBHOOK_BASE_URL ||
-    `http://localhost:${process.env.BOT_PORT || "3000"}`;
+  const host = (
+    process.env.PUBLIC_WEB_URL ||
+    `http://localhost:${process.env.BOT_PORT || "3000"}`
+  ).replace(/\/$/, "");
   return `${host}/webhooks/trigger/${secret}`;
 }
 
