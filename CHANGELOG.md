@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.28.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.28.0...modus-v1.28.1) (2026-09-30)
+
+
+### 🐛 Bug Fixes
+
+* **bot:** guard ticket close and add priority buttons ([#103](https://github.com/PPO-GG/MODUS/issues/103)) ([559c666](https://github.com/PPO-GG/MODUS/commit/559c6669636c4890aa9a1a41bdaf57920c1ffc83))
+
+## [1.28.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.27.0...modus-v1.28.0) (2026-09-30)
+
+
+### ✨ Features
+
+* **web:** draft automod rules from plain English ([#102](https://github.com/PPO-GG/MODUS/issues/102)) ([4118d51](https://github.com/PPO-GG/MODUS/commit/4118d51c69117f3870782e41056f8f7d1999a98b))
+
+
+### 🐛 Bug Fixes
+
+* **bot:** make 128+ kbps recording bitrates premium-only ([#100](https://github.com/PPO-GG/MODUS/issues/100)) ([2a3a5f0](https://github.com/PPO-GG/MODUS/commit/2a3a5f006c26405f9b2f6260ec3ae4e1d2d6c8e0))
+
+## [1.27.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.26.1...modus-v1.27.0) (2026-09-30)
+
+
+### ✨ Features
+
+* **web:** make the Dashboard nav link an outlined pill ([#98](https://github.com/PPO-GG/MODUS/issues/98)) ([f5dba18](https://github.com/PPO-GG/MODUS/commit/f5dba18f1c61fd077a6430b38c89ba2eb1464668))
+* **web:** redesign XP leaderboards on the Glide system ([#95](https://github.com/PPO-GG/MODUS/issues/95)) ([abcbf91](https://github.com/PPO-GG/MODUS/commit/abcbf916bb36afe27005eedfcc6d160ae3bb6525))
+
+
+### 🐛 Bug Fixes
+
+* **web:** align landing chain labels to their icons ([#96](https://github.com/PPO-GG/MODUS/issues/96)) ([26799d9](https://github.com/PPO-GG/MODUS/commit/26799d92167be49df4e73976c4bbdd65642c5abe))
+* **web:** keep backdrop-filter in production CSS ([#97](https://github.com/PPO-GG/MODUS/issues/97)) ([e1c7f5c](https://github.com/PPO-GG/MODUS/commit/e1c7f5c0faa9851872d757cc51ce57faa9dec5ce))
+
 ## [1.26.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.26.0...modus-v1.26.1) (2026-09-30)
 
 

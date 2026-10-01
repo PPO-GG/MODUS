@@ -1,4 +1,6 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
   ButtonInteraction,
   ChatInputCommandInteraction,
   ChannelType,
@@ -15,6 +17,9 @@ import { getThreadMeta } from "../lib/utils";
 import { generateMarkdownTranscript } from "../lib/transcript";
 import { snapshotTranscript } from "../lib/snapshot";
 import { isStaff } from "../lib/permissions";
+
+/** Thread IDs with a close in progress. A thread belongs to one shard, so in-process is enough. */
+const closing = new Set<string>();
 
 // ── Close handler ────────────────────────────────────────────────────────────
 
@@ -68,8 +73,28 @@ export async function handleClose(
     return;
   }
 
+  // Repeat clicks / commands while a close is in flight would each post their
+  // own transcript + DM. Check and claim synchronously so two racing calls
+  // can't both pass.
+  if (closing.has(thread.id)) {
+    await safeReply(interaction, "⏳ This ticket is already being closed.");
+    return;
+  }
+  closing.add(thread.id);
+
   // Acknowledge first — transcript generation can take a moment
   await safeReply(interaction, "🔒 Closing ticket and generating transcript…");
+
+  // Disable the buttons on the message that was clicked so they can't be
+  // pressed again while the transcript is generated.
+  if (interaction.isButton()) {
+    const disabled = interaction.message.components.map((row) => {
+      const builder = ActionRowBuilder.from<ButtonBuilder>(row as any);
+      builder.components.forEach((c) => c.setDisabled(true));
+      return builder;
+    });
+    await interaction.message.edit({ components: disabled }).catch(() => {});
+  }
 
   try {
     // ── Generate transcript ────────────────────────────────────────────────
@@ -182,6 +207,8 @@ export async function handleClose(
       interaction,
       "⚠️ Ticket closed, but an error occurred generating the transcript.",
     );
+  } finally {
+    closing.delete(thread.id);
   }
 }
 

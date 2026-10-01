@@ -26,6 +26,10 @@
       "types": "./src/rank-cards.ts",
       "default": "./dist/rank-cards.js"
     },
+    "./automod-rules": {
+      "types": "./src/automod-rules/index.ts",
+      "default": "./dist/automod-rules/index.js"
+    },
     "./recording-limits": {
       "types": "./src/recording-limits.ts",
       "default": "./dist/recording-limits.js"
