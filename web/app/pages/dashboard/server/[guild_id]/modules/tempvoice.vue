@@ -67,7 +67,7 @@
         </ul>
 
         <div class="flex items-center gap-2">
-          <div v-if="state.channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
+          <div v-if="channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
             <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
             <span class="text-sm">Loading channels…</span>
           </div>
@@ -186,7 +186,7 @@
           description="Where new channels are created."
           class="w-full"
         >
-          <div v-if="state.channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
+          <div v-if="channelsLoading" class="flex items-center gap-2 py-2 text-gray-400">
             <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-sky-200" />
             <span class="text-sm">Loading channels…</span>
           </div>
@@ -218,11 +218,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import type { DiscordChannel } from "~/composables/useServerSettings";
 
 const route = useRoute();
 const guildId = route.params.guild_id as string;
-const { state, isModuleEnabled, saveModuleSettings, getModuleConfig, loadChannels } =
-  useServerSettings(guildId);
+const { isModuleEnabled, saveModuleSettings, getModuleConfig } = useServerSettings(guildId);
+const toast = useToast();
 
 const saving = ref(false);
 const newLobbyId = ref("");
@@ -258,18 +259,36 @@ const dirty = computed(
 
 // ── Channels ──
 
-const channelsLoaded = computed(
-  () => !state.value.channelsLoading && state.value.channels.length > 0,
-);
+// The shared settings state only holds text channels, so this page loads its
+// own voice channels and categories.
+const channels = ref<DiscordChannel[]>([]);
+const channelsLoading = ref(true);
+const channelsLoaded = computed(() => !channelsLoading.value && channels.value.length > 0);
+
+const loadVoiceChannels = async () => {
+  try {
+    const response = await $fetch<{ channels: DiscordChannel[] }>("/api/discord/channels", {
+      params: { guild_id: guildId, types: "voice,category" },
+    });
+    channels.value = response.channels || [];
+  } catch (error) {
+    console.error("Error loading channels:", error);
+    toast.add({
+      title: "Error",
+      description: "Failed to load channels. Make sure the bot is in this server.",
+      color: "error",
+    });
+  } finally {
+    channelsLoading.value = false;
+  }
+};
 
 const voiceChannels = computed(() =>
-  state.value.channels.filter((c: any) => c.type === GUILD_VOICE),
+  channels.value.filter((c) => c.type === GUILD_VOICE),
 );
 
-const channelName = (id: string): string | undefined => {
-  const ch = state.value.channels.find((c: any) => c.id === id);
-  return ch ? ch.name : undefined;
-};
+const channelName = (id: string): string | undefined =>
+  channels.value.find((c) => c.id === id)?.name;
 
 const availableLobbyOptions = computed(() =>
   voiceChannels.value
@@ -279,9 +298,9 @@ const availableLobbyOptions = computed(() =>
 
 const categoryOptions = computed(() => [
   { label: "Same category as the lobby", value: NO_CATEGORY },
-  ...state.value.channels
-    .filter((c: any) => c.type === GUILD_CATEGORY)
-    .map((c: any) => ({ label: c.name, value: c.id })),
+  ...channels.value
+    .filter((c) => c.type === GUILD_CATEGORY)
+    .map((c) => ({ label: c.name, value: c.id })),
 ]);
 
 const categoryMissing = computed(
@@ -357,6 +376,6 @@ onMounted(async () => {
     };
   }
   baseline.value = JSON.parse(JSON.stringify(settings.value));
-  await loadChannels();
+  await loadVoiceChannels();
 });
 </script>
