@@ -38,6 +38,7 @@ import {
   FREE_MAX_RECORDING_BITRATE,
   getRecordingLimits,
 } from "@modus/db/recording-limits";
+import { premiumComponents } from "../lib/premiumUpsell";
 import { speakInConnection, isTTSAvailable } from "../lib/tts";
 import { resolveVoice } from "../lib/ttsVoices";
 
@@ -177,6 +178,8 @@ function getTempDir(): string {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
+
+const hoursLabel = (seconds: number) => `${seconds / 3600}h`;
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -1086,6 +1089,7 @@ async function handleStart(
       await interaction.editReply({
         content:
           "❌ Multi-track recording is a **Premium** feature. Without Premium, all users are recorded into a single mixed track.",
+        components: premiumComponents(),
       });
       return;
     }
@@ -1135,7 +1139,10 @@ async function handleStart(
             .setColor(0xed4245)
             .setTitle("⏹️ Recording Auto-Stopped")
             .setDescription(
-              `Maximum recording duration reached (${formatDuration(limits.maxDurationSeconds)}).`,
+              `Maximum recording duration reached (${formatDuration(limits.maxDurationSeconds)}).` +
+                (isPremium
+                  ? ""
+                  : `\n\nFree servers record for up to ${hoursLabel(getRecordingLimits(false).maxDurationSeconds)}; Premium up to ${hoursLabel(getRecordingLimits(true).maxDurationSeconds)}.`),
             )
             .addFields(
               {
