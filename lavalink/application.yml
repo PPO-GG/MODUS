@@ -32,10 +32,6 @@ lavalink:
     # its commit with `gh api repos/lavalink-devs/youtube-source/commits/<tag>`.
     - dependency: "dev.lavalink.youtube:youtube-plugin:158726dc7d570e8ff32512d6ab15736d561040b7"
       snapshot: true
-    # Unconfigured placeholder: no `plugins.lavasrc:` block below yet, so this
-    # is inert until Spotify/Apple Music/etc. source credentials are wired up.
-    - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.8.3"
-      snapshot: false
   server:
     # Injected by Docker Compose from LAVALINK_SERVER_PASSWORD. Never write a
     # literal password here: this file is committed. The bot presents the same
