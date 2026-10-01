@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   // Shared by robots/sitemap/og-image for absolute URLs. Override with
   // NUXT_SITE_URL for staging or self-hosted deployments.
   site: {
-    url: "https://modus.ppo.gg",
+    url: "https://modusbot.io",
     name: "MODUS",
     description:
       "Free all-in-one Discord bot: music, moderation, anti-raid, AI, voice recordings, XP leaderboards and tickets — configured from a web dashboard.",
@@ -97,7 +97,7 @@ export default defineNuxtConfig({
       maxAge: 60 * 60 * 24 * 30, // 30 days — override via NUXT_SESSION_MAX_AGE
     },
     // Base URL of the bot's HTTP server (server-side only, never sent to browser)
-    // Docker: http://bot:3005  |  Non-Docker: https://modus-bot.ppo.gg
+    // Docker: http://bot:3005  |  Non-Docker: https://bot.modusbot.io
     botWebhookUrl: "http://bot:3005", // Set via NUXT_BOT_WEBHOOK_URL
     // Shared secret for the bot's /music control API. Must match BOT_API_SECRET
     // on the bot. When set, unauthenticated calls to the bot are rejected.
@@ -119,8 +119,8 @@ export default defineNuxtConfig({
     // return 503 rather than silently degrading.
     databaseUrl: "", // Set via NUXT_DATABASE_URL
     public: {
-      baseUrl: "https://modus.ppo.gg", // Set via NUXT_PUBLIC_BASE_URL
-      webhookBaseUrl: "https://modus.ppo.gg", // Public origin for webhook trigger URLs — Set via NUXT_PUBLIC_WEBHOOK_BASE_URL
+      baseUrl: "https://modusbot.io", // Set via NUXT_PUBLIC_BASE_URL
+      webhookBaseUrl: "https://modusbot.io", // Public origin for webhook trigger URLs — Set via NUXT_PUBLIC_WEBHOOK_BASE_URL
       botAdminIds: "", // Comma-separated Discord IDs, set via NUXT_PUBLIC_BOT_ADMIN_IDS
       botUrl: "", // Bot health check URL, set via NUXT_PUBLIC_BOT_URL
       discordClientId: "", // Discord bot client ID, set via NUXT_PUBLIC_DISCORD_CLIENT_ID
@@ -141,7 +141,7 @@ export default defineNuxtConfig({
   },
   vite: {
     server: {
-      allowedHosts: ["localhost", "127.0.0.1", "0.0.0.0", "modus.ppo.gg"],
+      allowedHosts: ["localhost", "127.0.0.1", "0.0.0.0", "modusbot.io", "modus.ppo.gg"],
     },
   },
 });

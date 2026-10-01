@@ -2,15 +2,15 @@
  * Webhook Trigger Proxy
  *
  * Proxies incoming POST requests from external services (GitHub, Twitch,
- * generic webhooks) through the public Nuxt host (modus.ppo.gg) to the
- * bot's internal HTTP server (modus-bot.ppo.gg / http://bot:3005 in Docker).
+ * generic webhooks) through the public Nuxt host (modusbot.io) to the
+ * bot's internal HTTP server (bot.modusbot.io / http://bot:3005 in Docker).
  *
  * External services send to:
- *   POST https://modus.ppo.gg/webhooks/trigger/<secret>
+ *   POST https://modusbot.io/webhooks/trigger/<secret>
  *
  * This handler forwards the request to:
  *   POST http://bot:3005/webhooks/trigger/<secret>   (Docker internal)
- *   or   https://modus-bot.ppo.gg/...               (set via NUXT_BOT_WEBHOOK_URL)
+ *   or   https://bot.modusbot.io/...               (set via NUXT_BOT_WEBHOOK_URL)
  *
  * Also handles the Twitch webhook verification challenge (GET + query params)
  * and OPTIONS CORS preflight.
