@@ -62,6 +62,7 @@ const activeTab = computed(() => {
   if (path.endsWith("/overview")) return "overview";
   if (path.includes("/identity")) return "identity";
   if (path.includes("/logs")) return "logs";
+  if (path.includes("/permissions")) return "permissions";
   const moduleMatch = path.match(/\/modules\/([^/]+)/);
   if (moduleMatch?.[1]) return moduleMatch[1];
   return "modules";
@@ -70,7 +71,7 @@ const activeTab = computed(() => {
 const canAccessActiveTab = computed(() => {
   if (state.value.accessibleModules === null) return true;
   if (activeTab.value === "overview") return true;
-  if (["logs", "modules", "identity"].includes(activeTab.value)) return false;
+  if (["logs", "modules", "identity", "permissions"].includes(activeTab.value)) return false;
   return state.value.accessibleModules.includes(activeTab.value);
 });
 
@@ -111,6 +112,12 @@ const sidebarTabs = computed(() => {
             label: "Bot Identity",
             icon: "i-lucide-bot",
             to: `${basePath}/identity`,
+          },
+          {
+            id: "permissions",
+            label: "Permission Audit",
+            icon: "i-lucide-shield-check",
+            to: `${basePath}/permissions`,
           },
         ]
       : [];
