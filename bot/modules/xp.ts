@@ -16,6 +16,7 @@ import {
 import { BotModule, ModuleManager } from "../ModuleManager";
 import { XpSettingsSchema } from "../lib/schemas";
 import { parseSettings } from "../lib/validateSettings";
+import { emitLevelUp } from "../lib/levelEvents";
 import { getXpProgress, getLevelFromXp } from "@modus/db/rank-cards";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -1145,6 +1146,9 @@ export function registerXpEvents(moduleManager: ModuleManager) {
       // Check level-up
       if (newLevel > oldLevel) {
         state.level = newLevel;
+        if (message.guildId) {
+          emitLevelUp({ guildId: message.guildId, userId: message.author.id, level: newLevel });
+        }
         void sendLevelUpNotification(
           message,
           newLevel,

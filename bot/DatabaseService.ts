@@ -38,6 +38,7 @@ import {
   SystemFlagsRepository,
   ModerationCaseRepository,
   TicketRepository,
+  AutoroleGrantRepository,
   GuildEntitlementRepository,
   type PremiumStatus,
   type CreateModerationCaseInput,
@@ -87,6 +88,7 @@ export class DatabaseService {
   public readonly systemFlags: SystemFlagsRepository;
   public readonly moderationCases: ModerationCaseRepository;
   public readonly tickets: TicketRepository;
+  public readonly autoroleGrants: AutoroleGrantRepository;
 
   /** TTL cache for guild config + tag lookups. Shared-shard aware via EventBus. */
   private configCache: CacheService<any>;
@@ -164,6 +166,7 @@ export class DatabaseService {
     this.systemFlags = new SystemFlagsRepository(db);
     this.moderationCases = new ModerationCaseRepository(db);
     this.tickets = new TicketRepository(db);
+    this.autoroleGrants = new AutoroleGrantRepository(db);
 
     // Periodic log flush. unref() so a pending timer never holds the
     // process open during shutdown — gracefulShutdown calls flushLogs().
@@ -734,6 +737,13 @@ export class DatabaseService {
     data: Record<string, any>,
   ): Promise<void> {
     await this.xp.update(docId, data);
+  }
+
+  async listOptedInXpLevels(
+    guildId: string,
+    minLevel: number,
+  ): Promise<Array<{ userId: string; level: number }>> {
+    return this.xp.listOptedInLevels(guildId, minLevel);
   }
 
   async getXpLeaderboard(

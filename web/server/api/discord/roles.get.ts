@@ -59,8 +59,31 @@ export default defineEventHandler(async (event) => {
         permissions: r.permissions,
       }));
 
+    // Hierarchy: the bot can only grant roles below its own highest role. The
+    // bot's user id is the application (client) id. Any failure -> null, so the
+    // dashboard shows no hierarchy warning rather than a false one.
+    let botTopPosition: number | null = null;
+    const botUserId = config.public.discordClientId as string;
+    if (botUserId) {
+      try {
+        const botMember: { roles: string[] } = await $fetch(
+          `https://discord.com/api/v10/guilds/${guildId}/members/${botUserId}`,
+          { headers: { Authorization: `Bot ${botToken}` } },
+        );
+        const held = roles.filter((r) => botMember.roles.includes(r.id));
+        // A member with no roles sits at @everyone (position 0).
+        botTopPosition = held.reduce((max, r) => Math.max(max, r.position), 0);
+      } catch (error: any) {
+        console.warn(
+          `[Roles API] Could not resolve the bot's top role for guild ${guildId}:`,
+          error?.message || error,
+        );
+      }
+    }
+
     return {
       roles: filteredRoles,
+      botTopPosition,
     };
   } catch (error: any) {
     console.error(
