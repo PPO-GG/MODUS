@@ -19,12 +19,33 @@ const moderation = (settings = {}) => ({ name: 'moderation', enabled: true, sett
 const logging = (settings = {}) => ({ name: 'logging', enabled: true, settings })
 
 describe('checkReadiness', () => {
-  it('reports nothing when the bot has Administrator', () => {
+  it('skips permission checks when the bot has Administrator but still reports deleted channels', () => {
     const input = makeInput({
       roles: [everyoneRole(), botRole(bits(P.Administrator))],
       modules: [moderation({ modLogChannelId: 'gone' }), { name: 'tempvoice', enabled: true, settings: {} }],
     })
+    expect(checkReadiness(input).map((f) => f.id)).toEqual(['channel-missing:moderation:gone'])
+  })
+
+  it('reports nothing for an Administrator bot when every configured channel exists', () => {
+    const input = makeInput({
+      roles: [everyoneRole(), botRole(bits(P.Administrator))],
+      channels: [textChannel('log', 'mod-log', [overwrite(GUILD_ID, 0, ZERO, P.ViewChannel | P.SendMessages)])],
+      modules: [moderation({ modLogChannelId: 'log' })],
+    })
     expect(checkReadiness(input)).toEqual([])
+  })
+
+  it('marks channel permission findings as fixable and guild-wide ones as not', () => {
+    const input = makeInput({
+      roles: [everyoneRole(), botRole(bits(P.ViewChannel, P.SendMessages, P.EmbedLinks))],
+      channels: [textChannel('c1', 'audit', [overwrite(GUILD_ID, 0, ZERO, P.ViewChannel)])],
+      modules: [logging({ auditChannelId: 'c1' }), moderation()],
+    })
+    const findings = checkReadiness(input)
+    expect(findings.find((f) => f.id === 'channel-perms:logging:c1')!.fixable).toBe(true)
+    expect(findings.find((f) => f.id === 'missing-guild-perms:moderation')!.fixable).toBeUndefined()
+    expect(findings.find((f) => f.id === 'missing-optional-perms:moderation')!.fixable).toBeUndefined()
   })
 
   it('reports nothing when every requirement is met', () => {

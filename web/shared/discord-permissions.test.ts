@@ -9,6 +9,7 @@ import {
   missingPermissions,
   parseBits,
   permissionLabel,
+  permissionNames,
   type ChannelLike,
   type OverwriteLike,
   type RoleLike,
@@ -138,6 +139,12 @@ describe('permission helpers', () => {
     const bits = P.ViewChannel | P.SendMessages
     expect(missingPermissions(bits, ['ViewChannel', 'EmbedLinks'])).toEqual(['EmbedLinks'])
     expect(heldPermissions(bits, ['ViewChannel', 'EmbedLinks'])).toEqual(['ViewChannel'])
+  })
+
+  it('permissionNames lists only the known permissions set in a bitfield, ignoring unknown bits', () => {
+    const unknown = BigInt(1) << BigInt(60)
+    expect(permissionNames(P.ViewChannel | P.ManageRoles | unknown)).toEqual(['ViewChannel', 'ManageRoles'])
+    expect(permissionNames(BigInt(0))).toEqual([])
   })
 
   it('permissionLabel splits camel case into words', () => {

@@ -7,18 +7,15 @@
  * restricted to managers of the guild. Results are cached 30s per guild;
  * `fresh=1` (the dashboard's Re-run button) bypasses the cache.
  */
-import type { Report } from "#shared/permission-audit-types";
 import { getRepos } from "../../utils/db";
 import { describeUpstreamFailure } from "../../utils/discord-upstream-error";
 import { runPermissionAudit } from "../../utils/permission-audit";
+import { auditReportCache } from "../../utils/permission-audit-cache";
 import {
   BotNotInGuildError,
-  createTtlCache,
   loadAuditInput,
 } from "../../utils/permission-audit-data";
 import { requireGuildManager } from "../../utils/session";
-
-const cache = createTtlCache<Report>(30_000);
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -33,7 +30,7 @@ export default defineEventHandler(async (event) => {
   await requireGuildManager(event, guildId);
 
   if (query.fresh !== "1") {
-    const cached = cache.get(guildId);
+    const cached = auditReportCache.get(guildId);
     if (cached) return cached;
   }
 
@@ -60,7 +57,7 @@ export default defineEventHandler(async (event) => {
       repos.guildConfigs,
     );
     const report = runPermissionAudit(input);
-    cache.set(guildId, report);
+    auditReportCache.set(guildId, report);
     return report;
   } catch (error: any) {
     if (error instanceof BotNotInGuildError) {

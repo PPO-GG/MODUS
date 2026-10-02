@@ -155,4 +155,13 @@ describe('createTtlCache', () => {
     cache.set('g1', 'a')
     expect(cache.get('g2')).toBeUndefined()
   })
+
+  it('delete drops one key and leaves the others', () => {
+    const cache = createTtlCache<string>(30_000, () => 0)
+    cache.set('g1', 'a')
+    cache.set('g2', 'b')
+    cache.delete('g1')
+    expect(cache.get('g1')).toBeUndefined()
+    expect(cache.get('g2')).toBe('b')
+  })
 })

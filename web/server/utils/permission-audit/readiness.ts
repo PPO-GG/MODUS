@@ -14,8 +14,9 @@ const labels = (names: PermissionName[]) => names.map(permissionLabel).join(', '
 
 export function checkReadiness(input: AuditInput): Finding[] {
   const botBase = computeBasePermissions(input.guildId, input.roles, input.bot.roleIds)
-  // Administrator satisfies every requirement.
-  if (hasPermission(botBase, 'Administrator')) return []
+  // Administrator satisfies every permission requirement, but a configured
+  // channel that no longer exists is still a problem worth reporting.
+  const isAdmin = hasPermission(botBase, 'Administrator')
 
   const findings: Finding[] = []
   const channelsById = new Map(input.channels.map((c) => [c.id, c]))
@@ -26,30 +27,32 @@ export function checkReadiness(input: AuditInput): Finding[] {
     if (!needs) continue
     const moduleSubject = { type: 'module' as const, id: mod.name, name: mod.name }
 
-    const missingRequired = missingPermissions(botBase, needs.required)
-    if (missingRequired.length > 0) {
-      findings.push({
-        id: `missing-guild-perms:${mod.name}`,
-        check: 'readiness',
-        severity: 'critical',
-        title: `The bot is missing ${labels(missingRequired)} for ${mod.name}`,
-        detail: `The ${mod.name} module needs ${labels(needs.required)} but the bot's roles do not grant ${labels(missingRequired)}, so the module will fail.`,
-        subject: moduleSubject,
-        recommendation: `Server Settings → Roles → the bot's role: enable ${labels(missingRequired)}.`,
-      })
-    }
+    if (!isAdmin) {
+      const missingRequired = missingPermissions(botBase, needs.required)
+      if (missingRequired.length > 0) {
+        findings.push({
+          id: `missing-guild-perms:${mod.name}`,
+          check: 'readiness',
+          severity: 'critical',
+          title: `The bot is missing ${labels(missingRequired)} for ${mod.name}`,
+          detail: `The ${mod.name} module needs ${labels(needs.required)} but the bot's roles do not grant ${labels(missingRequired)}, so the module will fail.`,
+          subject: moduleSubject,
+          recommendation: `Server Settings → Roles → the bot's role: enable ${labels(missingRequired)}.`,
+        })
+      }
 
-    const missingOptional = missingPermissions(botBase, needs.optional)
-    if (missingOptional.length > 0) {
-      findings.push({
-        id: `missing-optional-perms:${mod.name}`,
-        check: 'readiness',
-        severity: 'warning',
-        title: `Some ${mod.name} features need ${labels(missingOptional)}`,
-        detail: `The bot's roles do not grant ${labels(missingOptional)}. The ${mod.name} module still works, but the features that use them will not.`,
-        subject: moduleSubject,
-        recommendation: `Server Settings → Roles → the bot's role: enable ${labels(missingOptional)} if you use those features.`,
-      })
+      const missingOptional = missingPermissions(botBase, needs.optional)
+      if (missingOptional.length > 0) {
+        findings.push({
+          id: `missing-optional-perms:${mod.name}`,
+          check: 'readiness',
+          severity: 'warning',
+          title: `Some ${mod.name} features need ${labels(missingOptional)}`,
+          detail: `The bot's roles do not grant ${labels(missingOptional)}. The ${mod.name} module still works, but the features that use them will not.`,
+          subject: moduleSubject,
+          recommendation: `Server Settings → Roles → the bot's role: enable ${labels(missingOptional)} if you use those features.`,
+        })
+      }
     }
 
     for (const ref of needs.channels) {
@@ -66,6 +69,7 @@ export function checkReadiness(input: AuditInput): Finding[] {
         })
         continue
       }
+      if (isAdmin) continue
 
       const effective = computeChannelPermissions(
         botBase,
@@ -84,6 +88,7 @@ export function checkReadiness(input: AuditInput): Finding[] {
           detail: `${mod.name} uses #${channel.name} as its ${ref.label} and needs ${labels(ref.perms)} there, but the bot lacks ${labels(missing)}. A channel or category overwrite may be denying them.`,
           subject: { type: 'channel', id: channel.id, name: channel.name },
           recommendation: `Edit #${channel.name} → Permissions: allow ${labels(missing)} for the bot's role (also check the category's overwrites).`,
+          fixable: true,
         })
       }
     }

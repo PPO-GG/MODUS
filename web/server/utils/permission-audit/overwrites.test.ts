@@ -108,6 +108,21 @@ describe('checkOverwrites', () => {
     expect(checkOverwrites(withChannels([textChannel('child', 'x', [], 'missing-cat')]))).toEqual([])
   })
 
+  it('marks the three channel overwrite rules as fixable', () => {
+    const findings = checkOverwrites(
+      withChannels([
+        category('cat', 'Staff', [overwrite(GUILD_ID, 0, ZERO, P.ViewChannel)]),
+        textChannel('child', 'mod-chat', [overwrite(GUILD_ID, 0, P.ViewChannel | P.ManageChannels | P.MentionEveryone)], 'cat'),
+      ]),
+    )
+    expect(findings.map((f) => f.id).sort()).toEqual([
+      'child-exposed:child',
+      'everyone-channel-manage:child',
+      'everyone-channel-mention:child',
+    ])
+    expect(findings.every((f) => f.fixable === true)).toBe(true)
+  })
+
   it('handles a large guild', () => {
     const channels = Array.from({ length: 2000 }, (_, i) => textChannel(`c${i}`, `chan-${i}`))
     expect(checkOverwrites(withChannels(channels))).toEqual([])

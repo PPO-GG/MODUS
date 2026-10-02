@@ -12,6 +12,22 @@ export function checkHierarchy(input: AuditInput): Finding[] {
   )
   const botTopPosition = botTop?.position ?? 0
 
+  // Discord's member.roles excludes @everyone; a bot with none only gets
+  // @everyone's permissions, which explains every Readiness finding below.
+  if (input.bot.roleIds.filter((id) => id !== input.guildId).length === 0) {
+    findings.push({
+      id: `bot-no-role:${input.bot.userId}`,
+      check: 'hierarchy',
+      severity: 'warning',
+      title: 'The bot has no role in this server',
+      detail:
+        "The bot only has @everyone's permissions here, so the Readiness findings below are expected. Servers normally give a bot a role when it is invited.",
+      subject: { type: 'bot', id: input.bot.userId, name: 'The bot' },
+      recommendation:
+        'Re-invite the bot with its permissions, or create a role with the permissions it needs and assign that role to the bot.',
+    })
+  }
+
   const botBase = computeBasePermissions(input.guildId, input.roles, input.bot.roleIds)
   if (hasPermission(botBase, 'Administrator')) {
     findings.push({
