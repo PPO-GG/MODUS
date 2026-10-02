@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.32.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.31.1...modus-v1.32.0) (2026-10-02)
+
+
+### ✨ Features
+
+* add auto roles module ([#116](https://github.com/PPO-GG/MODUS/issues/116)) ([730c4db](https://github.com/PPO-GG/MODUS/commit/730c4db90bf981b362e4df197d718324f50952ea))
+
 ## [1.31.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.31.0...modus-v1.31.1) (2026-10-01)
 
 
