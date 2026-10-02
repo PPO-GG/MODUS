@@ -46,6 +46,8 @@ export interface ServerSettingsState {
   channelsLoading: boolean;
   roles: DiscordRole[];
   rolesLoading: boolean;
+  /** Highest position among the bot's own roles; null when unknown. */
+  botTopPosition: number | null;
   loading: boolean;
   unauthorized: boolean;
   dashboardRoleIds: string[];
@@ -69,6 +71,7 @@ export function useServerSettings(guildId: string) {
       channelsLoading: false,
       roles: [],
       rolesLoading: false,
+      botTopPosition: null,
       loading: true,
       unauthorized: false,
       dashboardRoleIds: [],
@@ -107,6 +110,7 @@ export function useServerSettings(guildId: string) {
     "alerts",
     "tempvoice",
     "reaction-roles",
+    "autoroles",
     "events",
     "polls",
     "giveaways",
@@ -250,11 +254,12 @@ export function useServerSettings(guildId: string) {
     if (state.value.roles.length > 0) return;
     state.value.rolesLoading = true;
     try {
-      const response = await $fetch<{ roles: DiscordRole[] }>(
+      const response = await $fetch<{ roles: DiscordRole[]; botTopPosition?: number | null }>(
         "/api/discord/roles",
         { params: { guild_id: guildId } },
       );
       state.value.roles = response.roles || [];
+      state.value.botTopPosition = response.botTopPosition ?? null;
     } catch (error) {
       console.error("Error loading roles:", error);
       toast.add({
