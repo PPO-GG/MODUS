@@ -2,98 +2,74 @@
   <img src="https://modusbot.io/modus2-animated.svg" alt="MODUS" width="280" />
 </p>
 
-<h3 align="center">A modular Discord bot with a web dashboard.</h3>
+<h3 align="center">One bot. Every module. Fully open source.</h3>
 
 <p align="center">
-  Music, moderation, AI, anti-raid, recordings, tickets, and more — 25+ features you can toggle per server.
+  A verified, modular Discord bot with a real-time web dashboard. Moderation, tickets, music, voice recording, leveling, giveaways, an AI assistant and more, each toggled per server.
+</p>
+
+<p align="center">
+  <a href="https://modus.ppo.gg">Website &amp; Dashboard</a> ·
+  <a href="INSTALLATION.md">Self-Hosting Guide</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
 ---
 
 ## What is MODUS?
 
-MODUS is a Discord bot designed to replace the pile of single-purpose bots most servers end up with. Instead of running five different bots for moderation, music, welcome messages, tickets, and logging, MODUS handles all of it through independent modules that can be toggled on or off per server.
+MODUS replaces the pile of single-purpose bots most servers end up with. Instead of running separate bots for moderation, music, tickets, welcome messages and logging, MODUS handles all of it through independent modules you turn on or off per server.
 
-It ships with a web dashboard (built on Nuxt 4) for configuring everything without touching slash commands, and uses Postgres, Redis, and Cloudflare R2 as its backend infrastructure.
+Everything is configured from a web dashboard (Nuxt 4) instead of slash commands. The bot and dashboard share a Postgres backend, with Redis for cross-shard coordination and Cloudflare R2 for recordings and welcome backgrounds.
 
 ## Features
 
-### AI Chat
+### Moderation & Safety
 
-Talk to LLMs directly in Discord. Supports multiple providers and models:
+- **Moderation** — warn, kick, ban, timeout, purge, slowmode and lock/unlock, with case history, automatic escalation (e.g. 3 warnings triggers a timeout), DM notifications and a modlog channel.
+- **AutoMod** — rule-based filtering with regex/contains/starts-with/role conditions, AND/OR logic, per-rule cooldowns, exemptions and actions (delete, warn, timeout, kick, ban, DM, log). Describe a rule in plain English on the dashboard and let the AI draft it for you.
+- **Anti-Raid** — join-rate detection (X joins in Y seconds) with automatic lockdown.
+- **Verification** — button-based gate with role assignment.
+- **Logging** — per-category audit log: message edits/deletes, joins/leaves, role and channel changes, invite tracking.
 
-- **Anthropic** — Claude 4 Sonnet, Claude 4 Opus
-- **OpenAI** — GPT-4o, GPT-4o Mini, o3-mini
-- **Google** — Gemini 2.5 Pro, Gemini 2.5 Flash
-- **Groq** — Llama 4 Scout, Llama 4 Maverick, Qwen QwQ
+### Support & Community
 
-Servers can bring their own API keys, set custom system prompts, adjust token limits, and configure per-user cooldowns. The AI module also has access to tools — it can control music playback, search the web, and more.
+- **Tickets** — deployable panels, tickets as threads, claim/add/remove users, priority buttons, auto-generated transcripts on close and idle-ticket sweeps.
+- **Reaction Roles** — button and dropdown panels, no emoji reactions needed.
+- **Temporary Voice Channels** — join a lobby to spawn a personal channel with naming templates and user limits; it auto-deletes when empty.
+- **Triggers** — custom auto-responses and webhook receivers (GitHub, Twitch or custom) that post formatted embeds.
+- **Tags** — reusable text/embed snippets with autocomplete.
+- **Events** — scheduled server events with timezone support.
 
-### Music
+### Engagement
 
-Full music player with queue management, playback controls, and audio filters. Supports YouTube and Spotify links out of the box through a Lavalink v4 control plane, with durable queues that survive a restart.
+- **XP & Leveling** — rank cards, a real-time leaderboard on the dashboard, and a character-count milestone tracker.
+- **Giveaways** — timed giveaways with entry requirements, reroll and winner announcements.
+- **Polls** — native Discord polls with visual result bars.
+- **Reminders** — `/remindme`, also available through the AI assistant.
 
-**Filters:** Bass Boost, Nightcore, Vaporwave, 8D Audio, Karaoke, Tremolo, Vibrato, Lo-Fi, Phaser, Chorus, Flanger, Treble Boost.
+### Creative & Media
 
-### Voice Recording
+- **Welcome Banners** — canvas-rendered images built in a visual dashboard editor: text, images, shapes and avatars with fonts, shadows, opacity, rotation and borders.
+- **Embed / Message Builder** — rich embeds and V2 components from the dashboard or via slash command.
+- **Music** — Lavalink v4 playback with queue management, loop/shuffle/autoplay, lyrics, volume, audio filters (Bass Boost, Nightcore, Vaporwave, 8D, Karaoke, Tremolo, Vibrato and more) and durable queues that survive restarts.
+- **Voice Recording** — per-user multitrack recording with silence-padded timing so tracks stay aligned. Higher bitrates and longer limits are available with Discord Premium subscriptions.
+- **Alerts** — Twitch go-live (EventSub), YouTube uploads, GitHub activity and any RSS feed.
 
-Record voice channels with per-user multitrack output. Each participant gets their own audio track with silence-padded timing so tracks stay aligned. Configurable bitrate and duration limits.
+### AI Assistant (optional)
 
-### Moderation
+Chat with an LLM directly in Discord, or just ask for things in natural language. The assistant can use tools to:
 
-Standard mod toolkit — warn, kick, ban, timeout, purge — with case tracking, automatic escalation (e.g. 3 warnings triggers a timeout), DM notifications, and a modlog channel.
+- search the web and images
+- play, pause, skip, shuffle and queue music
+- create, update and delete reminders
+- check the weather
 
-### AutoMod
-
-Rule-based content filtering with flexible conditions (regex, contains, starts with, role checks) and configurable actions (delete, warn, timeout, kick, ban, DM, log). Rules support AND/OR logic, per-rule cooldowns, and channel/role exemptions.
-
-### Tickets
-
-Deployable ticket panels with button-based creation. Tickets are created as threads with full lifecycle management — open, claim, add/remove users, set priority, and auto-generate transcripts on close. Idle tickets can be swept automatically.
-
-### Welcome Messages
-
-Canvas-rendered welcome images with a visual editor on the dashboard. Place text, images, shapes, and user avatars on a customizable background. Supports fonts, shadows, opacity, rotation, and borders.
-
-### Reaction Roles
-
-Button and dropdown-based role assignment panels. Deploy to any channel with customizable button styles and embed formatting. No emoji reactions needed.
-
-### Temporary Voice Channels
-
-Lobby-based system where joining a designated channel spawns a personal voice channel. Supports naming templates (`{username}`, `{displayname}`), user limits, and category assignment. Channels auto-delete when empty.
-
-### Alerts
-
-Monitor external platforms and post updates to Discord:
-
-- **Twitch** — Stream go-live notifications via EventSub
-- **YouTube** — New video/upload alerts
-- **GitHub** — Repository activity
-- **RSS** — Any RSS feed
-
-### Logging
-
-Audit logging with per-category toggles: message edits/deletes, member joins/leaves, role changes, channel changes, and invite tracking. Everything goes to a designated log channel with timestamped embeds.
-
-### Anti-Raid
-
-Velocity-based join flood detection. Configurable thresholds (X joins in Y seconds) with automatic channel lockdown during detected raids.
-
-### And More
-
-- **Events** — Schedule server events with timezone support
-- **Tags** — Reusable text/embed snippets with autocomplete
-- **Polls** — Native Discord polls with visual result bars
-- **Verification** — Button-based gate verification with role assignment
-- **Triggers** — Receive webhooks from GitHub, Twitch, or custom sources and post formatted embeds
-- **Embeds** — Build and send custom embeds via slash command or modal
+Servers can set their own provider/API key, system prompt, token limits and per-user cooldowns. Supports Anthropic, OpenAI, Google Gemini and Groq.
 
 ## Web Dashboard
 
-The dashboard runs as a separate service on Nuxt 4. It connects to the same Postgres backend as the bot and leverages `nuxt-auth-utils` for Discord OAuth, letting server admins configure modules, preview welcome images, manage recordings, and monitor bot health — all through a browser.
-
-SSR is disabled for dashboard routes (they require Discord OAuth), while public pages like the landing page are server-rendered.
+A separate Nuxt 4 service that uses the same Postgres backend as the bot, with Discord OAuth login via `nuxt-auth-utils`. Server admins can configure every module, design welcome banners, manage recordings, review logs and monitor bot health. Access can be scoped per module with dashboard RBAC. Public pages are server-rendered, and `/dashboard/**` runs as a SPA.
 
 ## Stack
 
@@ -101,13 +77,13 @@ SSR is disabled for dashboard routes (they require Discord OAuth), while public 
 |-------|------|
 | Bot | Discord.js 14, Lavalink 4 (Shoukaku), Node 22, TypeScript |
 | Web | Nuxt 4, nuxt-auth-utils, @nuxt/ui, Tailwind CSS, Pinia |
-| AI | Anthropic Claude, OpenAI, Groq, Google Gemini |
-| Backend | Postgres, Redis, Cloudflare R2 |
+| Data | Postgres (Drizzle), Redis, Cloudflare R2 |
+| AI | Anthropic, OpenAI, Google Gemini, Groq |
 | Infra | Docker Compose, GHCR, pnpm workspaces |
 
 ## Self-Hosting
 
-For detailed instructions on how to set up MODUS using Docker (with prebuilt images or from source) or for native development, please see our [Installation Guide](INSTALLATION.md).
+MODUS is MIT-licensed and fully self-hostable. See the [Installation Guide](INSTALLATION.md) for Docker (prebuilt images or from source) and native development setup.
 
 ## Project Structure
 
@@ -116,15 +92,17 @@ bot/                    Discord bot
   modules/              Feature plugins (auto-loaded)
   lib/                  Shared utilities
   ModuleManager.ts      Plugin loader and interaction router
-  DatabaseService.ts    Postgres database layer
+  DatabaseService.ts    Data facade (repositories + cache + storage)
 
 web/                    Nuxt 4 dashboard
   app/pages/            File-based routing
   app/composables/      Vue composition hooks
   server/api/           Backend API routes
+
+packages/db/            @modus/db: shared schema, drizzle client, repositories
 ```
 
-Modules are self-contained — drop a file in `bot/modules/` and it gets picked up automatically. No registration step required.
+Modules are self-contained. Drop a file in `bot/modules/` and it gets picked up automatically, with no registration step.
 
 ## License
 
