@@ -64,6 +64,8 @@ const REQUIREMENTS: Record<string, Build> = {
     return { required, channels: chan(s.alertChannelId, 'alert channel', POST) }
   },
   tickets: (s) => ({
+    // The info message is pinned in each thread; failure is swallowed.
+    optional: ['PinMessages'],
     channels: [
       ...chan(s.panelChannelId, 'ticket panel channel', POST),
       // The transcript is posted as an attached file.
@@ -110,7 +112,16 @@ const REQUIREMENTS: Record<string, Build> = {
     // The level-up message is an embed.
     channels: chan(s.announcementChannel, 'level-up announcement channel', POST),
   }),
-  music: () => ({ required: ['Connect', 'Speak'] }),
+  // The bot renames itself to show the current track (updateNickname setting).
+  music: () => ({ required: ['Connect', 'Speak'], optional: ['ChangeNickname'] }),
+  events: () => ({ required: ['ManageEvents'] }),
+  // Native polls need the Create Polls permission.
+  polls: () => ({ required: ['SendPolls'] }),
+  // Deleting is always needed; the rest depends on which actions rules use.
+  automod: () => ({
+    required: ['ManageMessages'],
+    optional: ['ModerateMembers', 'KickMembers', 'BanMembers', 'AddReactions'],
+  }),
   recording: () => ({ required: ['Connect'] }),
 }
 

@@ -155,4 +155,14 @@ describe('permission helpers', () => {
     expect(P.SendMessagesInThreads).toBe(BigInt(1) << BigInt(38))
     expect(P.ModerateMembers).toBe(BigInt(1) << BigInt(40))
   })
+
+  it('has the documented bit positions for the invite-only permissions', () => {
+    expect(P.AddReactions).toBe(BigInt(1) << BigInt(6))
+    expect(P.ReadMessageHistory).toBe(BigInt(1) << BigInt(16))
+    expect(P.UseExternalEmojis).toBe(BigInt(1) << BigInt(18))
+    expect(P.ChangeNickname).toBe(BigInt(1) << BigInt(26))
+    expect(P.ManageEvents).toBe(BigInt(1) << BigInt(33))
+    expect(P.SendPolls).toBe(BigInt(1) << BigInt(49))
+    expect(P.PinMessages).toBe(BigInt(1) << BigInt(51))
+  })
 })

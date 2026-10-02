@@ -120,9 +120,25 @@ describe('getModuleNeeds', () => {
     expect(getModuleNeeds('xp', { announcementChannel: null })!.channels).toEqual([])
   })
 
-  it('music and recording: voice permissions guild-wide', () => {
+  it('music and recording: voice permissions guild-wide; music also renames the bot (optional)', () => {
     expect(getModuleNeeds('music', {})!.required).toEqual(['Connect', 'Speak'])
+    expect(getModuleNeeds('music', {})!.optional).toEqual(['ChangeNickname'])
     expect(getModuleNeeds('recording', {})!.required).toEqual(['Connect'])
+  })
+
+  it('events creates scheduled events; polls sends native polls', () => {
+    expect(getModuleNeeds('events', {})!.required).toEqual(['ManageEvents'])
+    expect(getModuleNeeds('polls', {})!.required).toEqual(['SendPolls'])
+  })
+
+  it('automod: deleting messages is required; the other actions depend on the rule and are optional', () => {
+    const needs = getModuleNeeds('automod', {})!
+    expect(needs.required).toEqual(['ManageMessages'])
+    expect(needs.optional).toEqual(['ModerateMembers', 'KickMembers', 'BanMembers', 'AddReactions'])
+  })
+
+  it('tickets pin the info message (optional, failure is swallowed)', () => {
+    expect(getModuleNeeds('tickets', {})!.optional).toEqual(['PinMessages'])
   })
 
   it('never throws on malformed settings', () => {

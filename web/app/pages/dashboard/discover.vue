@@ -246,7 +246,7 @@
     <!-- Bot Invite Modal -->
     <UModal v-model:open="inviteModalOpen">
       <template #content>
-        <div class="p-8 text-center space-y-6">
+        <div class="max-h-[90vh] space-y-6 overflow-y-auto p-8 text-center">
           <!-- Header -->
           <div class="space-y-3">
             <div
@@ -292,12 +292,18 @@
             <p
               class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3"
             >
-              Requested Permissions
+              Requested Permissions ({{ botPermissionsList.length }})
             </p>
-            <div class="flex flex-wrap justify-center gap-2">
+            <div
+              class="flex max-h-32 flex-wrap justify-center gap-2 overflow-y-auto pr-1"
+              tabindex="0"
+              role="list"
+              aria-label="Requested permissions"
+            >
               <UBadge
                 v-for="perm in botPermissionsList"
                 :key="perm"
+                role="listitem"
                 variant="soft"
                 color="neutral"
                 class="rounded-lg text-[10px] uppercase font-bold tracking-wider"
@@ -345,7 +351,8 @@
 </template>
 
 <script setup lang="ts">
-import { canManageGuild } from "#shared/discord-permissions";
+import { INVITE_PERMISSION_NAMES, buildBotInviteUrl } from "#shared/bot-invite";
+import { canManageGuild, permissionLabel } from "#shared/discord-permissions";
 
 const userStore = useUserStore();
 const toast = useToast();
@@ -367,17 +374,9 @@ const joiningId = ref<string | null>(null);
 const inviteModalOpen = ref(false);
 const inviteGuild = ref<any>(null);
 
-// Permissions the bot requests (Administrator for full access)
-const BOT_PERMISSIONS = "8"; // Administrator
-const botPermissionsList = [
-  "Administrator",
-  "Manage Server",
-  "Manage Channels",
-  "Send Messages",
-  "Read Messages",
-  "Connect (Voice)",
-  "Speak (Voice)",
-];
+// Permissions the bot requests, shown in the invite modal. Generated from the
+// same list the invite URL uses so the two cannot disagree.
+const botPermissionsList = INVITE_PERMISSION_NAMES.map(permissionLabel);
 
 // Guild IDs the user has dashboard role access to (resolved async)
 const dashboardRoleGuildIds = ref<Set<string>>(new Set());
@@ -416,15 +415,7 @@ const getBotInviteUrl = (guildId: string) => {
   const clientId = config.public.discordClientId as string;
   if (!clientId) return null;
 
-  const params = new URLSearchParams({
-    client_id: clientId,
-    scope: "bot applications.commands",
-    permissions: BOT_PERMISSIONS,
-    guild_id: guildId,
-    disable_guild_select: "true",
-  });
-
-  return `https://discord.com/oauth2/authorize?${params.toString()}`;
+  return buildBotInviteUrl(clientId, { guildId });
 };
 
 const openBotInvite = (guild: any) => {
