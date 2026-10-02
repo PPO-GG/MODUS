@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://modus.ppo.gg">Website &amp; Dashboard</a> ·
+  <a href="https://modusbot.io">Website &amp; Dashboard</a> ·
   <a href="INSTALLATION.md">Self-Hosting Guide</a> ·
   <a href="CHANGELOG.md">Changelog</a>
 </p>
@@ -36,6 +36,7 @@ Everything is configured from a web dashboard (Nuxt 4) instead of slash commands
 
 - **Tickets** — deployable panels, tickets as threads, claim/add/remove users, priority buttons, auto-generated transcripts on close and idle-ticket sweeps.
 - **Reaction Roles** — button and dropdown panels, no emoji reactions needed.
+- **Auto Roles** — grant roles automatically when members meet requirements: level, server tenure, account age, or on join. Grant-only, so a manual removal is never re-applied.
 - **Temporary Voice Channels** — join a lobby to spawn a personal channel with naming templates and user limits; it auto-deletes when empty.
 - **Triggers** — custom auto-responses and webhook receivers (GitHub, Twitch or custom) that post formatted embeds.
 - **Tags** — reusable text/embed snippets with autocomplete.
@@ -43,7 +44,7 @@ Everything is configured from a web dashboard (Nuxt 4) instead of slash commands
 
 ### Engagement
 
-- **XP & Leveling** — rank cards, a real-time leaderboard on the dashboard, and a character-count milestone tracker.
+- **XP & Leveling** — rank cards and a real-time leaderboard on the dashboard.
 - **Giveaways** — timed giveaways with entry requirements, reroll and winner announcements.
 - **Polls** — native Discord polls with visual result bars.
 - **Reminders** — `/remindme`, also available through the AI assistant.
