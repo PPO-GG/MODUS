@@ -572,6 +572,47 @@ export type ReactionRolesSettingsType = ButtonRolesSettingsType;
 /** @deprecated Use ButtonRolesSettingsSchema instead */
 export const ReactionRolesSettingsSchema = ButtonRolesSettingsSchema;
 
+// ── Auto Roles ─────────────────────────────────────────────────────
+//
+// A rule grants `roleId` to members who meet ALL of its requirements.
+// `rules` is stored as unknown[] so one malformed rule cannot invalidate the
+// rest — the bot validates each rule individually (see
+// bot/modules/autoroles/rules.ts).
+
+export const AutoRoleRequirementSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("level"), level: z.number().int().min(1).max(1000) }),
+  z.object({ type: z.literal("tenure_days"), days: z.number().int().min(1).max(3650) }),
+  z.object({ type: z.literal("account_age_days"), days: z.number().int().min(1).max(36500) }),
+  z.object({ type: z.literal("on_join") }),
+]);
+
+export type AutoRoleRequirement = z.infer<typeof AutoRoleRequirementSchema>;
+
+export const AutoRoleSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1).max(80),
+    enabled: z.boolean().default(true),
+    roleId: z.string().min(1),
+    requirements: z.array(AutoRoleRequirementSchema).min(1).max(5),
+  })
+  .refine(
+    (rule) =>
+      !rule.requirements.some((r) => r.type === "on_join") ||
+      rule.requirements.every((r) => r.type === "on_join" || r.type === "account_age_days"),
+    { message: "on_join can only be combined with account_age_days" },
+  );
+
+export type AutoRole = z.infer<typeof AutoRoleSchema>;
+
+export const MAX_AUTOROLES_PER_GUILD = 25;
+
+export const AutoRolesSettingsSchema = z.object({
+  rules: z.array(z.unknown()).default([]),
+});
+
+export type AutoRolesSettingsType = z.infer<typeof AutoRolesSettingsSchema>;
+
 // ── Polls ──────────────────────────────────────────────────────────
 
 export const PollsSettingsSchema = z.object({
