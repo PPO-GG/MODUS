@@ -383,6 +383,7 @@
 
 <script setup lang="ts">
 import gsap from "gsap";
+import { buildBotInviteUrl } from "#shared/bot-invite";
 
 definePageMeta({
   layout: false,
@@ -393,7 +394,7 @@ const config = useRuntimeConfig();
 const botInviteUrl = computed(() => {
   const clientId = config.public.discordClientId as string;
   if (!clientId) return "#";
-  return `https://discord.com/oauth2/authorize?client_id=${clientId}&scope=bot+applications.commands&permissions=8`;
+  return buildBotInviteUrl(clientId);
 });
 
 // Fetch live stats

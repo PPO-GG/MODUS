@@ -130,6 +130,8 @@
 </template>
 
 <script setup lang="ts">
+import { buildBotInviteUrl } from "#shared/bot-invite";
+
 const config = useRuntimeConfig();
 const route = useRoute();
 const isScrolled = ref(false);
@@ -138,7 +140,7 @@ const isMenuOpen = ref(false);
 const botInviteUrl = computed(() => {
   const clientId = config.public.discordClientId as string;
   if (!clientId) return "#";
-  return `https://discord.com/oauth2/authorize?client_id=${clientId}&scope=bot+applications.commands&permissions=8`;
+  return buildBotInviteUrl(clientId);
 });
 
 // These links only have a matching section on the homepage. Elsewhere
