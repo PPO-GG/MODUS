@@ -1,6 +1,7 @@
 import { computeBasePermissions, hasPermission } from '../../../shared/discord-permissions'
 import { getModuleNeeds } from '../../../shared/module-requirements'
 import type { Finding } from '../../../shared/permission-audit-types'
+import { describeAdminBotNeeds } from './admin-needs'
 import type { AuditInput } from './types'
 
 export function checkHierarchy(input: AuditInput): Finding[] {
@@ -35,11 +36,10 @@ export function checkHierarchy(input: AuditInput): Finding[] {
       check: 'hierarchy',
       severity: 'info',
       title: 'The bot has Administrator',
-      detail:
-        'The bot ignores every channel permission and can do anything its role position allows. This is convenient but broader than MODUS needs.',
+      detail: `The bot ignores every channel permission and can do anything its role position allows. This is convenient but broader than MODUS needs. Without Administrator, the bot's role needs:\n\n${describeAdminBotNeeds(input)}`,
       subject: { type: 'role', id: botTop?.id ?? input.guildId, name: botTop?.name ?? '@everyone' },
       recommendation:
-        "Server Settings → Roles → the bot's role: remove Administrator and grant only the permissions the Readiness findings list. Check those first, because channel permissions start to apply to the bot.",
+        "Server Settings → Roles → the bot's role: first grant the permissions listed above, then remove Administrator, then re-run this audit. Channel permissions start to apply to the bot at that point, and any Readiness findings that appear are real.",
     })
   }
 

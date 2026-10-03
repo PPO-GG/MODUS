@@ -7,8 +7,8 @@
  */
 import { PERMISSION_BITS, type PermissionName } from './discord-permissions'
 
-export const INVITE_PERMISSION_NAMES: PermissionName[] = [
-  // Baseline: reading and posting messages, embeds and files in channels.
+/** Baseline: reading and posting messages, embeds and files in channels. */
+export const INVITE_BASELINE_NAMES: PermissionName[] = [
   'ViewChannel',
   'SendMessages',
   'SendMessagesInThreads',
@@ -17,6 +17,10 @@ export const INVITE_PERMISSION_NAMES: PermissionName[] = [
   'ReadMessageHistory',
   'AddReactions',
   'UseExternalEmojis',
+]
+
+export const INVITE_PERMISSION_NAMES: PermissionName[] = [
+  ...INVITE_BASELINE_NAMES,
   // Moderation, automod, anti-raid.
   'ManageMessages',
   'KickMembers',
