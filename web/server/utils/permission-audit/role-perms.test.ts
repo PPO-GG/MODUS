@@ -33,7 +33,7 @@ describe('checkRolePerms', () => {
     expect(finding!.title).not.toContain('View Channel')
   })
 
-  it('flags Mention Everyone, Manage Messages, Manage Nicknames and Moderate Members as a warning', () => {
+  it('flags Mention Everyone, Manage Messages, Manage Nicknames and Timeout Members as a warning', () => {
     const findings = checkRolePerms(
       makeInput({ roles: [everyoneRole(bits(P.MentionEveryone, P.ModerateMembers)), botRole()] }),
     )

@@ -69,7 +69,7 @@ describe('checkReadiness', () => {
       subject: { type: 'module', id: 'moderation', name: 'moderation' },
     })
     expect(finding.title).toContain('Ban Members')
-    expect(finding.title).toContain('Moderate Members')
+    expect(finding.title).toContain('Timeout Members')
     expect(finding.title).not.toContain('Kick Members')
   })
 
