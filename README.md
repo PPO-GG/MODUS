@@ -46,6 +46,7 @@ Everything is configured from a web dashboard (Nuxt 4) instead of slash commands
 
 - **XP & Leveling** — rank cards and a real-time leaderboard on the dashboard.
 - **Giveaways** — timed giveaways with entry requirements, reroll and winner announcements.
+- **Starboard** — mirror messages that collect enough star (or any emoji) reactions into a board channel, with multiple boards per server and a per-board leaderboard.
 - **Polls** — native Discord polls with visual result bars.
 - **Reminders** — `/remindme`, also available through the AI assistant.
 
