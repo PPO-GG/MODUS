@@ -38,6 +38,7 @@ export function checkOverwrites(input: AuditInput): Finding[] {
           detail: `The channel's @everyone overwrite explicitly allows ${names}, so every member can use it here.`,
           subject,
           recommendation: `Edit #${channel.name} → Permissions → @everyone and reset these permissions to neutral or deny.`,
+          fixable: true,
         })
       }
 
@@ -50,6 +51,7 @@ export function checkOverwrites(input: AuditInput): Finding[] {
           detail: `The channel's @everyone overwrite explicitly allows Mention Everyone, so any member can ping the whole server here.`,
           subject,
           recommendation: `Edit #${channel.name} → Permissions → @everyone and reset Mention Everyone to neutral or deny.`,
+          fixable: true,
         })
       }
     }
@@ -75,6 +77,7 @@ export function checkOverwrites(input: AuditInput): Finding[] {
             detail: `The category "${parent.name}" hides its channels from @everyone, but #${channel.name} has its own overwrite that lets @everyone see it.`,
             subject,
             recommendation: `Edit #${channel.name} → Permissions and use "Sync permissions with category", or remove its @everyone View Channel allow.`,
+            fixable: true,
           })
         }
       }

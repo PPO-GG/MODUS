@@ -138,6 +138,16 @@
                   <p class="text-gray-400">
                     <span class="font-semibold text-gray-300">How to fix: </span>{{ finding.recommendation }}
                   </p>
+                  <UButton
+                    v-if="finding.fixable"
+                    color="primary"
+                    variant="soft"
+                    size="xs"
+                    icon="i-lucide-wrench"
+                    @click="openFix(finding)"
+                  >
+                    Fix automatically…
+                  </UButton>
                 </div>
               </details>
             </li>
@@ -150,6 +160,8 @@
         seconds; use the refresh button to re-run now.
       </p>
     </template>
+
+    <DashboardPermissionFixModal :fix="fix" @confirm="onConfirmFix" @close="closeFix" />
   </div>
 </template>
 
@@ -161,8 +173,28 @@ import type { SeverityFilter } from "~/composables/usePermissionAudit";
 const route = useRoute();
 const guildId = route.params.guild_id as string;
 
-const { report, loading, refreshing, error, severity, check, filtered, groups, run } =
-  usePermissionAudit(guildId);
+const {
+  report, loading, refreshing, error, severity, check, filtered, groups, run,
+  fix, lastFix, openFix, confirmFix, closeFix,
+} = usePermissionAudit(guildId);
+const toast = useToast();
+
+const onConfirmFix = async () => {
+  if (!(await confirmFix())) return;
+  if (lastFix.value?.logged === false) {
+    toast.add({
+      title: "Fix applied, but not logged",
+      description: "The previous values could not be saved to the Server Logs. Discord's own audit log still records the change.",
+      color: "warning",
+    });
+    return;
+  }
+  toast.add({
+    title: "Fix applied",
+    description: "The previous values were saved to the Server Logs.",
+    color: "success",
+  });
+};
 
 const severities: Array<{ value: SeverityFilter; label: string; badge: string }> = [
   { value: "all", label: "All", badge: "bg-white/[0.08] text-gray-300" },
@@ -188,7 +220,13 @@ const severityCount = (value: SeverityFilter) => {
 };
 
 const subjectIcon = (type: FindingSubject["type"]) =>
-  type === "role" ? "i-lucide-users" : type === "channel" ? "i-lucide-hash" : "i-lucide-puzzle";
+  type === "role"
+    ? "i-lucide-users"
+    : type === "channel"
+      ? "i-lucide-hash"
+      : type === "bot"
+        ? "i-lucide-bot"
+        : "i-lucide-puzzle";
 
 const subjectLabel = (subject: FindingSubject) =>
   subject.type === "channel" ? `#${subject.name}` : subject.name;

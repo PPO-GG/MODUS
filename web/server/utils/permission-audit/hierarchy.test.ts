@@ -101,6 +101,34 @@ describe('checkHierarchy', () => {
         modules: [{ name: 'autoroles', enabled: true, settings: { rules: [{ roleId: '50' }] } }],
       }),
     )
-    expect(findings.map((f) => f.id)).toEqual(['role-above-bot:50'])
+    expect(findings.map((f) => f.id).sort()).toEqual(['bot-no-role:900', 'role-above-bot:50'])
+  })
+
+  it('warns when the bot has no role of its own in the server', () => {
+    const findings = checkHierarchy(
+      makeInput({ roles: [everyoneRole()], bot: { userId: '900', roleIds: [] } }),
+    )
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatchObject({
+      id: 'bot-no-role:900',
+      check: 'hierarchy',
+      severity: 'warning',
+      subject: { type: 'bot', id: '900' },
+    })
+    expect(findings[0]!.detail).toContain('@everyone')
+  })
+
+  it('does not warn when the bot has a role, even one missing from the role list', () => {
+    expect(checkHierarchy(makeInput())).toEqual([])
+    expect(
+      checkHierarchy(makeInput({ roles: [], bot: { userId: '900', roleIds: ['901'] } })),
+    ).toEqual([])
+  })
+
+  it('ignores the @everyone id in the bot role list', () => {
+    const findings = checkHierarchy(
+      makeInput({ roles: [everyoneRole()], bot: { userId: '900', roleIds: ['100'] } }),
+    )
+    expect(findings.map((f) => f.id)).toEqual(['bot-no-role:900'])
   })
 })

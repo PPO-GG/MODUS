@@ -126,6 +126,13 @@ export function heldPermissions(
   return names.filter((name) => hasPermission(bits, name))
 }
 
+/** The known permissions set in a bitfield (unknown bits are ignored). */
+export function permissionNames(bits: bigint): PermissionName[] {
+  return (Object.keys(PERMISSION_BITS) as PermissionName[]).filter((name) =>
+    hasPermission(bits, name),
+  )
+}
+
 /** Subset of Discord's role object the audit reads. */
 export interface RoleLike {
   id: string

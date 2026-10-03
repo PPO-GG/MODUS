@@ -148,5 +148,8 @@ export function createTtlCache<T>(ttlMs: number, now: () => number = Date.now) {
       }
       store.set(key, { value, expires: current + ttlMs })
     },
+    delete(key: string): void {
+      store.delete(key)
+    },
   }
 }
