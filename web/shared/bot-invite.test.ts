@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { PERMISSION_BITS } from './discord-permissions'
 import { MODULE_NAMES_WITH_REQUIREMENTS, getModuleNeeds } from './module-requirements'
 import {
+  INVITE_BASELINE_NAMES,
   INVITE_PERMISSION_NAMES,
   buildBotInviteUrl,
   getInvitePermissionBits,
@@ -29,6 +30,12 @@ describe('invite permission set', () => {
     expect(INVITE_PERMISSION_NAMES).not.toContain('Administrator')
     const bits = BigInt(getInvitePermissionBits())
     expect((bits & PERMISSION_BITS.Administrator) === PERMISSION_BITS.Administrator).toBe(false)
+  })
+
+  it('exports the basic-messaging group, which leads the invite list', () => {
+    expect(INVITE_BASELINE_NAMES).toContain('ViewChannel')
+    expect(INVITE_BASELINE_NAMES).toContain('SendMessages')
+    expect(INVITE_PERMISSION_NAMES.slice(0, INVITE_BASELINE_NAMES.length)).toEqual(INVITE_BASELINE_NAMES)
   })
 
   it('has no duplicate names', () => {

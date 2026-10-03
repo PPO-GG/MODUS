@@ -134,7 +134,7 @@
                   />
                 </summary>
                 <div class="mt-3 space-y-2 pl-[3.75rem] text-[13px]">
-                  <p class="text-gray-300">{{ finding.detail }}</p>
+                  <p class="whitespace-pre-line text-gray-300">{{ finding.detail }}</p>
                   <p class="text-gray-400">
                     <span class="font-semibold text-gray-300">How to fix: </span>{{ finding.recommendation }}
                   </p>

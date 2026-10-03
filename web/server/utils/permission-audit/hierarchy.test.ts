@@ -22,6 +22,27 @@ describe('checkHierarchy', () => {
     })
   })
 
+  it('for an Administrator bot, the finding lists what MODUS needs and the safe order to remove Administrator', () => {
+    const input = makeInput({
+      roles: [everyoneRole(), botRole(bits(P.Administrator))],
+      modules: [{ name: 'moderation', enabled: true, settings: {} }],
+    })
+    const finding = checkHierarchy(input).find((f) => f.id === `bot-administrator:${BOT_ROLE_ID}`)!
+    expect(finding.detail).toContain('Without Administrator, the bot\'s role needs:')
+    expect(finding.detail).toContain('Required (a module fails without these):')
+    expect(finding.detail).toContain('• Ban Members — moderation')
+    expect(finding.recommendation).toContain('grant the permissions listed above')
+    expect(finding.recommendation).toContain('then remove Administrator')
+    expect(finding.recommendation).not.toContain('Readiness findings list')
+  })
+
+  it('does not report a needs list for a bot without Administrator', () => {
+    const findings = checkHierarchy(
+      makeInput({ modules: [{ name: 'moderation', enabled: true, settings: {} }] }),
+    )
+    expect(findings.some((f) => f.id.startsWith('bot-administrator'))).toBe(false)
+  })
+
   it('reports nothing for a normal bot and no role-assigning modules', () => {
     expect(checkHierarchy(makeInput())).toEqual([])
   })
