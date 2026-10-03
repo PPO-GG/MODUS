@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.33.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.32.0...modus-v1.33.0) (2026-10-03)
+
+
+### ✨ Features
+
+* **web:** add permission audit autofix ([#121](https://github.com/PPO-GG/MODUS/issues/121)) ([900219b](https://github.com/PPO-GG/MODUS/commit/900219b2a77f494ed12fc6e46cb1fee1cf3178da))
+* **web:** add permission audit dashboard page ([#119](https://github.com/PPO-GG/MODUS/issues/119)) ([039631b](https://github.com/PPO-GG/MODUS/commit/039631b7e4db6eb2a297d751d1cdb78299573f1f))
+* **web:** add permission presets ([#122](https://github.com/PPO-GG/MODUS/issues/122)) ([cd41c52](https://github.com/PPO-GG/MODUS/commit/cd41c528c4d4705c530f9582c2af3e4871c92087))
+* **web:** request least-privilege permissions in the bot invite ([#120](https://github.com/PPO-GG/MODUS/issues/120)) ([e57d602](https://github.com/PPO-GG/MODUS/commit/e57d6023ebf5010fa1e83165082e9cae92e9814b))
+
+
+### 📖 Documentation
+
+* refresh README to match current features ([d5e2c43](https://github.com/PPO-GG/MODUS/commit/d5e2c436bfac86ac1582b9d59464a7007c8f1440))
+* update README links and modules ([25b633a](https://github.com/PPO-GG/MODUS/commit/25b633a8307759ad9dc26a81e59454c394da2976))
+
 ## [1.32.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.31.1...modus-v1.32.0) (2026-10-02)
 
 
