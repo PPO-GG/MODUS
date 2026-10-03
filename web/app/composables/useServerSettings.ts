@@ -112,6 +112,7 @@ export function useServerSettings(guildId: string) {
     "reaction-roles",
     "autoroles",
     "starboard",
+    "suggestions",
     "events",
     "polls",
     "giveaways",

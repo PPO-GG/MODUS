@@ -113,6 +113,11 @@ const REQUIREMENTS: Record<string, Build> = {
       .filter((board) => board.enabled !== false)
       .flatMap((board) => chan(board.channelId, 'starboard channel', POST)),
   }),
+  suggestions: (s) => ({
+    // Discussion threads are created per suggestion; the post itself works without them.
+    optional: s.createThread === false ? [] : ['CreatePublicThreads', 'SendMessagesInThreads'],
+    channels: chan(s.channelId, 'suggestions channel', POST),
+  }),
   xp: (s) => ({
     // The level-up message is an embed.
     channels: chan(s.announcementChannel, 'level-up announcement channel', POST),

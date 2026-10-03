@@ -31,7 +31,7 @@ export const INVITE_PERMISSION_NAMES: PermissionName[] = [
   // temp voice).
   'ManageRoles',
   'ManageChannels',
-  // Tickets (private threads) and polls.
+  // Tickets (private threads), suggestion discussion threads, and polls.
   'CreatePrivateThreads',
   'ManageThreads',
   // Permission presets can let staff roles create public threads in read-only channels,
