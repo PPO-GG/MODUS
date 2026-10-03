@@ -91,9 +91,19 @@ export type PermissionName = keyof typeof PERMISSION_BITS
 /** Every bit set — what Administrator effectively grants. */
 export const ALL_PERMISSIONS = (BigInt(1) << BigInt(64)) - BigInt(1)
 
-/** `ManageChannels` → `Manage Channels`. */
+/**
+ * Names Discord's role settings show where they differ from the API names, so
+ * a label can be found in Server Settings → Roles.
+ */
+const UI_LABELS: Partial<Record<PermissionName, string>> = {
+  ModerateMembers: 'Timeout Members',
+  ManageGuild: 'Manage Server',
+  SendPolls: 'Create Polls',
+}
+
+/** The name Discord's role settings show: `ManageChannels` → `Manage Channels`, `ModerateMembers` → `Timeout Members`. */
 export function permissionLabel(name: PermissionName): string {
-  return name.replace(/([a-z])([A-Z])/g, '$1 $2')
+  return UI_LABELS[name] ?? name.replace(/([a-z])([A-Z])/g, '$1 $2')
 }
 
 /** Parse a Discord permission string; garbage becomes 0 instead of throwing. */

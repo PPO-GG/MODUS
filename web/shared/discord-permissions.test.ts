@@ -147,6 +147,12 @@ describe('permission helpers', () => {
     expect(permissionNames(BigInt(0))).toEqual([])
   })
 
+  it("permissionLabel uses the names Discord's role settings show where they differ from the API names", () => {
+    expect(permissionLabel('ModerateMembers')).toBe('Timeout Members')
+    expect(permissionLabel('ManageGuild')).toBe('Manage Server')
+    expect(permissionLabel('SendPolls')).toBe('Create Polls')
+  })
+
   it('permissionLabel splits camel case into words', () => {
     expect(permissionLabel('ManageChannels')).toBe('Manage Channels')
     expect(permissionLabel('SendMessagesInThreads')).toBe('Send Messages In Threads')
