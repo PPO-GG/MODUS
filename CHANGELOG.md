@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.34.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.33.0...modus-v1.34.0) (2026-10-03)
+
+
+### ✨ Features
+
+* add starboard module ([#126](https://github.com/PPO-GG/MODUS/issues/126)) ([839e88c](https://github.com/PPO-GG/MODUS/commit/839e88c6f894c1579b68ed38177c291553792d76))
+* add suggestions module ([#127](https://github.com/PPO-GG/MODUS/issues/127)) ([4dfa153](https://github.com/PPO-GG/MODUS/commit/4dfa153440ea3dd985658dd01ccd383ffe057819))
+* **web:** show what MODUS needs for bots with Administrator ([#123](https://github.com/PPO-GG/MODUS/issues/123)) ([2c0d4fc](https://github.com/PPO-GG/MODUS/commit/2c0d4fc95e93c506f4c80324500b402e4979b07e))
+
+
+### 🐛 Bug Fixes
+
+* **web:** use Discord's in-app names for permission labels ([#124](https://github.com/PPO-GG/MODUS/issues/124)) ([a3f08e7](https://github.com/PPO-GG/MODUS/commit/a3f08e78ba869860520d5d486b9ddf6c5837405a))
+
 ## [1.33.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.32.0...modus-v1.33.0) (2026-10-03)
 
 
