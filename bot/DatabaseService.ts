@@ -39,6 +39,8 @@ import {
   ModerationCaseRepository,
   TicketRepository,
   AutoroleGrantRepository,
+  SuggestionRepository,
+  SuggestionVoteRepository,
   StarboardPostRepository,
   GuildEntitlementRepository,
   type PremiumStatus,
@@ -90,6 +92,8 @@ export class DatabaseService {
   public readonly moderationCases: ModerationCaseRepository;
   public readonly tickets: TicketRepository;
   public readonly autoroleGrants: AutoroleGrantRepository;
+  public readonly suggestions: SuggestionRepository;
+  public readonly suggestionVotes: SuggestionVoteRepository;
   public readonly starboardPosts: StarboardPostRepository;
 
   /** TTL cache for guild config + tag lookups. Shared-shard aware via EventBus. */
@@ -169,6 +173,8 @@ export class DatabaseService {
     this.moderationCases = new ModerationCaseRepository(db);
     this.tickets = new TicketRepository(db);
     this.autoroleGrants = new AutoroleGrantRepository(db);
+    this.suggestions = new SuggestionRepository(db);
+    this.suggestionVotes = new SuggestionVoteRepository(db);
     this.starboardPosts = new StarboardPostRepository(db);
 
     // Periodic log flush. unref() so a pending timer never holds the

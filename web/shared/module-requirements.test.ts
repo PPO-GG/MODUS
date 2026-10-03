@@ -171,4 +171,16 @@ describe('getModuleNeeds', () => {
       { id: 'b2', label: 'starboard channel', perms: POST_PERMS },
     ])
   })
+
+  it('suggestions: the suggestions channel must be postable; thread permissions are optional and only when threads are on', () => {
+    const on = getModuleNeeds('suggestions', { channelId: 's1' })!
+    expect(on.required).toEqual([])
+    expect(on.optional).toEqual(['CreatePublicThreads', 'SendMessagesInThreads'])
+    expect(on.channels).toEqual([{ id: 's1', label: 'suggestions channel', perms: POST_PERMS }])
+
+    const off = getModuleNeeds('suggestions', { channelId: 's1', createThread: false })!
+    expect(off.optional).toEqual([])
+
+    expect(getModuleNeeds('suggestions', {})!.channels).toEqual([])
+  })
 })

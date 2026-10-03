@@ -164,6 +164,7 @@ describe('permission helpers', () => {
     expect(P.ViewChannel).toBe(BigInt(1) << BigInt(10))
     expect(P.ManageRoles).toBe(BigInt(1) << BigInt(28))
     expect(P.ManageThreads).toBe(BigInt(1) << BigInt(34))
+    expect(P.CreatePublicThreads).toBe(BigInt(1) << BigInt(35))
     expect(P.CreatePrivateThreads).toBe(BigInt(1) << BigInt(36))
     expect(P.SendMessagesInThreads).toBe(BigInt(1) << BigInt(38))
     expect(P.ModerateMembers).toBe(BigInt(1) << BigInt(40))
@@ -179,7 +180,4 @@ describe('permission helpers', () => {
     expect(P.PinMessages).toBe(BigInt(1) << BigInt(51))
   })
 
-  it('has the documented bit position for Create Public Threads', () => {
-    expect(P.CreatePublicThreads).toBe(BigInt(1) << BigInt(35))
-  })
 })

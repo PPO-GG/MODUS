@@ -641,6 +641,19 @@ export const StarboardSettingsSchema = z.object({
 
 export type StarboardSettingsType = z.infer<typeof StarboardSettingsSchema>;
 
+// ── Suggestions ────────────────────────────────────────────────────────
+
+export const SuggestionsSettingsSchema = z.object({
+  /** Where suggestions are posted; null until an admin picks a channel. */
+  channelId: z.string().min(1).nullable().default(null),
+  staffRoleIds: z.array(z.string().min(1)).max(25).default([]),
+  createThread: z.boolean().default(true),
+  /** When on, `denied` and `implemented` suggestions stop accepting votes. */
+  closeVotingOnDecision: z.boolean().default(true),
+});
+
+export type SuggestionsSettingsType = z.infer<typeof SuggestionsSettingsSchema>;
+
 // ── Polls ──────────────────────────────────────────────────────────
 
 export const PollsSettingsSchema = z.object({
