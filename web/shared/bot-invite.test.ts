@@ -35,6 +35,10 @@ describe('invite permission set', () => {
     expect(new Set(INVITE_PERMISSION_NAMES).size).toBe(INVITE_PERMISSION_NAMES.length)
   })
 
+  it('includes Create Public Threads, which the Read-only permission preset grants to staff roles', () => {
+    expect(INVITE_PERMISSION_NAMES).toContain('CreatePublicThreads')
+  })
+
   it('covers everything every module can require, drift guard against module-requirements.ts', () => {
     const granted = new Set(INVITE_PERMISSION_NAMES)
     const missing: string[] = []

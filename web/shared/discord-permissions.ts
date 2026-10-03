@@ -78,6 +78,7 @@ export const PERMISSION_BITS = {
   ManageWebhooks: bit(29),
   ManageEvents: bit(33),
   ManageThreads: bit(34),
+  CreatePublicThreads: bit(35),
   CreatePrivateThreads: bit(36),
   SendMessagesInThreads: bit(38),
   ModerateMembers: bit(40),

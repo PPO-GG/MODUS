@@ -89,3 +89,19 @@ export interface FixResult {
   /** False when the fix was applied but the guild log entry could not be written. */
   logged: boolean
 }
+
+/** Counts shown in the preset preview. */
+export interface PresetStats {
+  /** Channels selected. */
+  channels: number
+  /** Channels with at least one overwrite change. */
+  changed: number
+  /** Channels that already match the preset. */
+  unchanged: number
+  /** Total overwrite writes the apply would perform. */
+  changes: number
+}
+
+export interface PresetPreview extends FixPreview {
+  stats: PresetStats | null
+}

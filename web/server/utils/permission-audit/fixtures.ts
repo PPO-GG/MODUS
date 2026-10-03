@@ -42,6 +42,13 @@ export const textChannel = (
   parentId: string | null = null,
 ): ChannelLike => ({ id, name, type: 0, parent_id: parentId, permission_overwrites: overwrites })
 
+export const voiceChannel = (
+  id: string,
+  name: string,
+  overwrites: OverwriteLike[] = [],
+  parentId: string | null = null,
+): ChannelLike => ({ id, name, type: 2, parent_id: parentId, permission_overwrites: overwrites })
+
 export const category = (id: string, name: string, overwrites: OverwriteLike[] = []): ChannelLike => ({
   id,
   name,
