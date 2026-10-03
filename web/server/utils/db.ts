@@ -30,6 +30,7 @@ import {
   AdminAuditEventRepository,
   ModerationCaseRepository,
   TicketRepository,
+  StarboardPostRepository,
   type Database,
 } from "@modus/db";
 
@@ -58,6 +59,7 @@ export interface Repos {
   adminAudit: AdminAuditEventRepository;
   moderationCases: ModerationCaseRepository;
   tickets: TicketRepository;
+  starboardPosts: StarboardPostRepository;
 }
 
 let cached: Repos | null = null;
@@ -96,6 +98,7 @@ export function getRepos(): Repos | null {
       adminAudit: new AdminAuditEventRepository(db),
       moderationCases: new ModerationCaseRepository(db),
       tickets: new TicketRepository(db),
+      starboardPosts: new StarboardPostRepository(db),
     };
     return cached;
   } catch (err) {

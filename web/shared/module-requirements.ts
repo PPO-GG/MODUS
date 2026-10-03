@@ -108,6 +108,11 @@ const REQUIREMENTS: Record<string, Build> = {
     channels: chan(s.verificationChannelId, 'verification panel channel', POST),
   }),
   logging: (s) => ({ channels: chan(s.auditChannelId, 'audit log channel', POST) }),
+  starboard: (s) => ({
+    channels: records(s.boards)
+      .filter((board) => board.enabled !== false)
+      .flatMap((board) => chan(board.channelId, 'starboard channel', POST)),
+  }),
   xp: (s) => ({
     // The level-up message is an embed.
     channels: chan(s.announcementChannel, 'level-up announcement channel', POST),

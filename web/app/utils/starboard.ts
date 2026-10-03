@@ -1,0 +1,102 @@
+/**
+ * Pure helpers for the Starboard dashboard page. The limits here mirror
+ * StarboardBoardSchema in bot/lib/schemas.ts — keep them in sync.
+ */
+
+export const MAX_BOARDS = 10;
+export const MAX_NAME_LENGTH = 80;
+export const EMOJI_PRESETS = ["⭐", "🌟", "💀", "❤️", "😂", "🔥", "👍"];
+
+export interface BoardDraft {
+  id: string;
+  name: string;
+  enabled: boolean;
+  /** A unicode emoji, or a custom-emoji id. */
+  emoji: string;
+  threshold: number;
+  channelId: string;
+  ignoredChannelIds: string[];
+  deleteBelowThreshold: boolean;
+}
+
+/** Removes the emoji variation selector so ❤ and ❤️ compare equal. */
+export function normalizeEmoji(value: string): string {
+  return value.replace(/\uFE0F/g, "").trim();
+}
+
+export function isCustomEmoji(emoji: string): boolean {
+  return /^\d{15,25}$/.test(emoji);
+}
+
+/** Unicode glyph as typed, or the id of a pasted custom emoji; null when it is neither. */
+export function parseEmojiInput(input: string): string | null {
+  const value = input.trim();
+  if (!value) return null;
+  const pasted = /^<a?:\w{2,32}:(\d{15,25})>$/.exec(value);
+  if (pasted) return pasted[1]!;
+  if (isCustomEmoji(value)) return value;
+
+  // For unicode emoji: must be exactly one grapheme and either:
+  // - contains Extended_Pictographic, or
+  // - is a regional-indicator pair (flag), or
+  // - is a keycap sequence
+  const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+  const segments = Array.from(segmenter.segment(value)).map((s) => s.segment);
+
+  if (segments.length === 1) {
+    const grapheme = segments[0]!;
+    if (/\p{Extended_Pictographic}/u.test(grapheme)) return grapheme;
+    if (/^\p{Regional_Indicator}{2}$/u.test(grapheme)) return grapheme;
+    if (/^[0-9#*]\uFE0F?\u20E3$/u.test(grapheme)) return grapheme;
+  }
+
+  return null;
+}
+
+export function newBoard(id: string): BoardDraft {
+  return {
+    id,
+    name: "",
+    enabled: true,
+    emoji: "⭐",
+    threshold: 3,
+    channelId: "",
+    ignoredChannelIds: [],
+    deleteBelowThreshold: false,
+  };
+}
+
+/** First problem with a board draft, or null when it can be saved. `others` excludes the draft itself. */
+export function validateBoard(board: BoardDraft, others: BoardDraft[]): string | null {
+  if (!board.name.trim()) return "Give the board a name.";
+  if (board.name.trim().length > MAX_NAME_LENGTH)
+    return `Name must be ${MAX_NAME_LENGTH} characters or fewer.`;
+  const emoji = parseEmojiInput(board.emoji);
+  if (!emoji) return "Pick a valid emoji (a unicode emoji, or a pasted custom emoji).";
+  if (!Number.isInteger(board.threshold) || board.threshold < 1 || board.threshold > 100) {
+    return "Threshold must be a whole number between 1 and 100.";
+  }
+  if (!board.channelId) return "Choose the channel posts go to.";
+  if (board.ignoredChannelIds.length > 100) return "Ignore at most 100 channels.";
+  const clash = others.some(
+    (o) =>
+      o.channelId === board.channelId &&
+      normalizeEmoji(parseEmojiInput(o.emoji) ?? o.emoji) === normalizeEmoji(emoji),
+  );
+  if (clash) return "Another board already uses this emoji and channel.";
+  return null;
+}
+
+/** Normalised copy for saving: trimmed name, emoji reduced to its stored form. */
+export function toSavedBoard(board: BoardDraft): BoardDraft {
+  return {
+    ...board,
+    name: board.name.trim(),
+    emoji: parseEmojiInput(board.emoji) ?? board.emoji.trim(),
+  };
+}
+
+export function describeBoard(board: BoardDraft, channelName: string): string {
+  const emoji = isCustomEmoji(board.emoji) ? "custom emoji" : board.emoji;
+  return `${emoji} ≥ ${board.threshold} → #${channelName}`;
+}

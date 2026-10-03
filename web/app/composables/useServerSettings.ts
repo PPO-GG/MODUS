@@ -111,6 +111,7 @@ export function useServerSettings(guildId: string) {
     "tempvoice",
     "reaction-roles",
     "autoroles",
+    "starboard",
     "events",
     "polls",
     "giveaways",
