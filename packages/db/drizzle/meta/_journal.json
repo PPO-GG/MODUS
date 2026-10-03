@@ -134,6 +134,13 @@
       "when": 1790996669247,
       "tag": "0018_soft_lord_hawal",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791048174529,
+      "tag": "0019_smooth_whiplash",
+      "breakpoints": true
     }
   ]
 }

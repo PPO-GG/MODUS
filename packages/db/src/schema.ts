@@ -24,6 +24,7 @@ import {
   index,
   uniqueIndex,
   uuid,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -1252,3 +1253,52 @@ export const starboardPosts = pgTable(
 );
 export type StarboardPostRow = typeof starboardPosts.$inferSelect;
 export type NewStarboardPostRow = typeof starboardPosts.$inferInsert;
+
+// ── Suggestions ──────────────────────────────────────────────────────
+// One row per member suggestion. `number` is a per-guild sequence shown to
+// members (#12) and used by `/suggestion review`. Rows are never deleted when
+// the Discord message disappears — they become `withdrawn` so the dashboard
+// queue keeps its history. `status` is one of the SuggestionStatus values
+// defined in repositories/suggestions.ts.
+export const suggestions = pgTable(
+  "suggestions",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    guildId: text("guild_id").notNull(),
+    number: integer("number").notNull(),
+    authorId: text("author_id").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    status: text("status").notNull().default("pending"),
+    statusReason: text("status_reason"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    channelId: text("channel_id"),
+    messageId: text("message_id"),
+    threadId: text("thread_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byGuildNumber: uniqueIndex("suggestions_guild_number_idx").on(t.guildId, t.number),
+    byGuildStatus: index("suggestions_guild_status_idx").on(t.guildId, t.status, t.createdAt),
+    byMessage: index("suggestions_guild_message_idx").on(t.guildId, t.messageId),
+  }),
+);
+export type SuggestionRow = typeof suggestions.$inferSelect;
+export type NewSuggestionRow = typeof suggestions.$inferInsert;
+
+// One vote per (suggestion, user); `direction` is "up" or "down".
+export const suggestionVotes = pgTable(
+  "suggestion_votes",
+  {
+    suggestionId: text("suggestion_id").notNull(),
+    userId: text("user_id").notNull(),
+    direction: text("direction").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.suggestionId, t.userId] }),
+    bySuggestion: index("suggestion_votes_suggestion_idx").on(t.suggestionId),
+  }),
+);
+export type SuggestionVoteRow = typeof suggestionVotes.$inferSelect;

@@ -26,5 +26,7 @@ export * from "./repositories/system-flags";
 export * from "./repositories/moderation-cases";
 export * from "./repositories/tickets";
 export * from "./repositories/autorole-grants";
+export * from "./repositories/suggestions";
+export * from "./repositories/suggestion-votes";
 export * from "./repositories/starboard-posts";
 export * from "./rank-cards";
