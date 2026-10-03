@@ -41,16 +41,23 @@ function state(input: AuditInput, ow: RawOverwrite): OverwriteState {
   }
 }
 
+export { state as overwriteState }
+
 const byIdType = (a: OverwriteState, b: OverwriteState) =>
   a.type - b.type || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
 
 const statesOf = (input: AuditInput, channel: ChannelLike): OverwriteState[] =>
   (channel.permission_overwrites ?? []).map((o) => state(input, o)).sort(byIdType)
 
-/** Hash of the raw data only (never labels or names), so a role rename does not invalidate a preview. */
-function hashPlan(findingId: string, changes: FixChange[]): string {
+/**
+ * Hash of the raw data only (never labels or names), so a role rename does not
+ * invalidate a preview. `extra` mixes in request inputs that are not visible in
+ * the changes (preset slot roles, selected channels); omitting it leaves the
+ * hash identical to what plans produced before presets existed.
+ */
+export function hashPlan(findingId: string, changes: FixChange[], extra?: unknown): string {
   const raw = (o: OverwriteState) => [o.id, o.type, o.allow, o.deny]
-  const canonical = {
+  const base = {
     f: findingId,
     c: changes.map((c) => ({
       ch: c.channelId,
@@ -61,6 +68,7 @@ function hashPlan(findingId: string, changes: FixChange[]): string {
       a: c.after.map(raw),
     })),
   }
+  const canonical = extra === undefined ? base : { ...base, x: extra }
   return createHash('sha256').update(JSON.stringify(canonical)).digest('hex')
 }
 

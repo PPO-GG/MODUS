@@ -63,6 +63,7 @@ const activeTab = computed(() => {
   if (path.includes("/identity")) return "identity";
   if (path.includes("/logs")) return "logs";
   if (path.includes("/permissions")) return "permissions";
+  if (path.includes("/presets")) return "presets";
   const moduleMatch = path.match(/\/modules\/([^/]+)/);
   if (moduleMatch?.[1]) return moduleMatch[1];
   return "modules";
@@ -71,7 +72,7 @@ const activeTab = computed(() => {
 const canAccessActiveTab = computed(() => {
   if (state.value.accessibleModules === null) return true;
   if (activeTab.value === "overview") return true;
-  if (["logs", "modules", "identity", "permissions"].includes(activeTab.value)) return false;
+  if (["logs", "modules", "identity", "permissions", "presets"].includes(activeTab.value)) return false;
   return state.value.accessibleModules.includes(activeTab.value);
 });
 
@@ -118,6 +119,12 @@ const sidebarTabs = computed(() => {
             label: "Permission Audit",
             icon: "i-lucide-shield-check",
             to: `${basePath}/permissions`,
+          },
+          {
+            id: "presets",
+            label: "Permission Presets",
+            icon: "i-lucide-wand-sparkles",
+            to: `${basePath}/presets`,
           },
         ]
       : [];

@@ -172,4 +172,8 @@ describe('permission helpers', () => {
     expect(P.SendPolls).toBe(BigInt(1) << BigInt(49))
     expect(P.PinMessages).toBe(BigInt(1) << BigInt(51))
   })
+
+  it('has the documented bit position for Create Public Threads', () => {
+    expect(P.CreatePublicThreads).toBe(BigInt(1) << BigInt(35))
+  })
 })
