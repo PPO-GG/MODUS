@@ -59,6 +59,9 @@ const client = new Client({
     Partials.Channel,
     Partials.GuildMember,
     Partials.Reaction,
+    // Needed so unstars from users not in the cache (e.g. after a restart) still
+    // emit MessageReactionRemove; handlers must not assume a full User there.
+    Partials.User,
     Partials.Poll,
     Partials.PollAnswer,
   ],

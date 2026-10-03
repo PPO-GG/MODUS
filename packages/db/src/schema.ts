@@ -1215,3 +1215,40 @@ export const autoroleGrants = pgTable(
 );
 export type AutoroleGrantRow = typeof autoroleGrants.$inferSelect;
 export type NewAutoroleGrantRow = typeof autoroleGrants.$inferInsert;
+
+// ── Starboard ────────────────────────────────────────────────────────
+// One row per (guild, board, source message) once a message has crossed a
+// board's star threshold. `board_id` is the uuid of a board entry in
+// guild_configs.settings (module `starboard`) — deliberately not a foreign
+// key, since boards live in JSON. `board_message_id` is null when the
+// mirrored post was deleted by hand; the next qualifying reaction reposts it.
+export const starboardPosts = pgTable(
+  "starboard_posts",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    guildId: text("guild_id").notNull(),
+    boardId: text("board_id").notNull(),
+    sourceChannelId: text("source_channel_id").notNull(),
+    sourceMessageId: text("source_message_id").notNull(),
+    authorId: text("author_id").notNull(),
+    boardMessageId: text("board_message_id"),
+    starCount: integer("star_count").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    bySource: uniqueIndex("starboard_posts_guild_board_source_idx").on(
+      t.guildId,
+      t.boardId,
+      t.sourceMessageId,
+    ),
+    byStars: index("starboard_posts_guild_board_stars_idx").on(
+      t.guildId,
+      t.boardId,
+      t.starCount,
+    ),
+    bySourceMessage: index("starboard_posts_guild_source_idx").on(t.guildId, t.sourceMessageId),
+  }),
+);
+export type StarboardPostRow = typeof starboardPosts.$inferSelect;
+export type NewStarboardPostRow = typeof starboardPosts.$inferInsert;

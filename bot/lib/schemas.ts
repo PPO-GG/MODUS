@@ -613,6 +613,34 @@ export const AutoRolesSettingsSchema = z.object({
 
 export type AutoRolesSettingsType = z.infer<typeof AutoRolesSettingsSchema>;
 
+// ── Starboard ──────────────────────────────────────────────────────
+//
+// `boards` is stored as unknown[] so one malformed board cannot invalidate
+// the rest — the bot validates each board individually (see
+// bot/modules/starboard/boards.ts). `emoji` is a unicode character or a
+// custom-emoji id.
+
+export const StarboardBoardSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(80),
+  enabled: z.boolean().default(true),
+  emoji: z.string().min(1).max(64),
+  threshold: z.number().int().min(1).max(100),
+  channelId: z.string().min(1),
+  ignoredChannelIds: z.array(z.string().min(1)).max(100).default([]),
+  deleteBelowThreshold: z.boolean().default(false),
+});
+
+export type StarboardBoard = z.infer<typeof StarboardBoardSchema>;
+
+export const MAX_STARBOARDS_PER_GUILD = 10;
+
+export const StarboardSettingsSchema = z.object({
+  boards: z.array(z.unknown()).default([]),
+});
+
+export type StarboardSettingsType = z.infer<typeof StarboardSettingsSchema>;
+
 // ── Polls ──────────────────────────────────────────────────────────
 
 export const PollsSettingsSchema = z.object({

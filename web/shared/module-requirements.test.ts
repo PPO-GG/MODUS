@@ -154,4 +154,21 @@ describe('getModuleNeeds', () => {
       expect.arrayContaining(['moderation', 'tickets', 'tempvoice', 'autoroles', 'logging']),
     )
   })
+
+  it('starboard: board channels need to be postable; disabled boards are ignored; no guild-wide perms', () => {
+    const needs = getModuleNeeds('starboard', {
+      boards: [
+        { channelId: 'b1', enabled: true },
+        { channelId: 'b2' },
+        { channelId: 'off', enabled: false },
+        { enabled: true },
+      ],
+    })!
+    expect(needs.required).toEqual([])
+    expect(needs.optional).toEqual([])
+    expect(needs.channels).toEqual([
+      { id: 'b1', label: 'starboard channel', perms: POST_PERMS },
+      { id: 'b2', label: 'starboard channel', perms: POST_PERMS },
+    ])
+  })
 })

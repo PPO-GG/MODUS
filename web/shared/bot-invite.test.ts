@@ -23,6 +23,7 @@ const FULL_SETTINGS = {
   verificationChannelId: 'c6',
   auditChannelId: 'c7',
   announcementChannel: 'c8',
+  boards: [{ channelId: 'c9', enabled: true }],
 }
 
 describe('invite permission set', () => {
