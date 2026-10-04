@@ -71,6 +71,8 @@ describe("newBoard", () => {
       threshold: 3,
       channelId: "",
       ignoredChannelIds: [],
+      watchedChannelIds: [],
+      autoReact: false,
       deleteBelowThreshold: false,
     });
   });
@@ -110,6 +112,18 @@ describe("validateBoard", () => {
     expect(validateBoard({ ...valid(), ignoredChannelIds: ids(100) }, [])).toBeNull();
   });
 
+  it("caps the watched channel list at 100", () => {
+    const ids = (n: number) => Array.from({ length: n }, (_, i) => `c${i}`);
+    expect(validateBoard({ ...valid(), watchedChannelIds: ids(101) }, [])).toMatch(/100/);
+    expect(validateBoard({ ...valid(), watchedChannelIds: ids(100) }, [])).toBeNull();
+  });
+
+  it("requires a watched channel to turn on vote reactions", () => {
+    expect(validateBoard({ ...valid(), autoReact: true, watchedChannelIds: [] }, [])).toMatch(/watched channel/i);
+    expect(validateBoard({ ...valid(), autoReact: true, watchedChannelIds: ["gallery"] }, [])).toBeNull();
+    expect(validateBoard({ ...valid(), autoReact: false, watchedChannelIds: [] }, [])).toBeNull();
+  });
+
   it("rejects the same emoji + channel as another board, treating ❤ and ❤️ as equal", () => {
     const other = { ...valid(), id: "b2", emoji: "❤" };
     const draft = { ...valid(), emoji: "❤️" };
@@ -123,6 +137,11 @@ describe("toSavedBoard / describeBoard", () => {
     const saved = toSavedBoard({ ...valid(), name: "  Hall  ", emoji: " ⭐ " });
     expect(saved.name).toBe("Hall");
     expect(saved.emoji).toBe("⭐");
+  });
+
+  it("turns vote reactions off when no channel is watched", () => {
+    expect(toSavedBoard({ ...valid(), autoReact: true, watchedChannelIds: [] }).autoReact).toBe(false);
+    expect(toSavedBoard({ ...valid(), autoReact: true, watchedChannelIds: ["g"] }).autoReact).toBe(true);
   });
 
   it("describes a board for the list row", () => {

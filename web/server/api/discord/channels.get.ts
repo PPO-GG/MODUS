@@ -4,7 +4,7 @@
  *
  * Query params:
  *   - guild_id: The Discord guild ID
- *   - types: Optional comma-separated kinds to return: text (default), voice, category
+ *   - types: Optional comma-separated kinds to return: text (default), voice, category, forum
  */
 import { getAccessibleModules } from "../../utils/session";
 
@@ -12,6 +12,7 @@ const CHANNEL_TYPE_GROUPS: Record<string, number[]> = {
   text: [0, 5], // GUILD_TEXT, GUILD_ANNOUNCEMENT
   voice: [2], // GUILD_VOICE
   category: [4], // GUILD_CATEGORY
+  forum: [15, 16], // GUILD_FORUM, GUILD_MEDIA
 };
 
 export default defineEventHandler(async (event) => {

@@ -10,7 +10,7 @@
 
     <DashboardModuleSection
       title="Boards"
-      description="Each board watches one emoji. Members' own reactions, bots, NSFW channels and the board channels themselves never count. Messages from channels @everyone can't see are never posted to a channel @everyone can see."
+      description="Each board watches one emoji. Members' own reactions, bots, NSFW channels and the board channels themselves never count. Messages from channels @everyone can't see are never posted to a channel @everyone can see. A board can watch only chosen channels, and the bot can add its emoji to every image posted there."
     >
       <template #actions>
         <UButton
@@ -245,7 +245,7 @@
           <UFormField label="Ignored channels" description="Messages in these channels (and their threads) are never posted." class="w-full">
             <USelectMenu
               v-model="draft.ignoredChannelIds"
-              :items="channelOptions"
+              :items="sourceChannelOptions"
               value-key="value"
               multiple
               searchable
@@ -254,6 +254,35 @@
               class="w-full"
             />
           </UFormField>
+
+          <UFormField
+            label="Watched channels"
+            description="Only reactions in these channels (and their threads) count. Leave empty to watch every channel."
+            class="w-full"
+          >
+            <USelectMenu
+              v-model="draft.watchedChannelIds"
+              :items="sourceChannelOptions"
+              value-key="value"
+              multiple
+              searchable
+              placeholder="All channels"
+              icon="i-lucide-eye"
+              class="w-full"
+            />
+          </UFormField>
+
+          <div class="space-y-1">
+            <USwitch
+              v-model="draft.autoReact"
+              :disabled="draft.watchedChannelIds.length === 0"
+              label="Add this emoji to every image posted in the watched channels"
+            />
+            <p class="text-[13px] text-gray-400">
+              Members can then vote with one click. Needs at least one watched channel, and the bot needs Add Reactions
+              and Read Message History there.
+            </p>
+          </div>
 
           <USwitch
             v-model="draft.deleteBelowThreshold"
@@ -309,7 +338,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, watch, onMounted } from "vue";
 import {
   EMOJI_PRESETS,
   MAX_BOARDS,
@@ -331,6 +360,24 @@ const {
   error: leaderboardError,
   fetchLeaderboard,
 } = useStarboardLeaderboard(guildId);
+
+// Ignored/watched pickers also offer forum + media channels; fail soft to text-only.
+const sourceOptions = ref<{ label: string; value: string }[] | null>(null);
+const sourceChannelOptions = computed(() => sourceOptions.value ?? channelOptions.value);
+const loadSourceChannels = async () => {
+  try {
+    const response = await $fetch<{ channels: { id: string; name: string }[] }>(
+      "/api/discord/channels",
+      { params: { guild_id: guildId, types: "text,forum" } },
+    );
+    sourceOptions.value = (response.channels || []).map((c) => ({
+      label: `#${c.name}`,
+      value: c.id,
+    }));
+  } catch (error) {
+    console.error("Error loading source channels:", error);
+  }
+};
 
 const saving = ref(false);
 const settings = reactive<{ boards: BoardDraft[] }>({ boards: [] });
@@ -363,6 +410,14 @@ const draftError = computed(() =>
         settings.boards.filter((b) => b.id !== draft.value!.id),
       )
     : null,
+);
+
+// Clearing the last watched channel turns vote reactions off (it would seed every channel).
+watch(
+  () => draft.value?.watchedChannelIds.length,
+  (count) => {
+    if (draft.value && count === 0) draft.value.autoReact = false;
+  },
 );
 
 function openCreate() {
@@ -426,10 +481,12 @@ onMounted(async () => {
       threshold: Number.isInteger(b.threshold) ? b.threshold : 3,
       channelId: b.channelId ?? "",
       ignoredChannelIds: Array.isArray(b.ignoredChannelIds) ? b.ignoredChannelIds : [],
+      watchedChannelIds: Array.isArray(b.watchedChannelIds) ? b.watchedChannelIds : [],
+      autoReact: b.autoReact === true && Array.isArray(b.watchedChannelIds) && b.watchedChannelIds.length > 0,
       deleteBelowThreshold: b.deleteBelowThreshold ?? false,
     }));
   }
   baseline.value = JSON.stringify(settings);
-  await loadChannels();
+  await Promise.all([loadChannels(), loadSourceChannels()]);
 });
 </script>

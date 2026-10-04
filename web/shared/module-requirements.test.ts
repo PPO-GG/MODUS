@@ -172,6 +172,25 @@ describe('getModuleNeeds', () => {
     ])
   })
 
+  it('starboard: auto-react boards need to add reactions in each watched channel, once per channel', () => {
+    const needs = getModuleNeeds('starboard', {
+      boards: [
+        { channelId: 'fame', autoReact: true, watchedChannelIds: ['gallery', 'memes'] },
+        { channelId: 'shame', autoReact: true, watchedChannelIds: ['gallery'] },
+        { channelId: 'plain', autoReact: false, watchedChannelIds: ['ignored-here'] },
+        { channelId: 'off', enabled: false, autoReact: true, watchedChannelIds: ['disabled-board-chan'] },
+      ],
+    })!
+    const vote = ['ViewChannel', 'AddReactions', 'ReadMessageHistory']
+    expect(needs.channels).toEqual([
+      { id: 'fame', label: 'starboard channel', perms: ['ViewChannel', 'SendMessages', 'EmbedLinks'] },
+      { id: 'shame', label: 'starboard channel', perms: ['ViewChannel', 'SendMessages', 'EmbedLinks'] },
+      { id: 'plain', label: 'starboard channel', perms: ['ViewChannel', 'SendMessages', 'EmbedLinks'] },
+      { id: 'gallery', label: 'vote reactions channel', perms: vote },
+      { id: 'memes', label: 'vote reactions channel', perms: vote },
+    ])
+  })
+
   it('suggestions: the suggestions channel must be postable; thread permissions are optional and only when threads are on', () => {
     const on = getModuleNeeds('suggestions', { channelId: 's1' })!
     expect(on.required).toEqual([])
