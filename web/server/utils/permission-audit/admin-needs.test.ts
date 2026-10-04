@@ -26,7 +26,7 @@ describe('describeAdminBotNeeds', () => {
       '• Ban Members — moderation',
       '• Manage Messages — moderation',
       '• Manage Roles — autoroles, verification',
-      '• Moderate Members — moderation',
+      '• Timeout Members — moderation',
     ])
   })
 
