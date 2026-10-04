@@ -13,7 +13,11 @@
       description="Members use /suggest; staff use /suggestion review or the queue below."
     >
       <div class="space-y-5">
-        <UFormField label="Suggestions channel" description="Where new suggestions are posted." class="w-full">
+        <UFormField
+          label="Suggestions channel"
+          description="Where new suggestions are posted. A text channel gets an embed plus a thread; a forum or media channel gets one post per suggestion."
+          class="w-full"
+        >
           <div v-if="state.channelsLoading" class="flex items-center gap-2 py-1.5 text-gray-400">
             <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-emerald-200" />
             <span class="text-sm">Loading channels…</span>
@@ -21,7 +25,7 @@
           <USelectMenu
             v-else-if="channelOptions.length > 0"
             v-model="settings.channelId"
-            :items="channelOptions"
+            :items="suggestionChannelOptions"
             value-key="value"
             placeholder="Select a channel…"
             searchable
@@ -56,7 +60,7 @@
           </p>
         </UFormField>
 
-        <USwitch v-model="settings.createThread" label="Create a discussion thread for each suggestion" />
+        <USwitch v-model="settings.createThread" label="Create a discussion thread for each suggestion (text channels only)" />
         <USwitch
           v-model="settings.closeVotingOnDecision"
           label="Close voting when a suggestion is denied or implemented"
@@ -65,11 +69,97 @@
         <p class="flex items-start gap-2 text-[13px] text-gray-400">
           <UIcon name="i-lucide-shield-check" class="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            The bot needs to view, send messages and embed links in the channel (and create threads if enabled).
+            The bot needs to view, send messages and embed links in the channel, and send messages in threads (and create threads if enabled).
             <NuxtLink :to="`/dashboard/server/${guildId}/permissions`" class="text-emerald-300 hover:underline">
               Check bot access on the Permissions page.
             </NuxtLink>
           </span>
+        </p>
+      </div>
+    </DashboardModuleSection>
+
+    <DashboardModuleSection
+      title="Panel"
+      description="Post a message with a button that opens the suggestion form, so members don't need /suggest. You can also use /suggestion panel in Discord."
+    >
+      <div class="space-y-5">
+        <UFormField label="Title" class="w-full">
+          <UInput
+            v-model="settings.panelTitle"
+            :maxlength="PANEL_LIMITS.title"
+            :placeholder="PANEL_DEFAULTS.title"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField
+          label="Blurb"
+          :description="`${settings.panelBlurb.length}/${PANEL_LIMITS.blurb}`"
+          class="w-full"
+        >
+          <UTextarea
+            v-model="settings.panelBlurb"
+            :maxlength="PANEL_LIMITS.blurb"
+            :rows="4"
+            :placeholder="PANEL_DEFAULTS.blurb"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField label="Button label" class="w-full">
+          <UInput
+            v-model="settings.panelButtonLabel"
+            :maxlength="PANEL_LIMITS.buttonLabel"
+            :placeholder="PANEL_DEFAULTS.buttonLabel"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField
+          label="Panel channel"
+          description="Where the panel is posted. Text channels only (a forum can't hold a loose message)."
+          class="w-full"
+        >
+          <div v-if="state.channelsLoading" class="flex items-center gap-2 py-1.5 text-gray-400">
+            <UIcon name="i-lucide-loader-circle" class="h-4 w-4 animate-spin text-emerald-200" />
+            <span class="text-sm">Loading channels…</span>
+          </div>
+          <USelectMenu
+            v-else-if="channelOptions.length > 0"
+            v-model="panelTarget"
+            :items="channelOptions"
+            value-key="value"
+            placeholder="Select a channel…"
+            searchable
+            icon="i-lucide-hash"
+            class="w-full"
+          />
+          <p v-else class="py-1.5 text-sm italic text-gray-500">No channels available.</p>
+        </UFormField>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <UButton
+            color="primary"
+            icon="i-lucide-send"
+            :loading="deploying"
+            :disabled="!settings.channelId || !panelTarget || !!panelValidation"
+            @click="postPanel"
+          >
+            {{ panelButtonText }}
+          </UButton>
+          <p class="text-[13px] text-gray-400">Posting also saves your settings.</p>
+        </div>
+
+        <p v-if="!settings.channelId" class="text-[13px] text-amber-200">
+          Choose a suggestions channel first — the panel button needs somewhere to send suggestions.
+        </p>
+
+        <p
+          v-if="panelValidation || panelError"
+          class="flex items-start gap-2 rounded-lg bg-amber-400/[0.08] px-3 py-2 text-[13px] text-amber-200"
+        >
+          <UIcon name="i-lucide-triangle-alert" class="mt-0.5 h-4 w-4 shrink-0" />
+          {{ panelValidation || panelError }}
         </p>
       </div>
     </DashboardModuleSection>
@@ -230,12 +320,18 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import {
   MAX_REASON_LENGTH,
+  PANEL_DEFAULTS,
+  PANEL_LIMITS,
   STAFF_STATUS_OPTIONS,
   STATUS_TABS,
   messageLink,
+  panelResultTitle,
   relativeAge,
   statusBadgeColor,
   statusLabel,
+  storedPanelText,
+  toSavedPanel,
+  validatePanel,
   validateReview,
   type StaffStatus,
 } from "~/utils/suggestions";
@@ -269,6 +365,7 @@ const {
   loadMore,
   loadVoters,
   review,
+  deployPanel,
 } = useSuggestions(guildId);
 
 // ── Settings ─────────────────────────────────────────────────────────
@@ -279,7 +376,52 @@ const settings = reactive<{
   staffRoleIds: string[];
   createThread: boolean;
   closeVotingOnDecision: boolean;
-}>({ channelId: "", staffRoleIds: [], createThread: true, closeVotingOnDecision: true });
+  panelTitle: string;
+  panelBlurb: string;
+  panelButtonLabel: string;
+  panelChannelId: string;
+  panelMessageId: string;
+}>({
+  channelId: "",
+  staffRoleIds: [],
+  createThread: true,
+  closeVotingOnDecision: true,
+  panelTitle: PANEL_DEFAULTS.title,
+  panelBlurb: PANEL_DEFAULTS.blurb,
+  panelButtonLabel: PANEL_DEFAULTS.buttonLabel,
+  panelChannelId: "",
+  panelMessageId: "",
+});
+
+// The suggestions channel picker also offers forum + media channels; fail soft to text-only.
+const forumOptions = ref<{ label: string; value: string }[] | null>(null);
+const suggestionChannelOptions = computed(() => forumOptions.value ?? channelOptions.value);
+const loadSuggestionChannels = async () => {
+  try {
+    const response = await $fetch<{ channels: { id: string; name: string }[] }>(
+      "/api/discord/channels",
+      { params: { guild_id: guildId, types: "text,forum" } },
+    );
+    forumOptions.value = (response.channels || []).map((c) => ({ label: `#${c.name}`, value: c.id }));
+  } catch {
+    // Keep the text-only list from useServerSettings.
+  }
+};
+
+// The panel channel the admin picks; settings.panelChannelId is where the panel was last posted.
+const panelTarget = ref("");
+const deploying = ref(false);
+const panelError = ref<string | null>(null);
+const panelValidation = computed(() =>
+  validatePanel({
+    title: settings.panelTitle,
+    blurb: settings.panelBlurb,
+    buttonLabel: settings.panelButtonLabel,
+  }),
+);
+const panelButtonText = computed(() =>
+  settings.panelMessageId && settings.panelChannelId === panelTarget.value ? "Update panel" : "Post panel",
+);
 
 // The bot's settings schema accepts at most this many staff roles; cap the
 // selection so a saved config always parses there.
@@ -297,11 +439,21 @@ const dirty = computed(() => JSON.stringify(settings) !== baseline.value);
 
 const save = async () => {
   saving.value = true;
+  const panel = toSavedPanel({
+    title: settings.panelTitle,
+    blurb: settings.panelBlurb,
+    buttonLabel: settings.panelButtonLabel,
+  });
   const ok = await saveModuleSettings("suggestions", {
     channelId: settings.channelId || null,
     staffRoleIds: settings.staffRoleIds,
     createThread: settings.createThread,
     closeVotingOnDecision: settings.closeVotingOnDecision,
+    panelTitle: panel.title,
+    panelBlurb: panel.blurb,
+    panelButtonLabel: panel.buttonLabel,
+    panelChannelId: settings.panelChannelId || null,
+    panelMessageId: settings.panelMessageId || null,
   });
   // A failed save keeps the form dirty so the bar stays and Save can retry.
   if (ok) baseline.value = JSON.stringify(settings);
@@ -310,6 +462,7 @@ const save = async () => {
 
 const discard = () => {
   Object.assign(settings, JSON.parse(baseline.value));
+  panelTarget.value = settings.panelChannelId;
 };
 
 // ── Review ───────────────────────────────────────────────────────────
@@ -360,6 +513,34 @@ async function submitReview() {
   }
 }
 
+// ── Panel ────────────────────────────────────────────────────────────
+
+async function postPanel() {
+  if (!settings.channelId || !panelTarget.value || panelValidation.value) return;
+  deploying.value = true;
+  panelError.value = null;
+  try {
+    const texts = toSavedPanel({
+      title: settings.panelTitle,
+      blurb: settings.panelBlurb,
+      buttonLabel: settings.panelButtonLabel,
+    });
+    const result = await deployPanel(panelTarget.value, texts);
+    settings.panelTitle = texts.title;
+    settings.panelBlurb = texts.blurb;
+    settings.panelButtonLabel = texts.buttonLabel;
+    settings.panelChannelId = result.panelChannelId;
+    settings.panelMessageId = result.panelMessageId;
+    toast.add({ title: panelResultTitle(result.action), color: "success" });
+    // Persist the new ids (and the texts that were just posted) with the rest of the settings.
+    await save();
+  } catch (err: any) {
+    panelError.value = err?.message || "Failed to post the panel.";
+  } finally {
+    deploying.value = false;
+  }
+}
+
 // ── Init ─────────────────────────────────────────────────────────────
 
 onMounted(async () => {
@@ -369,8 +550,18 @@ onMounted(async () => {
     settings.staffRoleIds = Array.isArray(saved.staffRoleIds) ? saved.staffRoleIds : [];
     settings.createThread = saved.createThread ?? true;
     settings.closeVotingOnDecision = saved.closeVotingOnDecision ?? true;
+    settings.panelTitle = storedPanelText(saved.panelTitle, PANEL_LIMITS.title, PANEL_DEFAULTS.title);
+    settings.panelBlurb = storedPanelText(saved.panelBlurb, PANEL_LIMITS.blurb, PANEL_DEFAULTS.blurb);
+    settings.panelButtonLabel = storedPanelText(
+      saved.panelButtonLabel,
+      PANEL_LIMITS.buttonLabel,
+      PANEL_DEFAULTS.buttonLabel,
+    );
+    settings.panelChannelId = typeof saved.panelChannelId === "string" ? saved.panelChannelId : "";
+    settings.panelMessageId = typeof saved.panelMessageId === "string" ? saved.panelMessageId : "";
   }
+  panelTarget.value = settings.panelChannelId;
   baseline.value = JSON.stringify(settings);
-  await Promise.all([loadChannels(), loadRoles()]);
+  await Promise.all([loadChannels(), loadRoles(), loadSuggestionChannels()]);
 });
 </script>

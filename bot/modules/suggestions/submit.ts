@@ -5,19 +5,26 @@ import {
   type SuggestionMessagePayload,
 } from "./embed";
 
+/** Where a posted suggestion lives. `threadId` is set when the post IS a thread (forum/media). */
+export interface PostedLocation {
+  channelId: string;
+  messageId: string;
+  threadId?: string;
+}
+
 export interface SubmitDeps {
   suggestions: Pick<SuggestionRepository, "create" | "setPost" | "deleteById">;
-  /** Posts the embed to the suggestions channel. Throws when it cannot. */
+  /** Posts the embed (a channel message, or a new forum post). Throws when it cannot. */
   post(
     suggestion: SuggestionRow,
     payload: SuggestionMessagePayload,
-  ): Promise<{ channelId: string; messageId: string }>;
+  ): Promise<PostedLocation>;
   /** Deletes a posted message from Discord. Best-effort; errors are swallowed. */
-  deletePost(post: { channelId: string; messageId: string }): Promise<void>;
+  deletePost(post: PostedLocation): Promise<void>;
   /** Best-effort discussion thread; null when it could not be created. */
   createThread(
     suggestion: SuggestionRow,
-    post: { channelId: string; messageId: string },
+    post: PostedLocation,
   ): Promise<string | null>;
   /** Optional error reporter for logging errors at different stages. */
   reportError?(stage: string, error: unknown): void;
@@ -46,7 +53,7 @@ export async function submitSuggestion(
 
   const payload = buildSuggestionMessage(embedInputFromRow(suggestion, { up: 0, down: 0 }, true));
 
-  let posted: { channelId: string; messageId: string };
+  let posted: PostedLocation;
   try {
     posted = await deps.post(suggestion, payload);
   } catch (error) {
@@ -86,8 +93,8 @@ export async function submitSuggestion(
     };
   }
 
-  // Thread creation is best-effort and does not block success.
-  if (input.createThread) {
+  // A forum post is already its own thread; only text posts get a discussion thread.
+  if (input.createThread && !posted.threadId) {
     try {
       const threadId = await deps.createThread(suggestion, posted);
       if (threadId) {

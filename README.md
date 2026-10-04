@@ -47,7 +47,7 @@ Everything is configured from a web dashboard (Nuxt 4) instead of slash commands
 - **XP & Leveling** — rank cards and a real-time leaderboard on the dashboard.
 - **Giveaways** — timed giveaways with entry requirements, reroll and winner announcements.
 - **Starboard** — mirror messages that collect enough star (or any emoji) reactions into a board channel, with multiple boards per server and a per-board leaderboard.
-- **Suggestions** — members submit ideas with `/suggest`, the community votes with buttons, and staff approve or deny from Discord or the dashboard review queue, with an optional discussion thread per suggestion.
+- **Suggestions** — members submit ideas with `/suggest` or an optional "New suggestion" panel (posted with `/suggestion panel` or from the dashboard), the community votes with buttons, and staff approve or deny from Discord or the dashboard review queue. Suggestions go to a text, forum or media channel, with an optional discussion thread per suggestion in text channels.
 - **Polls** — native Discord polls with visual result bars.
 - **Reminders** — `/remindme`, also available through the AI assistant.
 

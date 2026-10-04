@@ -653,13 +653,45 @@ export type StarboardSettingsType = z.infer<typeof StarboardSettingsSchema>;
 
 // ── Suggestions ────────────────────────────────────────────────────────
 
+/** Panel copy defaults/limits — mirrored by hand in web/app/utils/suggestions.ts and web/server/utils/suggestions.ts. */
+export const SUGGESTION_PANEL_DEFAULTS = {
+  title: "Suggestions",
+  blurb: "Have an idea for the server? Press the button below to submit it.",
+  buttonLabel: "New suggestion",
+} as const;
+
+export const SUGGESTION_PANEL_LIMITS = { title: 100, blurb: 1500, buttonLabel: 80 } as const;
+
 export const SuggestionsSettingsSchema = z.object({
-  /** Where suggestions are posted; null until an admin picks a channel. */
+  /** Where suggestions are posted (text/announcement channel, or a forum/media channel); null until an admin picks one. */
   channelId: z.string().min(1).nullable().default(null),
   staffRoleIds: z.array(z.string().min(1)).max(25).default([]),
   createThread: z.boolean().default(true),
   /** When on, `denied` and `implemented` suggestions stop accepting votes. */
   closeVotingOnDecision: z.boolean().default(true),
+  // Panel fields are cosmetic/bookkeeping: `.catch` falls back per field so one bad
+  // value never invalidates the config (an invalid config disables the whole module).
+  panelTitle: z
+    .string()
+    .trim()
+    .min(1)
+    .max(SUGGESTION_PANEL_LIMITS.title)
+    .catch(SUGGESTION_PANEL_DEFAULTS.title),
+  panelBlurb: z
+    .string()
+    .trim()
+    .min(1)
+    .max(SUGGESTION_PANEL_LIMITS.blurb)
+    .catch(SUGGESTION_PANEL_DEFAULTS.blurb),
+  panelButtonLabel: z
+    .string()
+    .trim()
+    .min(1)
+    .max(SUGGESTION_PANEL_LIMITS.buttonLabel)
+    .catch(SUGGESTION_PANEL_DEFAULTS.buttonLabel),
+  /** Where the panel was last posted; written by the deploy paths, not typed by an admin. */
+  panelChannelId: z.string().min(1).nullable().catch(null),
+  panelMessageId: z.string().min(1).nullable().catch(null),
 });
 
 export type SuggestionsSettingsType = z.infer<typeof SuggestionsSettingsSchema>;

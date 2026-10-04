@@ -191,15 +191,28 @@ describe('getModuleNeeds', () => {
     ])
   })
 
-  it('suggestions: the suggestions channel must be postable; thread permissions are optional and only when threads are on', () => {
+  it('suggestions: the suggestions channel must be postable and able to post in threads; thread permissions are optional and only when threads are on', () => {
     const on = getModuleNeeds('suggestions', { channelId: 's1' })!
     expect(on.required).toEqual([])
     expect(on.optional).toEqual(['CreatePublicThreads', 'SendMessagesInThreads'])
-    expect(on.channels).toEqual([{ id: 's1', label: 'suggestions channel', perms: POST_PERMS }])
+    expect(on.channels).toEqual([
+      { id: 's1', label: 'suggestions channel', perms: [...POST_PERMS, 'SendMessagesInThreads'] },
+    ])
 
     const off = getModuleNeeds('suggestions', { channelId: 's1', createThread: false })!
     expect(off.optional).toEqual([])
 
     expect(getModuleNeeds('suggestions', {})!.channels).toEqual([])
+  })
+
+  it('suggestions: the panel channel, when set, must be postable', () => {
+    const needs = getModuleNeeds('suggestions', { channelId: 's1', panelChannelId: 'p1' })!
+    expect(needs.channels).toEqual([
+      { id: 's1', label: 'suggestions channel', perms: [...POST_PERMS, 'SendMessagesInThreads'] },
+      { id: 'p1', label: 'suggestions panel channel', perms: POST_PERMS },
+    ])
+    expect(getModuleNeeds('suggestions', { panelChannelId: 'p1' })!.channels).toEqual([
+      { id: 'p1', label: 'suggestions panel channel', perms: POST_PERMS },
+    ])
   })
 })

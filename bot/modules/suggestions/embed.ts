@@ -38,7 +38,7 @@ const MAX_TITLE = 256;
 const MAX_DESCRIPTION = 4000;
 const MAX_FIELD_VALUE = 1024;
 
-const truncate = (value: string, max: number) =>
+export const truncate = (value: string, max: number) =>
   value.length > max ? `${value.slice(0, max - 1)}…` : value;
 
 export function voteCustomId(suggestionId: string, direction: "up" | "down"): string {
