@@ -194,3 +194,37 @@ describe("submitSuggestion", () => {
     expect(reportError).toHaveBeenCalledWith("thread", expect.any(Error));
   });
 });
+
+describe("submitSuggestion in a forum channel", () => {
+  const forumPost = { channelId: "t1", messageId: "t1", threadId: "t1" };
+
+  it("stores the post as its own thread in one write and never creates a second thread", async () => {
+    const deps = makeDeps({ post: vi.fn(async () => forumPost) });
+    const result = await submitSuggestion(deps, { ...input, createThread: true });
+
+    expect(deps.suggestions.setPost).toHaveBeenCalledTimes(1);
+    expect(deps.suggestions.setPost).toHaveBeenCalledWith("sug-1", forumPost);
+    expect(deps.createThread).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      ok: true,
+      messageUrl: "https://discord.com/channels/g1/t1/t1",
+    });
+  });
+
+  it("deletes the post and the row when the location cannot be saved", async () => {
+    const deps = makeDeps({
+      post: vi.fn(async () => forumPost),
+      suggestions: {
+        create: vi.fn(async () => created),
+        setPost: vi.fn(async () => {
+          throw new Error("db down");
+        }),
+        deleteById: vi.fn(async () => undefined),
+      },
+    });
+    const result = await submitSuggestion(deps, input);
+    expect(deps.deletePost).toHaveBeenCalledWith(forumPost);
+    expect(deps.suggestions.deleteById).toHaveBeenCalledWith("sug-1");
+    expect(result.ok).toBe(false);
+  });
+});

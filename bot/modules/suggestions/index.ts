@@ -2,6 +2,7 @@ import {
   ActionRowBuilder,
   AutocompleteInteraction,
   ButtonInteraction,
+  ChannelFlags,
   ChannelType,
   ChatInputCommandInteraction,
   Events,
@@ -12,18 +13,24 @@ import {
   SlashCommandBuilder,
   TextInputBuilder,
   TextInputStyle,
+  ThreadAutoArchiveDuration,
   type Guild,
+  type GuildBasedChannel,
   type GuildMember,
 } from "discord.js";
 import type { APIInteractionGuildMember } from "discord.js";
 import { BotModule, ModuleManager } from "../../ModuleManager";
 import { buildSuggestionMessage, embedInputFromRow } from "./embed";
+import { deployPanel } from "./deploy";
 import { isChannelNotInGuild, isStaleInteractionError } from "./discord-errors";
 import { resolveGuildSettings } from "./gate";
+import { buildPanelMessage } from "./panel";
 import { applyReview, type ReviewDeps } from "./review";
 import { isStaff } from "./staff";
 import { STAFF_STATUSES, STATUS_META, isStaffStatus } from "./status";
+import { parseSuggestionsSettings } from "./settings";
 import { submitSuggestion, type SubmitDeps } from "./submit";
+import { isThreadOnlyType, pickRequiredTag, submitTarget } from "./target";
 import { castVote } from "./vote";
 
 const MODULE = "suggestions";
@@ -76,6 +83,18 @@ const suggestionCommand = new SlashCommandBuilder()
           .setMaxLength(REASON_MAX),
       ),
   )
+  .addSubcommand((sub) =>
+    sub
+      .setName("panel")
+      .setDescription("Post or update the suggestions panel (staff only)")
+      .addChannelOption((opt) =>
+        opt
+          .setName("channel")
+          .setDescription("Channel to post the panel in")
+          .setRequired(true)
+          .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement),
+      ),
+  )
   .toJSON();
 
 function gateFor(moduleManager: ModuleManager, guildId: string) {
@@ -89,6 +108,19 @@ function gateFor(moduleManager: ModuleManager, guildId: string) {
 function memberRoleIds(member: GuildMember | APIInteractionGuildMember | null): string[] {
   if (!member) return [];
   return Array.isArray(member.roles) ? member.roles : [...member.roles.cache.keys()];
+}
+
+function isStaffMember(
+  interaction: ChatInputCommandInteraction | AutocompleteInteraction,
+  staffRoleIds: string[],
+): boolean {
+  return isStaff(
+    {
+      manageGuild: interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false,
+      roleIds: memberRoleIds(interaction.member),
+    },
+    staffRoleIds,
+  );
 }
 
 /**
@@ -117,10 +149,27 @@ async function sendableGuildChannel(guild: Guild, channelId: string) {
   return channel;
 }
 
+/**
+ * Throws unless the bot has every permission in `required` in `channel`.
+ * Without Embed Links Discord silently drops embeds, so this runs BEFORE posting
+ * rather than letting a post "succeed" with only buttons.
+ */
+async function assertCanPost(guild: Guild, channel: GuildBasedChannel, required: bigint[]): Promise<void> {
+  const me = guild.members.me ?? (await guild.members.fetchMe().catch(() => null));
+  const perms = me ? channel.permissionsFor(me) : null;
+  if (!perms?.has(required)) {
+    throw new Error(
+      `missing permissions in channel ${channel.id} (needs View Channel, Send Messages, Embed Links${
+        required.includes(PermissionFlagsBits.SendMessagesInThreads) ? ", Send Messages in Threads" : ""
+      })`,
+    );
+  }
+}
+
 // ── /suggest ──────────────────────────────────────────────────────────
 
 async function showSubmitModal(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction | ButtonInteraction,
   moduleManager: ModuleManager,
 ): Promise<void> {
   const gate = await resolveGuildSettings(gateFor(moduleManager, interaction.guildId!), {
@@ -178,33 +227,76 @@ async function submitFromModal(
 
   const deps: SubmitDeps = {
     suggestions: db.suggestions,
-    post: async (_suggestion, payload) => {
-      const channel = await sendableGuildChannel(guild, settings.channelId!);
-      // Without Embed Links Discord silently drops the embed and the post would
-      // succeed with only buttons, so verify before sending.
-      const me = guild.members.me ?? (await guild.members.fetchMe().catch(() => null));
-      const perms = me ? channel.permissionsFor(me) : null;
-      if (
-        !perms?.has([
-          PermissionFlagsBits.ViewChannel,
-          PermissionFlagsBits.SendMessages,
-          PermissionFlagsBits.EmbedLinks,
-        ])
-      ) {
+    post: async (suggestion, payload) => {
+      const channel = await guildChannel(guild, settings.channelId!);
+      const target = submitTarget(channel?.type);
+      if (!channel || !target) {
         throw new Error(
-          `missing View Channel, Send Messages or Embed Links in channel ${settings.channelId}`,
+          `channel ${settings.channelId} is missing or is not a text, forum or media channel`,
         );
       }
+      if (target === "forum") {
+        if (channel.type !== ChannelType.GuildForum && channel.type !== ChannelType.GuildMedia) {
+          throw new Error(`channel ${channel.id} is not a forum channel`);
+        }
+        await assertCanPost(guild, channel, [
+          PermissionFlagsBits.ViewChannel,
+          PermissionFlagsBits.SendMessages,
+          PermissionFlagsBits.SendMessagesInThreads,
+          PermissionFlagsBits.EmbedLinks,
+        ]);
+        // A forum that requires a tag rejects an untagged post (Discord 40067).
+        let appliedTags: string[] | undefined;
+        if (channel.flags.has(ChannelFlags.RequireTag)) {
+          const tagId = pickRequiredTag(channel.availableTags);
+          if (!tagId) {
+            throw new Error(
+              `forum channel ${channel.id} requires a tag but has no tag the bot can apply`,
+            );
+          }
+          appliedTags = [tagId];
+        }
+        const thread = await channel.threads.create({
+          name: `#${suggestion.number} ${suggestion.title}`.slice(0, 100),
+          autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+          appliedTags,
+          message: { ...payload, allowedMentions: { parse: [] } },
+        });
+        // A forum post IS its own thread, and its starter message shares the thread's id.
+        return { channelId: thread.id, messageId: thread.id, threadId: thread.id };
+      }
+      if (!channel.isSendable()) throw new Error(`channel ${channel.id} is not sendable`);
+      await assertCanPost(guild, channel, [
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.EmbedLinks,
+      ]);
       const sent = await channel.send({ ...payload, allowedMentions: { parse: [] } });
       return { channelId: channel.id, messageId: sent.id };
     },
     deletePost: async (post) => {
       try {
-        const channel = await sendableGuildChannel(guild, post.channelId);
-        await channel.messages.delete(post.messageId);
+        const channel = await guildChannel(guild, post.channelId);
+        if (channel?.isThread() && isThreadOnlyType(channel.parent?.type)) {
+          // Deleting only a forum post's starter message would leave a hollow thread.
+          try {
+            await channel.delete();
+          } catch (err) {
+            if (isUnknownMessage(err) || isChannelNotInGuild(err)) throw err;
+            // No Manage Threads: at least remove the bot's own starter message.
+            try {
+              await channel.messages.delete(post.messageId);
+            } catch (inner) {
+              if (!isUnknownMessage(inner)) throw inner;
+            }
+          }
+          return;
+        }
+        const sendable = await sendableGuildChannel(guild, post.channelId);
+        await sendable.messages.delete(post.messageId);
       } catch (err) {
-        // An already-gone message is the desired end state.
-        if (!isUnknownMessage(err)) throw err;
+        // An already-gone message or post is the desired end state.
+        if (!isUnknownMessage(err) && !isChannelNotInGuild(err)) throw err;
       }
     },
     createThread: async (suggestion, post) => {
@@ -353,13 +445,7 @@ async function reviewFromCommand(
   }
   const { settings } = gate;
 
-  const allowed = isStaff(
-    {
-      manageGuild: interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false,
-      roleIds: memberRoleIds(interaction.member),
-    },
-    settings.staffRoleIds,
-  );
+  const allowed = isStaffMember(interaction, settings.staffRoleIds);
   if (!allowed) {
     await interaction.editReply("Only staff can review suggestions.");
     return;
@@ -389,6 +475,11 @@ async function reviewFromCommand(
       const channel = await guildChannel(guild, row.channelId);
       if (!channel || !channel.isSendable()) return "missing";
       try {
+        // A forum suggestion's embed is its thread's starter message, and Discord refuses
+        // edits inside an archived thread. A locked thread stays a graceful failure.
+        if (channel.isThread() && channel.archived && !channel.locked) {
+          await channel.setArchived(false);
+        }
         await channel.messages.edit(row.messageId, payload);
         return "ok";
       } catch (err) {
@@ -475,13 +566,7 @@ async function handleAutocomplete(
       await interaction.respond([]);
       return;
     }
-    const allowed = isStaff(
-      {
-        manageGuild: interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false,
-        roleIds: memberRoleIds(interaction.member),
-      },
-      gate.settings.staffRoleIds,
-    );
+    const allowed = isStaffMember(interaction, gate.settings.staffRoleIds);
     if (!allowed) {
       await interaction.respond([]);
       return;
@@ -505,6 +590,118 @@ async function handleAutocomplete(
       );
     }
     await interaction.respond([]).catch(() => undefined);
+  }
+}
+
+// ── /suggestion panel ─────────────────────────────────────────────────
+
+async function panelFromCommand(
+  interaction: ChatInputCommandInteraction,
+  moduleManager: ModuleManager,
+  guild: Guild,
+): Promise<void> {
+  const gate = await resolveGuildSettings(gateFor(moduleManager, guild.id), { requireChannel: true });
+  if (!gate.ok) {
+    await interaction.editReply(gate.message);
+    return;
+  }
+  const { settings } = gate;
+
+  if (!isStaffMember(interaction, settings.staffRoleIds)) {
+    await interaction.editReply("Only staff can post the suggestions panel.");
+    return;
+  }
+
+  // Resolved through the interaction's own guild only.
+  const picked = interaction.options.getChannel("channel", true);
+  const channel = await guildChannel(guild, picked.id);
+  if (
+    !channel ||
+    (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)
+  ) {
+    await interaction.editReply("Pick a text or announcement channel in this server.");
+    return;
+  }
+  try {
+    await assertCanPost(guild, channel, [
+      PermissionFlagsBits.ViewChannel,
+      PermissionFlagsBits.SendMessages,
+      PermissionFlagsBits.EmbedLinks,
+    ]);
+  } catch {
+    await interaction.editReply(
+      `I need View Channel, Send Messages and Embed Links in <#${channel.id}> to post the panel.`,
+    );
+    return;
+  }
+
+  // The gate above read through the bot's L1 cache, which can lag a dashboard save by up to
+  // 60 s. Re-read straight from the repository (it throws instead of returning {}) so the panel
+  // reflects the latest text and the merge below can never revert or wipe the stored config.
+  const fresh = await moduleManager.databaseService.guildConfigs.getModuleSettings(guild.id, MODULE);
+  const { settings: freshSettings } = parseSuggestionsSettings(fresh);
+
+  const result = await deployPanel(
+    {
+      post: async (payload) => {
+        const sent = await channel.send({ ...payload, allowedMentions: { parse: [] } });
+        return sent.id;
+      },
+      edit: async (messageId, payload) => {
+        try {
+          await channel.messages.edit(messageId, payload);
+          return "ok";
+        } catch (err) {
+          if (isUnknownMessage(err)) return "missing";
+          throw err;
+        }
+      },
+    },
+    {
+      channelId: channel.id,
+      payload: buildPanelMessage(freshSettings),
+      stored: { panelChannelId: freshSettings.panelChannelId, panelMessageId: freshSettings.panelMessageId },
+    },
+  );
+
+  // setModuleSettings replaces the whole object, so merge into the fresh RAW stored settings.
+  await moduleManager.databaseService.setModuleSettings(guild.id, MODULE, {
+    ...fresh,
+    panelChannelId: channel.id,
+    panelMessageId: result.messageId,
+  });
+
+  await interaction.editReply(
+    result.action === "updated"
+      ? `✅ Updated the suggestions panel in <#${channel.id}>.`
+      : result.action === "reposted"
+        ? `✅ The old panel message was gone, so I posted a new one in <#${channel.id}>.`
+        : `✅ Posted the suggestions panel in <#${channel.id}>.`,
+  );
+}
+
+async function handlePanel(
+  interaction: ChatInputCommandInteraction,
+  moduleManager: ModuleManager,
+): Promise<void> {
+  await interaction.deferReply({ flags: ephemeral });
+  try {
+    const guild = interaction.guild;
+    if (!guild) {
+      await interaction.editReply("This can only be used in a server.");
+      return;
+    }
+    await panelFromCommand(interaction, moduleManager, guild);
+  } catch (err) {
+    moduleManager.logger.error(
+      "Suggestions panel deploy failed",
+      interaction.guildId ?? undefined,
+      err,
+      MODULE,
+    );
+    await interaction
+      .editReply("Something went wrong posting the panel. Check my permissions in that channel.")
+      .catch(() => undefined);
   }
 }
 
@@ -544,12 +741,21 @@ function registerSuggestionsEvents(moduleManager: ModuleManager): void {
     }
   });
 
+  // A forum suggestion IS its thread: deleting the post emits ThreadDelete (not ChannelDelete).
+  client.on(Events.ThreadDelete, async (thread) => {
+    try {
+      await db.suggestions.markWithdrawnByChannel(thread.guildId, thread.id);
+    } catch (err) {
+      logger.error("Suggestions thread-delete handler failed", thread.guildId, err, MODULE);
+    }
+  });
+
   logger.info("Suggestions events registered.", undefined, MODULE);
 }
 
 const suggestionsModule: BotModule = {
   name: MODULE,
-  description: "Members submit suggestions that the community votes on and staff review",
+  description: "Members submit suggestions (/suggest or a panel button) that the community votes on and staff review",
   // /suggest must answer with a modal (the initial reply), so ModuleManager must not defer.
   skipDefer: true,
   commands: [suggestCommand, suggestionCommand],
@@ -567,16 +773,19 @@ const suggestionsModule: BotModule = {
       return;
     }
     if (interaction.commandName === "suggest") return showSubmitModal(interaction, moduleManager);
-    if (interaction.commandName === "suggestion" && interaction.options.getSubcommand() === "review") {
-      return handleReview(interaction, moduleManager);
+    if (interaction.commandName === "suggestion") {
+      const sub = interaction.options.getSubcommand();
+      if (sub === "review") return handleReview(interaction, moduleManager);
+      if (sub === "panel") return handlePanel(interaction, moduleManager);
     }
   },
 
   autocomplete: handleAutocomplete,
 
-  // customId format: suggestions:vote:<suggestionId>:up|down
+  // customId format: suggestions:vote:<suggestionId>:up|down, or suggestions:new (the panel button)
   handleButton: async (interaction: ButtonInteraction, moduleManager: ModuleManager) => {
     const [, action, id, direction] = interaction.customId.split(":");
+    if (action === "new") return showSubmitModal(interaction, moduleManager);
     if (action === "vote" && id) return handleVoteButton(interaction, moduleManager, id, direction ?? "");
   },
 

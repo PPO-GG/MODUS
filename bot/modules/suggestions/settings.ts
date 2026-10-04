@@ -1,4 +1,4 @@
-import { SuggestionsSettingsSchema, type SuggestionsSettingsType } from "../../lib/schemas";
+import { SUGGESTION_PANEL_DEFAULTS, SuggestionsSettingsSchema, type SuggestionsSettingsType } from "../../lib/schemas";
 
 export interface ParsedSuggestionsSettings {
   settings: SuggestionsSettingsType;
@@ -13,6 +13,11 @@ const DEFAULTS: SuggestionsSettingsType = {
   staffRoleIds: [],
   createThread: true,
   closeVotingOnDecision: true,
+  panelTitle: SUGGESTION_PANEL_DEFAULTS.title,
+  panelBlurb: SUGGESTION_PANEL_DEFAULTS.blurb,
+  panelButtonLabel: SUGGESTION_PANEL_DEFAULTS.buttonLabel,
+  panelChannelId: null,
+  panelMessageId: null,
 };
 
 export function parseSuggestionsSettings(raw: unknown): ParsedSuggestionsSettings {
