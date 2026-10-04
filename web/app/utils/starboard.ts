@@ -5,6 +5,7 @@
 
 export const MAX_BOARDS = 10;
 export const MAX_NAME_LENGTH = 80;
+export const MAX_WATCHED_CHANNELS = 100;
 export const EMOJI_PRESETS = ["⭐", "🌟", "💀", "❤️", "😂", "🔥", "👍"];
 
 export interface BoardDraft {
@@ -16,6 +17,10 @@ export interface BoardDraft {
   threshold: number;
   channelId: string;
   ignoredChannelIds: string[];
+  /** Only these channels (and their threads) count; empty = every channel. */
+  watchedChannelIds: string[];
+  /** The bot seeds this board's emoji on images in the watched channels. */
+  autoReact: boolean;
   deleteBelowThreshold: boolean;
 }
 
@@ -62,6 +67,8 @@ export function newBoard(id: string): BoardDraft {
     threshold: 3,
     channelId: "",
     ignoredChannelIds: [],
+    watchedChannelIds: [],
+    autoReact: false,
     deleteBelowThreshold: false,
   };
 }
@@ -78,6 +85,10 @@ export function validateBoard(board: BoardDraft, others: BoardDraft[]): string |
   }
   if (!board.channelId) return "Choose the channel posts go to.";
   if (board.ignoredChannelIds.length > 100) return "Ignore at most 100 channels.";
+  if (board.watchedChannelIds.length > MAX_WATCHED_CHANNELS)
+    return `Watch at most ${MAX_WATCHED_CHANNELS} channels.`;
+  if (board.autoReact && board.watchedChannelIds.length === 0)
+    return "Pick at least one watched channel to turn on vote reactions.";
   const clash = others.some(
     (o) =>
       o.channelId === board.channelId &&
@@ -87,12 +98,13 @@ export function validateBoard(board: BoardDraft, others: BoardDraft[]): string |
   return null;
 }
 
-/** Normalised copy for saving: trimmed name, emoji reduced to its stored form. */
+/** Normalised copy for saving: trimmed name, emoji reduced to its stored form, auto-react only with a watched channel. */
 export function toSavedBoard(board: BoardDraft): BoardDraft {
   return {
     ...board,
     name: board.name.trim(),
     emoji: parseEmojiInput(board.emoji) ?? board.emoji.trim(),
+    autoReact: board.autoReact && board.watchedChannelIds.length > 0,
   };
 }
 

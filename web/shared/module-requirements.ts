@@ -37,6 +37,8 @@ const THREAD_PARENT: PermissionName[] = [
   'ManageThreads',
 ]
 
+const VOTE_REACTIONS: PermissionName[] = ['ViewChannel', 'AddReactions', 'ReadMessageHistory']
+
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v)
 const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '')
@@ -108,11 +110,20 @@ const REQUIREMENTS: Record<string, Build> = {
     channels: chan(s.verificationChannelId, 'verification panel channel', POST),
   }),
   logging: (s) => ({ channels: chan(s.auditChannelId, 'audit log channel', POST) }),
-  starboard: (s) => ({
-    channels: records(s.boards)
-      .filter((board) => board.enabled !== false)
-      .flatMap((board) => chan(board.channelId, 'starboard channel', POST)),
-  }),
+  starboard: (s) => {
+    const boards = records(s.boards).filter((board) => board.enabled !== false)
+    return {
+      channels: [
+        ...boards.flatMap((board) => chan(board.channelId, 'starboard channel', POST)),
+        // Seeded votes are added in each watched channel (once per channel, however many boards watch it).
+        ...unique(
+          boards
+            .filter((board) => board.autoReact === true)
+            .flatMap((board) => strings(board.watchedChannelIds)),
+        ).flatMap((id) => chan(id, 'vote reactions channel', VOTE_REACTIONS)),
+      ],
+    }
+  },
   suggestions: (s) => ({
     // Discussion threads are created per suggestion; the post itself works without them.
     optional: s.createThread === false ? [] : ['CreatePublicThreads', 'SendMessagesInThreads'],

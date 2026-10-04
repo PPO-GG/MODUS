@@ -13,9 +13,10 @@ import {
 } from "discord.js";
 import { BotModule, ModuleManager } from "../../ModuleManager";
 import type { StarboardBoard } from "../../lib/schemas";
+import { isSeedCandidate, planReactions, seedReactions, type ReactResult } from "./autoreact";
 import { boardMatchesEmoji, emojiKey, parseStarboard } from "./boards";
 import { countReactors } from "./count";
-import { isEligibleChannel, isLeakToPublicBoard } from "./evaluate";
+import { isEligibleChannel, isLeakToPublicBoard, type SourceChannel } from "./evaluate";
 import { buildBoardMessage } from "./post";
 import { processBoard, type ProcessDeps } from "./process";
 import { KeyedCoalescer } from "./queue";
@@ -178,6 +179,16 @@ async function runBoard(
   });
 }
 
+/** The eligibility view of a message's channel (threads resolve NSFW from their parent). */
+function sourceChannelOf(channel: Message["channel"]): SourceChannel {
+  const isThread = channel.isThread();
+  return {
+    id: channel.id,
+    parentId: isThread ? channel.parentId : null,
+    nsfw: isThread ? channel.parent?.nsfw === true : "nsfw" in channel && channel.nsfw === true,
+  };
+}
+
 async function onReaction(
   moduleManager: ModuleManager,
   rawReaction: MessageReaction | PartialMessageReaction,
@@ -211,14 +222,7 @@ async function onReaction(
   if (!guild || !message.author) return;
 
   const channel = message.channel;
-  const isThread = channel.isThread();
-  const sourceChannel = {
-    id: channel.id,
-    parentId: isThread ? channel.parentId : null,
-    nsfw: isThread
-      ? channel.parent?.nsfw === true
-      : "nsfw" in channel && channel.nsfw === true,
-  };
+  const sourceChannel = sourceChannelOf(channel);
   // Every board channel of the guild (enabled or not) is off-limits as a source.
   const allBoards = await loadBoards(moduleManager, guildId, false);
   const boardChannelIds = new Set(allBoards.map((b) => b.channelId));
@@ -241,6 +245,64 @@ async function onReaction(
       }
     });
   }
+}
+
+/** Seeds the vote emojis on an image message in a watched channel. */
+async function onMessageCreate(moduleManager: ModuleManager, message: Message): Promise<void> {
+  // Cheap, DB-free checks first: this runs for every message in every guild.
+  const guild = message.guild;
+  if (
+    !guild ||
+    !isSeedCandidate({
+      guildId: message.guildId,
+      authorBot: message.author.bot,
+      system: message.system,
+      content: message.content,
+      attachments: [...message.attachments.values()],
+    })
+  ) {
+    return;
+  }
+
+  const enabled = await loadBoards(moduleManager, guild.id, true);
+  if (!enabled.some((b) => b.autoReact)) return;
+  const allBoards = await loadBoards(moduleManager, guild.id, false);
+  const boardChannelIds = new Set(allBoards.map((b) => b.channelId));
+
+  const channel = message.channel;
+  const emojis = planReactions(enabled, sourceChannelOf(channel), boardChannelIds);
+  if (emojis.length === 0) return;
+
+  const me = guild.members.me;
+  const perms = me && "permissionsFor" in channel ? channel.permissionsFor(me) : null;
+  if (!perms?.has([PermissionFlagsBits.AddReactions, PermissionFlagsBits.ReadMessageHistory])) {
+    if (warnThrottle.shouldLog(`autoreact:${guild.id}:${channel.id}`)) {
+      void moduleManager.logger.warn(
+        `Starboard auto-react is on for channel ${channel.id} but MODUS lacks Add Reactions / Read Message History there.`,
+        guild.id,
+        MODULE,
+      );
+    }
+    return;
+  }
+
+  const react = async (emoji: string): Promise<ReactResult> => {
+    try {
+      await message.react(emoji);
+      return "ok";
+    } catch (err) {
+      if (isUnknownMessage(err)) return "gone";
+      if (warnThrottle.shouldLog(`autoreact:${guild.id}:${emoji}`)) {
+        void moduleManager.logger.warn(
+          `Starboard could not add the ${emoji} reaction: ${err instanceof Error ? err.message : String(err)}`,
+          guild.id,
+          MODULE,
+        );
+      }
+      return "failed";
+    }
+  };
+  await seedReactions(react, emojis);
 }
 
 /** Deletes a board's mirrored post (if any) for a source message that went away. */
@@ -339,6 +401,9 @@ function registerStarboardEvents(moduleManager: ModuleManager): void {
   const guard = (label: string, guildId: string | null | undefined, work: Promise<unknown>) =>
     work.catch((err) => logger.error(`Starboard ${label} failed`, guildId ?? undefined, err, MODULE));
 
+  client.on(Events.MessageCreate, (message) => {
+    void guard("auto-react", message.guildId, onMessageCreate(moduleManager, message));
+  });
   client.on(Events.MessageReactionAdd, (reaction, user) => {
     void guard("reaction add", reaction.message.guildId, onReaction(moduleManager, reaction, user));
   });
@@ -379,7 +444,8 @@ function registerStarboardEvents(moduleManager: ModuleManager): void {
 
 const starboardModule: BotModule = {
   name: MODULE,
-  description: "Mirrors popular messages to a board channel once they collect enough star reactions",
+  description:
+    "Mirrors popular messages to a board channel once they collect enough reactions, and can seed vote emojis on images",
   registerEvents: registerStarboardEvents,
   meta: {
     displayName: "Starboard",

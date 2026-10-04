@@ -11,6 +11,8 @@ const board: StarboardBoard = {
   threshold: 3,
   channelId: "board-chan",
   ignoredChannelIds: [],
+  watchedChannelIds: [],
+  autoReact: false,
   deleteBelowThreshold: false,
 };
 const source: SourceRef = { guildId: "g1", channelId: "c1", messageId: "m1", authorId: "author" };
