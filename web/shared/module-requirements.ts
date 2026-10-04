@@ -127,7 +127,11 @@ const REQUIREMENTS: Record<string, Build> = {
   suggestions: (s) => ({
     // Discussion threads are created per suggestion; the post itself works without them.
     optional: s.createThread === false ? [] : ['CreatePublicThreads', 'SendMessagesInThreads'],
-    channels: chan(s.channelId, 'suggestions channel', POST),
+    channels: [
+      // Send Messages in Threads covers forum suggestions (a forum post is a thread) and thread notes.
+      ...chan(s.channelId, 'suggestions channel', [...POST, 'SendMessagesInThreads']),
+      ...chan(s.panelChannelId, 'suggestions panel channel', POST),
+    ],
   }),
   xp: (s) => ({
     // The level-up message is an embed.

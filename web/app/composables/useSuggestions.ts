@@ -3,7 +3,7 @@
  * staff roles, toggles) go through useServerSettings's generic
  * saveModuleSettings/getModuleConfig, same as every other module.
  */
-import type { StaffStatus, SuggestionStatus } from "~/utils/suggestions";
+import type { PanelAction, PanelDraft, StaffStatus, SuggestionStatus } from "~/utils/suggestions";
 import { createRequestGate } from "~/utils/suggestions";
 
 export interface SuggestionItem {
@@ -153,6 +153,23 @@ export function useSuggestions(guildId: string) {
     }
   };
 
+  const deployPanel = async (channelId: string, texts: PanelDraft) => {
+    try {
+      return (await $fetch("/api/suggestions/panel", {
+        method: "POST",
+        body: {
+          guild_id: guildId,
+          channel_id: channelId,
+          title: texts.title,
+          blurb: texts.blurb,
+          button_label: texts.buttonLabel,
+        },
+      })) as { action: PanelAction; panelChannelId: string; panelMessageId: string };
+    } catch (err: any) {
+      throw new Error(messageOf(err, "Failed to post the panel"));
+    }
+  };
+
   onMounted(refresh);
 
   return {
@@ -171,5 +188,6 @@ export function useSuggestions(guildId: string) {
     refresh,
     loadVoters,
     review,
+    deployPanel,
   };
 }

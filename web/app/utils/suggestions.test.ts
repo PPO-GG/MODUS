@@ -2,11 +2,16 @@ import { describe, expect, it } from "vitest";
 import {
   createRequestGate,
   messageLink,
+  PANEL_DEFAULTS,
+  panelResultTitle,
   relativeAge,
   statusBadgeColor,
   statusLabel,
+  storedPanelText,
   STATUS_TABS,
   STAFF_STATUS_OPTIONS,
+  toSavedPanel,
+  validatePanel,
   validateReview,
 } from "./suggestions";
 
@@ -113,5 +118,61 @@ describe("createRequestGate", () => {
     expect(gate1.isCurrent(token1)).toBe(false);
     expect(gate1.isCurrent(token1b)).toBe(true);
     expect(gate2.isCurrent(token2)).toBe(true);
+  });
+});
+
+describe("panel helpers", () => {
+  const draft = { title: "Ideas", blurb: "Tell us", buttonLabel: "Suggest" };
+
+  it("validatePanel accepts texts up to the limits and rejects longer ones", () => {
+    expect(validatePanel(draft)).toBeNull();
+    expect(
+      validatePanel({ title: "t".repeat(100), blurb: "b".repeat(1500), buttonLabel: "l".repeat(80) }),
+    ).toBeNull();
+    expect(validatePanel({ ...draft, title: "t".repeat(101) })).toMatch(/title/i);
+    expect(validatePanel({ ...draft, blurb: "b".repeat(1501) })).toMatch(/blurb/i);
+    expect(validatePanel({ ...draft, buttonLabel: "l".repeat(81) })).toMatch(/button/i);
+  });
+
+  it("validatePanel allows blank texts (they save as the defaults)", () => {
+    expect(validatePanel({ title: "", blurb: "  ", buttonLabel: "" })).toBeNull();
+  });
+
+  it("toSavedPanel trims and replaces blank texts with the defaults, never empty strings", () => {
+    expect(toSavedPanel({ title: "  Ideas ", blurb: "Tell us", buttonLabel: " Go " })).toEqual({
+      title: "Ideas",
+      blurb: "Tell us",
+      buttonLabel: "Go",
+    });
+    expect(toSavedPanel({ title: "", blurb: "   ", buttonLabel: "" })).toEqual({
+      title: PANEL_DEFAULTS.title,
+      blurb: PANEL_DEFAULTS.blurb,
+      buttonLabel: PANEL_DEFAULTS.buttonLabel,
+    });
+  });
+
+  it("describes each deploy result", () => {
+    expect(panelResultTitle("posted")).toBe("Panel posted");
+    expect(panelResultTitle("updated")).toBe("Panel updated");
+    expect(panelResultTitle("reposted")).toBe("Panel posted (the old message was gone)");
+  });
+});
+
+describe("storedPanelText", () => {
+  it("returns a non-blank string within the limit as stored", () => {
+    expect(storedPanelText("Ideas", 100, "Fallback")).toBe("Ideas");
+    expect(storedPanelText("t".repeat(100), 100, "Fallback")).toBe("t".repeat(100));
+  });
+
+  it("falls back for non-strings, blank and whitespace-only values", () => {
+    expect(storedPanelText(undefined, 100, "Fallback")).toBe("Fallback");
+    expect(storedPanelText(42, 100, "Fallback")).toBe("Fallback");
+    expect(storedPanelText("", 100, "Fallback")).toBe("Fallback");
+    expect(storedPanelText("   ", 100, "Fallback")).toBe("Fallback");
+  });
+
+  it("falls back when the trimmed value is over the limit", () => {
+    expect(storedPanelText("t".repeat(101), 100, "Fallback")).toBe("Fallback");
+    expect(storedPanelText(`  ${"t".repeat(100)}  `, 100, "Fallback")).toBe(`  ${"t".repeat(100)}  `);
   });
 });

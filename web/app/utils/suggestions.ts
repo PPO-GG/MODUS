@@ -98,3 +98,57 @@ export function createRequestGate(): { next(): number; isCurrent(token: number):
     },
   };
 }
+
+/** Panel limits/defaults — mirror SUGGESTION_PANEL_* in bot/lib/schemas.ts and web/server/utils/suggestions.ts. */
+export const PANEL_LIMITS = { title: 100, blurb: 1500, buttonLabel: 80 } as const;
+export const PANEL_DEFAULTS = {
+  title: "Suggestions",
+  blurb: "Have an idea for the server? Press the button below to submit it.",
+  buttonLabel: "New suggestion",
+} as const;
+
+export interface PanelDraft {
+  title: string;
+  blurb: string;
+  buttonLabel: string;
+}
+
+/** First problem with the panel texts, or null. Blank texts are fine: they save as the defaults. */
+export function validatePanel(draft: PanelDraft): string | null {
+  if (draft.title.trim().length > PANEL_LIMITS.title)
+    return `The title must be ${PANEL_LIMITS.title} characters or fewer.`;
+  if (draft.blurb.trim().length > PANEL_LIMITS.blurb)
+    return `The blurb must be ${PANEL_LIMITS.blurb} characters or fewer.`;
+  if (draft.buttonLabel.trim().length > PANEL_LIMITS.buttonLabel)
+    return `The button label must be ${PANEL_LIMITS.buttonLabel} characters or fewer.`;
+  return null;
+}
+
+/** Trimmed copy for saving/posting; blank texts become the defaults (Discord rejects empty embeds/labels). */
+export function toSavedPanel(draft: PanelDraft): PanelDraft {
+  return {
+    title: draft.title.trim() || PANEL_DEFAULTS.title,
+    blurb: draft.blurb.trim() || PANEL_DEFAULTS.blurb,
+    buttonLabel: draft.buttonLabel.trim() || PANEL_DEFAULTS.buttonLabel,
+  };
+}
+
+/** A stored panel text as shown in the form: kept when it is a non-blank string within the limit (trimmed length), otherwise the default. Mirrors the bot schema's fall-back-to-default. */
+export function storedPanelText(value: unknown, limit: number, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  const length = value.trim().length;
+  return length > 0 && length <= limit ? value : fallback;
+}
+
+export type PanelAction = "posted" | "updated" | "reposted";
+
+export function panelResultTitle(action: PanelAction): string {
+  switch (action) {
+    case "updated":
+      return "Panel updated";
+    case "reposted":
+      return "Panel posted (the old message was gone)";
+    default:
+      return "Panel posted";
+  }
+}

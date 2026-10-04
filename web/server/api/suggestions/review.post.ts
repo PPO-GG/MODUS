@@ -8,7 +8,7 @@
  */
 import { getRepos } from "../../utils/db";
 import { requireModuleAccess } from "../../utils/session";
-import { parseReviewBody } from "../../utils/suggestions";
+import { isArchivedThreadError, parseReviewBody } from "../../utils/suggestions";
 import { buildSuggestionMessage, isVotingLocked, STATUS_META } from "./_embed";
 import type { SuggestionStatus } from "./_embed";
 
@@ -80,13 +80,28 @@ export default defineEventHandler(async (event) => {
       votingLocked: isVotingLocked(updated.status as SuggestionStatus, closeVotingOnDecision),
       createdAtMs: updated.createdAt.getTime(),
     });
-    try {
-      // PATCH carries embeds + components only (no `content`).
-      await $fetch(`${DISCORD_API}/channels/${updated.channelId}/messages/${updated.messageId}`, {
+    const headers = { Authorization: `Bot ${botToken}`, "Content-Type": "application/json" };
+    // PATCH carries embeds + components only (no `content`).
+    const editMessage = () =>
+      $fetch(`${DISCORD_API}/channels/${updated.channelId}/messages/${updated.messageId}`, {
         method: "PATCH",
-        headers: { Authorization: `Bot ${botToken}`, "Content-Type": "application/json" },
+        headers,
         body: payload,
       });
+    try {
+      try {
+        await editMessage();
+      } catch (error: any) {
+        if (!isArchivedThreadError(error)) throw error;
+        // A forum suggestion is its thread's starter message and can't be edited while the
+        // thread is archived: un-archive once, then retry the edit once.
+        await $fetch(`${DISCORD_API}/channels/${updated.channelId}`, {
+          method: "PATCH",
+          headers,
+          body: { archived: false },
+        });
+        await editMessage();
+      }
       embedUpdated = true;
     } catch (error: any) {
       const code = error?.data?.code ?? error?.response?._data?.code;
