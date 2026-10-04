@@ -620,16 +620,26 @@ export type AutoRolesSettingsType = z.infer<typeof AutoRolesSettingsSchema>;
 // bot/modules/starboard/boards.ts). `emoji` is a unicode character or a
 // custom-emoji id.
 
-export const StarboardBoardSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1).max(80),
-  enabled: z.boolean().default(true),
-  emoji: z.string().min(1).max(64),
-  threshold: z.number().int().min(1).max(100),
-  channelId: z.string().min(1),
-  ignoredChannelIds: z.array(z.string().min(1)).max(100).default([]),
-  deleteBelowThreshold: z.boolean().default(false),
-});
+export const StarboardBoardSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1).max(80),
+    enabled: z.boolean().default(true),
+    emoji: z.string().min(1).max(64),
+    threshold: z.number().int().min(1).max(100),
+    channelId: z.string().min(1),
+    ignoredChannelIds: z.array(z.string().min(1)).max(100).default([]),
+    /** Allowlist of source channels (threads count as their parent); empty = every channel. */
+    watchedChannelIds: z.array(z.string().min(1)).max(100).default([]),
+    /** Seed this board's emoji on image messages in the watched channels. */
+    autoReact: z.boolean().default(false),
+    deleteBelowThreshold: z.boolean().default(false),
+  })
+  // An empty watch list means "every channel"; seeding all of them is never intended.
+  .refine((board) => !board.autoReact || board.watchedChannelIds.length > 0, {
+    message: "autoReact requires at least one watched channel",
+    path: ["autoReact"],
+  });
 
 export type StarboardBoard = z.infer<typeof StarboardBoardSchema>;
 

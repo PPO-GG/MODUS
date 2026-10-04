@@ -61,6 +61,8 @@ describe("isEligibleChannel", () => {
     threshold: 3,
     channelId: "board-chan",
     ignoredChannelIds: ["ignored"],
+    watchedChannelIds: [],
+    autoReact: false,
     deleteBelowThreshold: false,
     ...over,
   });
@@ -105,6 +107,37 @@ describe("isEligibleChannel", () => {
     expect(
       isEligibleChannel(board(), channel({ id: "thread-3", parentId: "other-board-chan" }), boardChannels),
     ).toBe(false);
+  });
+
+  it("treats an empty watch list as 'watch every channel'", () => {
+    expect(isEligibleChannel(board({ watchedChannelIds: [] }), channel({ id: "anywhere" }), boardChannels)).toBe(true);
+  });
+
+  it("with a watch list, accepts only the listed channels", () => {
+    const watching = board({ watchedChannelIds: ["gallery"] });
+    expect(isEligibleChannel(watching, channel({ id: "gallery" }), boardChannels)).toBe(true);
+    expect(isEligibleChannel(watching, channel({ id: "general" }), boardChannels)).toBe(false);
+  });
+
+  it("counts a thread as its parent channel for the watch list", () => {
+    const watching = board({ watchedChannelIds: ["gallery"] });
+    expect(
+      isEligibleChannel(watching, channel({ id: "thread-4", parentId: "gallery" }), boardChannels),
+    ).toBe(true);
+    expect(
+      isEligibleChannel(watching, channel({ id: "thread-5", parentId: "general" }), boardChannels),
+    ).toBe(false);
+  });
+
+  it("lets the ignored list win over the watch list", () => {
+    const both = board({ watchedChannelIds: ["gallery"], ignoredChannelIds: ["gallery"] });
+    expect(isEligibleChannel(both, channel({ id: "gallery" }), boardChannels)).toBe(false);
+  });
+
+  it("still rejects NSFW and board channels when they are on the watch list", () => {
+    const watching = board({ watchedChannelIds: ["gallery", "board-chan"] });
+    expect(isEligibleChannel(watching, channel({ id: "gallery", nsfw: true }), boardChannels)).toBe(false);
+    expect(isEligibleChannel(watching, channel({ id: "board-chan" }), boardChannels)).toBe(false);
   });
 });
 

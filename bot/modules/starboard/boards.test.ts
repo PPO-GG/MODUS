@@ -9,6 +9,8 @@ const board = (over: Record<string, unknown> = {}) => ({
   threshold: 3,
   channelId: "chan-1",
   ignoredChannelIds: [],
+  watchedChannelIds: [],
+  autoReact: false,
   deleteBelowThreshold: false,
   ...over,
 });
@@ -50,6 +52,8 @@ describe("parseStarboard", () => {
         threshold: 3,
         channelId: "c1",
         ignoredChannelIds: [],
+        watchedChannelIds: [],
+        autoReact: false,
         deleteBelowThreshold: false,
       },
     ]);
@@ -98,5 +102,36 @@ describe("parseStarboard", () => {
 
   it("returns an empty (non-null) id list for an explicit empty boards array", () => {
     expect(parseStarboard({ boards: [] }).allBoardIds).toEqual([]);
+  });
+
+  it("parses a board stored before watch lists existed, with the new defaults", () => {
+    const { boards } = parseStarboard({
+      boards: [{ id: "old", name: "S", emoji: "⭐", threshold: 3, channelId: "c1", ignoredChannelIds: [] }],
+    });
+    expect(boards).toHaveLength(1);
+    expect(boards[0]!.watchedChannelIds).toEqual([]);
+    expect(boards[0]!.autoReact).toBe(false);
+  });
+
+  it("keeps watched channels and autoReact when a channel is chosen", () => {
+    const { boards } = parseStarboard({
+      boards: [board({ watchedChannelIds: ["gallery"], autoReact: true })],
+    });
+    expect(boards[0]).toMatchObject({ watchedChannelIds: ["gallery"], autoReact: true });
+  });
+
+  it("rejects autoReact with no watched channels but still reports the board id", () => {
+    const parsed = parseStarboard({
+      boards: [board({ id: "all-seeding", autoReact: true, watchedChannelIds: [] })],
+    });
+    expect(parsed.boards).toEqual([]);
+    expect(parsed.invalidCount).toBe(1);
+    expect(parsed.allBoardIds).toEqual(["all-seeding"]);
+  });
+
+  it("caps the watch list at 100 channels", () => {
+    const ids = (n: number) => Array.from({ length: n }, (_, i) => `c${i}`);
+    expect(parseStarboard({ boards: [board({ watchedChannelIds: ids(101) })] }).boards).toEqual([]);
+    expect(parseStarboard({ boards: [board({ watchedChannelIds: ids(100) })] }).boards).toHaveLength(1);
   });
 });

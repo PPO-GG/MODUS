@@ -50,6 +50,12 @@ export function isEligibleChannel(
   if (boardChannelIds.has(channel.id)) return false;
   if (board.ignoredChannelIds.includes(channel.id)) return false;
   if (channel.parentId !== null && board.ignoredChannelIds.includes(channel.parentId)) return false;
+  if (board.watchedChannelIds.length > 0) {
+    const watched =
+      board.watchedChannelIds.includes(channel.id) ||
+      (channel.parentId !== null && board.watchedChannelIds.includes(channel.parentId));
+    if (!watched) return false;
+  }
   // A thread started on a board post lives under the board channel.
   if (channel.parentId !== null && boardChannelIds.has(channel.parentId)) return false;
   return true;
