@@ -102,13 +102,18 @@
           </UFormField>
         </div>
 
-        <UFormField label="Model" required class="w-full">
+        <UFormField
+          label="Model"
+          :required="!!settings.aiApiKey"
+          :description="settings.aiApiKey ? undefined : 'Hosted AI uses the model the bot owner picked. Add your own key to choose one.'"
+          class="w-full"
+        >
           <div class="flex gap-2">
             <USelectMenu
               v-model="settings.aiModel"
               :items="availableModels"
               :loading="modelsLoading"
-              :disabled="modelsLoading"
+              :disabled="modelsLoading || !settings.aiApiKey"
               :search-input="{ placeholder: 'Search models…' }"
               placeholder="Select a model…"
               icon="i-lucide-brain"
@@ -119,6 +124,7 @@
               color="neutral"
               variant="soft"
               :loading="modelsLoading"
+              :disabled="!settings.aiApiKey"
               aria-label="Fetch available models"
               @click="fetchModels"
             />
@@ -760,12 +766,14 @@ async function toggleModule(enabled: boolean) {
 }
 
 async function fetchModels() {
-  modelsLoading.value = true;
   modelsWarning.value = "";
+  // Without a guild key the bot uses the admin's provider/model, so the
+  // guild's model choice is moot — don't probe the provider with no key.
+  if (!settings.value.aiApiKey) return;
+  modelsLoading.value = true;
 
-  // If using shared key fallback, use bot's provider; otherwise use configured one
   const provider = settings.value.aiProvider;
-  const apiKey = settings.value.aiApiKey || "__validate_only__";
+  const apiKey = settings.value.aiApiKey;
 
   try {
     const res = await $fetch<{ models: string[]; warning?: string }>(
