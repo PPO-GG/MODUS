@@ -89,6 +89,12 @@ export function validateBoard(board: BoardDraft, others: BoardDraft[]): string |
     return `Watch at most ${MAX_WATCHED_CHANNELS} channels.`;
   if (board.autoReact && board.watchedChannelIds.length === 0)
     return "Pick at least one watched channel to turn on vote reactions.";
+  // The bot never treats a board channel as a source, so watching one silently does nothing.
+  const boardChannelIds = new Set([board.channelId, ...others.map((o) => o.channelId)]);
+  if (board.watchedChannelIds.some((id) => boardChannelIds.has(id)))
+    return "A board channel can't be a watched channel. Post this board somewhere else, or stop watching it.";
+  if (others.some((o) => o.watchedChannelIds.includes(board.channelId)))
+    return "Another board watches this channel, so it can't be a board channel.";
   const clash = others.some(
     (o) =>
       o.channelId === board.channelId &&

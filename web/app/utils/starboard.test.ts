@@ -124,6 +124,19 @@ describe("validateBoard", () => {
     expect(validateBoard({ ...valid(), autoReact: false, watchedChannelIds: [] }, [])).toBeNull();
   });
 
+  it("rejects watching the board's own channel", () => {
+    expect(validateBoard({ ...valid(), watchedChannelIds: ["gallery", "chan-1"] }, [])).toMatch(
+      /board channel/i,
+    );
+  });
+
+  it("rejects watching another board's channel, and posting into a channel another board watches", () => {
+    const other = { ...valid(), id: "b2", channelId: "fame", watchedChannelIds: ["gallery"] };
+    expect(validateBoard({ ...valid(), watchedChannelIds: ["fame"] }, [other])).toMatch(/board channel/i);
+    expect(validateBoard({ ...valid(), channelId: "gallery" }, [other])).toMatch(/watches/i);
+    expect(validateBoard({ ...valid(), watchedChannelIds: ["gallery"] }, [other])).toBeNull();
+  });
+
   it("rejects the same emoji + channel as another board, treating ❤ and ❤️ as equal", () => {
     const other = { ...valid(), id: "b2", emoji: "❤" };
     const draft = { ...valid(), emoji: "❤️" };
