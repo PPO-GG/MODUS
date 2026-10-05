@@ -11,6 +11,13 @@ import { BotModule, ModuleManager } from "../ModuleManager";
 import { AISettingsSchema } from "../lib/schemas";
 import { parseSettings } from "../lib/validateSettings";
 import { buildSystemPrompt } from "../lib/aiPrompt";
+import {
+  emptyReplyMessage,
+  isTruncated,
+  raisedOutputBudget,
+  reasoningOffOptions,
+  stripReasoning,
+} from "../lib/aiReasoning";
 import { AiTool, collectAiTools, toOpenAiTools, toAnthropicTools } from "../lib/aiTools";
 import { getWeather } from "../lib/weather";
 
@@ -59,6 +66,7 @@ interface ToolCall {
 interface LLMResponse {
   content: string;
   tool_calls?: ToolCall[]; // Array of tool calls made by the model
+  finish_reason?: string; // Provider's raw stop reason ("stop", "length", "max_tokens", …)
   input_tokens: number;
   output_tokens: number;
 }
@@ -305,24 +313,24 @@ async function callLLM(
     };
 
     const response = await anthropic.messages.create(createParams);
+    const finish_reason = response.stop_reason ?? undefined;
 
-    // Check for tool use
-    if (tools.length && response.stop_reason === "tool_use") {
-      const toolBlocks = response.content.filter((b) => b.type === "tool_use") as Anthropic.ToolUseBlock[];
+    // Check for tool use. A tool_use block cut off by max_tokens has incomplete
+    // input, so treat that as truncation (the caller retries with more room).
+    const toolBlocks = response.content.filter((b) => b.type === "tool_use") as Anthropic.ToolUseBlock[];
+    if (tools.length && toolBlocks.length > 0 && !isTruncated(finish_reason)) {
       const textBlock = response.content.find((b) => b.type === "text") as Anthropic.TextBlock | undefined;
-
-      if (toolBlocks.length > 0) {
-        return {
-          content: textBlock?.text ?? "",
-          tool_calls: toolBlocks.map((b) => ({
-            id: b.id,
-            name: b.name,
-            args: b.input as Record<string, unknown>,
-          })),
-          input_tokens: response.usage.input_tokens,
-          output_tokens: response.usage.output_tokens,
-        };
-      }
+      return {
+        content: textBlock?.text ?? "",
+        tool_calls: toolBlocks.map((b) => ({
+          id: b.id,
+          name: b.name,
+          args: b.input as Record<string, unknown>,
+        })),
+        finish_reason,
+        input_tokens: response.usage.input_tokens,
+        output_tokens: response.usage.output_tokens,
+      };
     }
 
     const textBlock = response.content.find((b) => b.type === "text") as
@@ -330,6 +338,7 @@ async function callLLM(
       | undefined;
     return {
       content: textBlock?.text ?? "",
+      finish_reason,
       input_tokens: response.usage.input_tokens,
       output_tokens: response.usage.output_tokens,
     };
@@ -341,11 +350,17 @@ async function callLLM(
     baseURL: resolveBaseUrl(provider, baseUrl),
   });
 
-  const response = await openai.chat.completions.create({
+  const reasoningOff = reasoningOffOptions(provider, model);
+  const baseParams = {
     model,
     max_tokens: maxOutputTokens,
     messages: [
-      { role: "system" as const, content: systemPrompt },
+      {
+        role: "system" as const,
+        content: reasoningOff.systemSuffix
+          ? `${systemPrompt}\n\n${reasoningOff.systemSuffix}`
+          : systemPrompt,
+      },
       ...conversationMessages.map((m) => {
         if (m.role === "tool") {
           return {
@@ -372,16 +387,41 @@ async function callLLM(
       }),
     ],
     ...(tools.length ? { tools: toOpenAiTools(tools), tool_choice: "auto" } : {}),
-  });
+  };
+
+  let response: OpenAI.Chat.Completions.ChatCompletion;
+  try {
+    // The reasoning fields aren't in the SDK's param types (and vary by provider).
+    response = (await openai.chat.completions.create({
+      ...baseParams,
+      ...reasoningOff.body,
+    } as any)) as OpenAI.Chat.Completions.ChatCompletion;
+  } catch (err: any) {
+    // A provider that rejects the reasoning switch for this model shouldn't
+    // take the whole reply down — retry once without it.
+    if (err?.status !== 400 || Object.keys(reasoningOff.body).length === 0) throw err;
+    _moduleManager?.logger.warn(
+      `Provider rejected reasoning options ${JSON.stringify(reasoningOff.body)} for ${provider}/${model}; retrying without them: ${err?.message}`,
+      undefined,
+      "ai",
+    );
+    response = (await openai.chat.completions.create(
+      baseParams as any,
+    )) as OpenAI.Chat.Completions.ChatCompletion;
+  }
 
   const choice = response.choices[0];
   const usage = response.usage;
+  const finish_reason = choice?.finish_reason ?? undefined;
+  const content = stripReasoning(choice?.message?.content ?? "");
 
-  // Check for tool call response
+  // Check for tool call response. Don't gate on finish_reason === "tool_calls":
+  // Gemini's OpenAI endpoint and several local servers report "stop" alongside
+  // real tool calls. Truncated calls carry cut-off JSON args, so skip those.
   if (
     tools.length &&
-    choice?.finish_reason === "tool_calls" &&
-    choice.message?.tool_calls?.length
+    choice?.message?.tool_calls?.length &&
+    !isTruncated(finish_reason)
   ) {
     const tool_calls = choice.message.tool_calls.map((tc: any) => {
       let args: Record<string, unknown> = {};
@@ -397,15 +437,17 @@ async function callLLM(
       };
     });
     return {
-      content: choice.message.content ?? "",
+      content,
       tool_calls,
+      finish_reason,
       input_tokens: usage?.prompt_tokens ?? 0,
       output_tokens: usage?.completion_tokens ?? 0,
     };
   }
 
   return {
-    content: choice?.message?.content ?? "",
+    content,
+    finish_reason,
     input_tokens: usage?.prompt_tokens ?? 0,
     output_tokens: usage?.completion_tokens ?? 0,
   };
@@ -740,11 +782,25 @@ const aiModule: BotModule = {
       case "status": {
         const isEnabled = await db.isModuleEnabled(guildId, "ai");
         const settings = await db.getModuleSettings(guildId, "ai");
-        const merged: AIModuleSettings =
-          parseSettings(AISettingsSchema, settings, "ai", guildId) ??
-          DEFAULT_SETTINGS;
+        const merged: AIModuleSettings = {
+          ...(parseSettings(AISettingsSchema, settings, "ai", guildId) ??
+            DEFAULT_SETTINGS),
+        };
         const isPremium = await db.isGuildPremium(guildId);
         const hasOwnKey = !!merged.aiApiKey;
+
+        // On the shared key the bot answers with the admin's provider/model
+        // (see messageCreate), so show those rather than the guild's leftovers.
+        if (!hasOwnKey && isPremium) {
+          const globalConfig = await db.getGlobalAIConfig();
+          if (globalConfig?.aiApiKey) {
+            merged.aiProvider = globalConfig.aiProvider ?? "Groq";
+            merged.aiModel = globalConfig.aiModel ?? "llama-3.3-70b-versatile";
+          } else if (process.env.AI_API_KEY) {
+            merged.aiProvider = (process.env.AI_PROVIDER as AIProvider) ?? "Groq";
+            merged.aiModel = process.env.AI_MODEL ?? "llama-3.3-70b-versatile";
+          }
+        }
 
         const keyStatus = hasOwnKey
           ? "✅ Using guild-provided API key"
@@ -837,30 +893,23 @@ export function registerAIEvents(moduleManager: ModuleManager) {
         if (globalConfig?.aiApiKey) {
           apiKey = globalConfig.aiApiKey;
           keySource = "shared";
-          // Guild's explicitly saved provider/model/baseUrl take priority over the global
-          // admin config. We check `savedSettings` (raw DB doc) because `settings` is always
-          // fully populated with defaults post-merge, making a falsy check unreliable.
+          // Provider/model/baseUrl always come from the admin config here, never the
+          // guild's saved values: a model name is only valid for the provider that owns
+          // the key. Guild values linger after a guild removes its own key (and the
+          // dashboard saves defaults even if never touched), so honoring them sends the
+          // shared key to the wrong provider/model → "model not found".
           // The guild's systemPrompt is ALWAYS used regardless of key source.
-          if (!savedSettings.aiProvider)
-            settings.aiProvider = globalConfig.aiProvider ?? "Groq";
-          if (!savedSettings.aiModel)
-            settings.aiModel =
-              globalConfig.aiModel ?? "llama-3.3-70b-versatile";
-          if (!savedSettings.aiBaseUrl && globalConfig.aiBaseUrl)
-            settings.aiBaseUrl = globalConfig.aiBaseUrl;
+          settings.aiProvider = globalConfig.aiProvider ?? "Groq";
+          settings.aiModel = globalConfig.aiModel ?? "llama-3.3-70b-versatile";
+          settings.aiBaseUrl = globalConfig.aiBaseUrl ?? "";
         } else if (process.env.AI_API_KEY) {
           // 2️⃣ Fall back to bot .env vars — guild's systemPrompt is still honored.
+          // Same rule as above: the key's owner picks the provider/model.
           apiKey = process.env.AI_API_KEY;
           keySource = "shared";
-          // Only apply env-level defaults if the guild hasn't explicitly set their own values.
-          if (!savedSettings.aiProvider)
-            settings.aiProvider =
-              (process.env.AI_PROVIDER as AIProvider) ?? "Groq";
-          if (!savedSettings.aiModel)
-            settings.aiModel =
-              process.env.AI_MODEL ?? "llama-3.3-70b-versatile";
-          if (!savedSettings.aiBaseUrl && process.env.AI_BASE_URL)
-            settings.aiBaseUrl = process.env.AI_BASE_URL;
+          settings.aiProvider = (process.env.AI_PROVIDER as AIProvider) ?? "Groq";
+          settings.aiModel = process.env.AI_MODEL ?? "llama-3.3-70b-versatile";
+          settings.aiBaseUrl = process.env.AI_BASE_URL ?? "";
         } else {
           await message.reply(
             "⚠️ This server has Premium but no AI key is configured. Please ask the Discord Server Owner to set one in the server settings.",
@@ -982,6 +1031,9 @@ export function registerAIEvents(moduleManager: ModuleManager) {
       let totalOutputTokens = 0;
       let iterations = 0;
       const MAX_ITERATIONS = 5;
+      // Raised once if a reply comes back empty because it hit the token cap.
+      let outputBudget = settings.maxOutputTokens;
+      let budgetRaised = false;
 
       while (iterations < MAX_ITERATIONS) {
         iterations++;
@@ -997,7 +1049,7 @@ export function registerAIEvents(moduleManager: ModuleManager) {
           apiKey,
           settings.aiModel,
           llmMessages,
-          settings.maxOutputTokens,
+          outputBudget,
           settings.aiBaseUrl || undefined,
           aiTools,
         );
@@ -1053,9 +1105,24 @@ export function registerAIEvents(moduleManager: ModuleManager) {
           // Append tool results to message history and loop again
           llmMessages.push(...toolResults);
 
-        } else {
+        } else if (result.content) {
           // No tool calls, we have our final text reply
-          reply = result.content || "🤔 I got nothing on that one.";
+          reply = result.content;
+          break;
+        } else {
+          moduleManager.logger.warn(
+            `Empty LLM reply (iter ${iterations}): finish_reason=${result.finish_reason ?? "?"}, output_tokens=${result.output_tokens}, budget=${outputBudget}, model=${settings.aiProvider}/${settings.aiModel}`,
+            guildId,
+            "ai",
+          );
+          // Usually a reasoning model that spent the whole budget thinking —
+          // give it one more try with room to actually answer.
+          if (isTruncated(result.finish_reason) && !budgetRaised) {
+            budgetRaised = true;
+            outputBudget = raisedOutputBudget(settings.maxOutputTokens);
+            continue;
+          }
+          reply = emptyReplyMessage(result.finish_reason);
           break;
         }
       }
