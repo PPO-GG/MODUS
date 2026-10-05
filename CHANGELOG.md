@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.34.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.34.0...modus-v1.34.1) (2026-10-05)
+
+
+### 🐛 Bug Fixes
+
+* **bot:** stop empty AI replies and wrong model on the shared key ([352e394](https://github.com/PPO-GG/MODUS/commit/352e394e06f2eb4c568ce66d96244d8765123332))
+* **web:** block watching a starboard's own board channel ([42e74ea](https://github.com/PPO-GG/MODUS/commit/42e74eaa4915f90db7d7e35f5482a0099cd883df))
+* **web:** lock the AI model picker when using the hosted key ([49feb1d](https://github.com/PPO-GG/MODUS/commit/49feb1df2c737cd08b6539819693c9aa6fded9e3))
+
 ## [1.34.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.33.0...modus-v1.34.0) (2026-10-05)
 
 
