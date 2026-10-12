@@ -359,6 +359,7 @@ describe('applyFix', () => {
   })
 
   it('maps a Discord 403 on the write to a clear 403 without leaking the token', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const world = makeWorld()
     const hash = await previewHash(world)
     resetBotUserIdCache()
@@ -372,6 +373,10 @@ describe('applyFix', () => {
     expect(error.message).toContain('Missing Permissions')
     expect(error.message).not.toContain('SECRET-TOKEN')
     expect(deps.logs.log).not.toHaveBeenCalled()
+    // The refused write is recorded server-side for diagnosis, still without the token.
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn.mock.calls[0]!.join(' ')).not.toContain('SECRET-TOKEN')
+    warn.mockRestore()
   })
 })
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-6xl space-y-6 pb-24">
+  <div class="mx-auto max-w-6xl space-y-6">
     <DashboardModuleHeader
       :guild-id="guildId"
       icon="i-lucide-door-open"
@@ -116,24 +116,33 @@
       </div>
     </template>
 
-    <!-- Sticky footer -->
-    <div
-      v-if="state"
-      class="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[rgba(3,7,18,0.9)] backdrop-blur"
-    >
-      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <p class="text-sm text-gray-200">
-          <template v-if="editCount === 0">No pending changes.</template>
-          <template v-else>
-            {{ editCount }} channel{{ editCount === 1 ? "" : "s" }} edited<span v-if="cascadeCount">, plus {{ cascadeCount }} via categor{{ cascadeCount === 1 ? "y" : "ies" }}</span>
-            <span v-if="incompleteEdits" class="ml-2 text-xs text-amber-200">— choose roles for every edited channel</span>
-          </template>
-        </p>
-        <div class="flex items-center gap-2">
-          <UButton color="neutral" variant="ghost" size="sm" :disabled="editCount === 0" @click="clearEdits()">Discard edits</UButton>
-          <UButton color="primary" icon="i-lucide-eye" :disabled="!canReview || incompleteEdits" @click="openPreview()">Review changes</UButton>
+    <!--
+      Pending-changes bar. Same zero-cost sticky anchor as DashboardModuleSaveBar:
+      always in the flow inside the content column, so it never spans the sidebar
+      and appearing/disappearing never changes the page height.
+    -->
+    <div v-if="state" class="pointer-events-none sticky bottom-6 z-20 h-14">
+      <Transition name="save-bar">
+        <div
+          v-if="editCount > 0"
+          class="pointer-events-auto absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 rounded-full border border-amber-400/40 bg-[rgba(3,7,18,0.88)] py-2 pl-5 pr-2 shadow-[0_0_20px_rgba(251,191,36,0.25)] backdrop-blur-xl"
+          role="status"
+        >
+          <p class="flex items-center gap-2 text-sm text-amber-200">
+            <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
+            <span>
+              {{ editCount }} channel{{ editCount === 1 ? "" : "s" }} edited<span v-if="cascadeCount">, plus {{ cascadeCount }} via categor{{ cascadeCount === 1 ? "y" : "ies" }}</span>
+            </span>
+            <span v-if="incompleteEdits" class="hidden text-xs sm:inline">— choose roles for every edited channel</span>
+          </p>
+          <div class="flex items-center gap-2 whitespace-nowrap">
+            <UButton color="neutral" variant="ghost" size="sm" @click="clearEdits()">Discard</UButton>
+            <UButton color="primary" size="sm" icon="i-lucide-eye" :disabled="!canReview || incompleteEdits" @click="openPreview()">
+              <span>Review<span class="hidden sm:inline"> changes</span></span>
+            </UButton>
+          </div>
         </div>
-      </div>
+      </Transition>
     </div>
 
     <DashboardPermissionPlanModal
@@ -206,3 +215,23 @@ onMounted(() => {
 });
 onBeforeUnmount(() => window.removeEventListener("beforeunload", beforeUnload));
 </script>
+
+<style scoped>
+.save-bar-enter-active,
+.save-bar-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+.save-bar-enter-from,
+.save-bar-leave-to {
+  opacity: 0;
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .save-bar-enter-active,
+  .save-bar-leave-active {
+    transition: none;
+  }
+}
+</style>

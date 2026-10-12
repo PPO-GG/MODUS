@@ -222,9 +222,24 @@ export async function previewPlan(
   }
 }
 
-function mapWriteError(err: any): FixError {
+/** "#general (@everyone)" / "#general (Staff)" / "#general (all overwrites)" for error messages and logs. */
+function describeChange(change: FixChange): string {
+  if (change.op === 'replace-overwrites') return `#${change.channelName} (all overwrites)`
+  const label = change.after[0]?.label ?? change.before[0]?.label ?? change.targetId ?? 'overwrite'
+  return `#${change.channelName} (${label})`
+}
+
+function mapWriteError(err: any, change: FixChange): FixError {
   const status = err?.status ?? err?.statusCode
   const reason = typeof err?.data?.message === 'string' ? err.data.message : ''
+  // The user only sees a one-line summary; keep Discord's answer (status, error
+  // code, message) in the server log so a refused write can be diagnosed.
+  console.warn(
+    `[Permission plan] ${change.op} on ${describeChange(change)} (channel ${change.channelId}) failed:`,
+    status,
+    err?.data?.code ?? '',
+    reason || err?.message || err,
+  )
   if (status === 403) {
     return new FixError(
       403,
@@ -260,7 +275,7 @@ async function writeChange(deps: FixDeps, change: FixChange): Promise<void> {
       })
     }
   } catch (err) {
-    throw mapWriteError(err)
+    throw mapWriteError(err, change)
   }
 }
 
@@ -320,7 +335,7 @@ export async function applyPlan(
     await writeLog(deps, ctx, plan, options, applied)
     throw new FixError(
       failure.status,
-      `${applied} of ${plan.changes.length} changes were applied before it stopped: ${failure.message}`,
+      `${applied} of ${plan.changes.length} changes were applied before it stopped at ${describeChange(plan.changes[applied]!)}: ${failure.message}`,
       applied,
     )
   }
