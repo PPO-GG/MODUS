@@ -1,5 +1,5 @@
 import type { ChannelLike, RoleLike } from '../../../shared/discord-permissions'
-import type { FixPlan, PresetStats } from '../../../shared/permission-audit-types'
+import type { FixPlan, AccessStats } from '../../../shared/permission-audit-types'
 
 export interface AuditModule {
   /** Module key as stored in `guild_configs.module_name` (lowercase). */
@@ -26,7 +26,7 @@ export interface AuditInput {
 export interface PlanDerivation {
   plan: FixPlan | null
   problems: string[]
-  stats?: PresetStats
+  stats?: AccessStats
 }
 
 /** Derives a plan from the audit input. Pure. */

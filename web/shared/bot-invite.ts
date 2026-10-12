@@ -34,8 +34,8 @@ export const INVITE_PERMISSION_NAMES: PermissionName[] = [
   // Tickets (private threads), suggestion discussion threads, and polls.
   'CreatePrivateThreads',
   'ManageThreads',
-  // Permission presets can let staff roles create public threads in read-only channels,
-  // and a bot can only grant permissions it holds itself.
+  // The Channel Access editor can let poster roles create public threads in read-only
+  // channels, and a bot can only grant permissions it holds itself.
   'CreatePublicThreads',
   'PinMessages',
   'SendPolls',

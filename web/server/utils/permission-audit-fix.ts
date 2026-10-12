@@ -1,5 +1,5 @@
 /**
- * Preview and apply for permission plans (audit fixes and presets). Re-derives
+ * Preview and apply for permission plans (audit fixes and channel access edits). Re-derives
  * the plan from fresh Discord data on every call, checks the caller's live
  * Discord authority and the bot's capability, performs the writes through an
  * injected client, and logs the previous overwrites. No Nitro globals, so it is
@@ -21,7 +21,7 @@ import type {
   FixPlan,
   FixPreview,
   FixResult,
-  PresetStats,
+  AccessStats,
 } from '../../shared/permission-audit-types'
 import type { DiscordGet } from './discord-guild-context'
 import { describeUpstreamFailure } from './discord-upstream-error'
@@ -82,7 +82,7 @@ export interface FixContext extends PlanContext {
   findingId: string
 }
 
-/** Wording that differs between audit fixes and presets. */
+/** Wording that differs between audit fixes and channel access edits. */
 export interface PlanOptions {
   /** 404/409 message when the source derived no plan and gave no problems. */
   noPlanError: string
@@ -137,8 +137,8 @@ function blockersFor(plan: FixPlan, input: AuditInput): string[] {
   const add = (message: string) => {
     if (!blockers.includes(message)) blockers.push(message)
   }
-  // Audit fixes keep their original wording; presets say "preset".
-  const what = plan.findingId.startsWith('preset:') ? 'this preset' : 'this fix'
+  // Audit fixes keep their original wording; channel access edits say "this change".
+  const what = plan.findingId.startsWith('access:') ? 'this change' : 'this fix'
 
   // Guild-wide capability.
   const needed: PermissionName[] = ['ManageRoles']
@@ -194,7 +194,7 @@ function blockersFor(plan: FixPlan, input: AuditInput): string[] {
   return blockers
 }
 
-async function loadAndAuthorize(deps: FixDeps, ctx: PlanContext): Promise<AuditInput> {
+export async function loadAndAuthorize(deps: FixDeps, ctx: PlanContext): Promise<AuditInput> {
   const input = await loadAuditInput(ctx.guildId, deps.botToken, deps.get, deps.configs)
   if (!(await hasGuildAuthority(deps, ctx, input))) {
     throw new FixError(
@@ -210,7 +210,7 @@ export async function previewPlan(
   ctx: PlanContext,
   source: PlanSource,
   noPlanBlocker: string,
-): Promise<FixPreview & { stats?: PresetStats }> {
+): Promise<FixPreview & { stats?: AccessStats }> {
   const input = await loadAndAuthorize(deps, ctx)
   const { plan, problems, stats } = source(input)
   const blockers = plan === null ? (problems.length > 0 ? problems : [noPlanBlocker]) : blockersFor(plan, input)

@@ -168,6 +168,8 @@ export interface ChannelLike {
   name: string
   type: number
   parent_id?: string | null
+  /** Sort order within its parent; present when loaded from Discord. */
+  position?: number
   permission_overwrites?: OverwriteLike[]
 }
 

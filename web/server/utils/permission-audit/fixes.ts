@@ -52,8 +52,8 @@ const statesOf = (input: AuditInput, channel: ChannelLike): OverwriteState[] =>
 /**
  * Hash of the raw data only (never labels or names), so a role rename does not
  * invalidate a preview. `extra` mixes in request inputs that are not visible in
- * the changes (preset slot roles, selected channels); omitting it leaves the
- * hash identical to what plans produced before presets existed.
+ * the changes (channel access edits); omitting it leaves the hash identical
+ * to what plans produced before `extra` existed.
  */
 export function hashPlan(findingId: string, changes: FixChange[], extra?: unknown): string {
   const raw = (o: OverwriteState) => [o.id, o.type, o.allow, o.deny]

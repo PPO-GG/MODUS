@@ -3,7 +3,7 @@
     <template #content>
       <div class="max-h-[90vh] space-y-5 overflow-y-auto p-6">
         <header class="space-y-1">
-          <h2 class="text-lg font-bold text-white">Apply "{{ presetLabel }}"</h2>
+          <h2 class="text-lg font-bold text-white">{{ title }}</h2>
           <p class="text-sm text-gray-400">Review exactly what will change before anything is written.</p>
         </header>
 
@@ -16,7 +16,10 @@
           <p class="text-sm text-gray-200">{{ state.preview.plan.summary }}</p>
           <ul v-if="state.preview.stats" class="flex flex-wrap gap-2 text-xs">
             <li class="rounded-full bg-white/[0.06] px-3 py-1 text-gray-200">
-              {{ state.preview.stats.channels }} channel{{ state.preview.stats.channels === 1 ? "" : "s" }}
+              {{ state.preview.stats.channels }} edited
+            </li>
+            <li v-if="state.preview.stats.cascaded" class="rounded-full bg-white/[0.06] px-3 py-1 text-gray-200">
+              {{ state.preview.stats.cascaded }} via categor{{ state.preview.stats.cascaded === 1 ? "y" : "ies" }}
             </li>
             <li class="rounded-full bg-emerald-400/15 px-3 py-1 text-emerald-200">
               {{ state.preview.stats.changed }} will change
@@ -25,12 +28,12 @@
               {{ state.preview.stats.unchanged }} already match
             </li>
             <li class="rounded-full bg-white/[0.06] px-3 py-1 text-gray-300">
-              {{ state.preview.stats.changes }} overwrite change{{ state.preview.stats.changes === 1 ? "" : "s" }}
+              {{ state.preview.stats.changes }} write{{ state.preview.stats.changes === 1 ? "" : "s" }}
             </li>
           </ul>
-          <p v-if="hasCategory" class="text-xs text-gray-400">
-            Categories only change their own permissions. Channels inside a category are not changed; select
-            them too to change them.
+          <p v-if="cascaded > 0" class="text-xs text-gray-400">
+            Channels synced with an edited category get a copy of the category's permissions so they stay synced.
+            Channels with their own permissions are not changed unless you edited them.
           </p>
           <DashboardPermissionChangeList :changes="state.preview.plan.changes" grouped />
         </template>
@@ -74,7 +77,7 @@
             :disabled="!state.preview?.canApply || state.applying || state.loading"
             @click="emit('confirm')"
           >
-            Apply preset
+            Apply changes
           </UButton>
         </footer>
       </div>
@@ -83,16 +86,17 @@
 </template>
 
 <script setup lang="ts">
-import type { PresetPreviewState } from "~/composables/usePermissionPresets";
+import type { PlanModalState } from "~/composables/useChannelAccess";
 
 const props = defineProps<{
-  state: PresetPreviewState;
-  presetLabel: string;
-  hasCategory: boolean;
+  state: PlanModalState;
+  title: string;
+  /** Synced children that follow an edited category (drives the explanatory note). */
+  cascaded: number;
 }>();
 const emit = defineEmits<{ confirm: []; close: [] }>();
 
-// Escape / outside click arrive here as open=false. While a preset is being applied the modal must
+// Escape / outside click arrive here as open=false. While applying the modal must
 // stay open: closing it mid-request would discard the in-flight state.
 const onOpenChange = (open: boolean) => {
   if (!open && !props.state.applying) emit("close");

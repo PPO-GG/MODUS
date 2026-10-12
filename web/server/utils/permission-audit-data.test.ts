@@ -62,6 +62,7 @@ describe('loadAuditInput', () => {
       name: 'general',
       type: 0,
       parent_id: null,
+      position: 0,
       permission_overwrites: [{ id: '100', type: 0, allow: '0', deny: '1024' }],
     })
   })
