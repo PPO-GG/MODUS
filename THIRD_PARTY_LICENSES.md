@@ -589,7 +589,7 @@ pnpm run licenses:generate
 - **safe-stable-stringify** `2.5.0` — Ruben Bridgewater ([source](https://github.com/BridgeAR/safe-stable-stringify#readme))
 - **scule** `1.3.0` ([source](https://github.com/unjs/scule#readme))
 - **send** `1.2.1` — TJ Holowaychuk ([source](https://github.com/pillarjs/send#readme))
-- **seroval** `1.6.0` — Alexis Munsayac ([source](https://github.com/lxsmnsyc/seroval/tree/main/packages/seroval))
+- **seroval** `1.6.9` — Alexis Munsayac ([source](https://github.com/lxsmnsyc/seroval/tree/main/packages/seroval))
 - **serve-placeholder** `2.0.2` ([source](https://github.com/unjs/serve-placeholder#readme))
 - **serve-static** `2.2.1` — Douglas Christopher Wilson ([source](https://github.com/expressjs/serve-static#readme))
 - **setimmediate** `1.0.5` — YuzuJS ([source](https://github.com/YuzuJS/setImmediate#readme))
