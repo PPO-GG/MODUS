@@ -105,7 +105,7 @@ import type { FixChange, OverwriteState } from "#shared/permission-audit-types";
 
 const props = defineProps<{
   changes: FixChange[];
-  /** Group changes by channel into collapsible blocks (presets); otherwise one block per change. */
+  /** Group changes by channel into collapsible blocks (channel access); otherwise one block per change. */
   grouped?: boolean;
 }>();
 

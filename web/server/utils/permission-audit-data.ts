@@ -73,6 +73,7 @@ const toChannel = (c: Record<string, any>): ChannelLike => ({
   name: String(c.name ?? ''),
   type: Number(c.type ?? 0),
   parent_id: c.parent_id == null ? null : String(c.parent_id),
+  position: Number(c.position ?? 0),
   permission_overwrites: asArray(c.permission_overwrites).map(toOverwrite),
 })
 

@@ -67,3 +67,11 @@ export function makeInput(overrides: Partial<AuditInput> = {}): AuditInput {
     ...overrides,
   }
 }
+
+/** Type 15: the editor cannot edit forums, but a synced forum must still follow its category. */
+export const forumChannel = (
+  id: string,
+  name: string,
+  overwrites: OverwriteLike[] = [],
+  parentId: string | null = null,
+): ChannelLike => ({ id, name, type: 15, parent_id: parentId, permission_overwrites: overwrites })

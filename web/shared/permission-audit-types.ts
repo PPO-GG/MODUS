@@ -90,18 +90,20 @@ export interface FixResult {
   logged: boolean
 }
 
-/** Counts shown in the preset preview. */
-export interface PresetStats {
-  /** Channels selected. */
+/** Counts shown in the Channel Access preview. */
+export interface AccessStats {
+  /** Channels edited directly. */
   channels: number
-  /** Channels with at least one overwrite change. */
+  /** Synced children updated via their category. */
+  cascaded: number
+  /** Channels (direct or cascaded) with at least one write. */
   changed: number
-  /** Channels that already match the preset. */
+  /** Channels that already match. */
   unchanged: number
-  /** Total overwrite writes the apply would perform. */
+  /** Total writes the apply would perform. */
   changes: number
 }
 
-export interface PresetPreview extends FixPreview {
-  stats: PresetStats | null
+export interface AccessPreview extends FixPreview {
+  stats: AccessStats | null
 }
