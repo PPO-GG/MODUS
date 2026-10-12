@@ -534,7 +534,7 @@ pnpm run licenses:generate
 - **postcss-ordered-values** `8.0.1` — Ben Briggs ([source](https://github.com/cssnano/cssnano))
 - **postcss-reduce-initial** `8.0.1` — Ben Briggs ([source](https://github.com/cssnano/cssnano))
 - **postcss-reduce-transforms** `8.0.1` — Ben Briggs ([source](https://github.com/cssnano/cssnano))
-- **postcss-selector-parser** `7.1.4` ([source](https://github.com/postcss/postcss-selector-parser))
+- **postcss-selector-parser** `7.1.6` ([source](https://github.com/postcss/postcss-selector-parser))
 - **postcss-svgo** `8.0.1` — Ben Briggs ([source](https://github.com/cssnano/cssnano))
 - **postcss-unique-selectors** `8.0.1` — Ben Briggs ([source](https://github.com/cssnano/cssnano))
 - **postcss-value-parser** `4.2.0` — Bogdan Chadkin ([source](https://github.com/TrySound/postcss-value-parser))
