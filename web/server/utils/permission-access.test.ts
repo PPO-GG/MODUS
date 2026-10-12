@@ -206,6 +206,30 @@ describe('applyAccess', () => {
     expect(deps.logs.log.mock.calls[0]![0].message).toMatch(/^Channel access applied by 700: Change who can see and post in 2 channels\./)
   })
 
+  it('a partial failure names the write Discord refused and logs what was applied', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const world = makeWorld()
+    const deps = makeDeps(world)
+    const preview = await previewAccess(deps, ctx, [edit('cat', STAFF_ONLY)])
+    // Second write (the bot role's grant on #Team) is refused.
+    let call = 0
+    deps.request.mockImplementation(async () => {
+      call += 1
+      if (call === 2) throw Object.assign(new Error('Request failed with Bot SECRET-TOKEN'), { status: 403, data: { code: 50013, message: 'Missing Permissions' } })
+    })
+    const error = await applyAccess(deps, ctx, [edit('cat', STAFF_ONLY)], preview.plan!.hash).catch((e) => e)
+    expect(error).toMatchObject({ status: 403, applied: 1 })
+    expect(error.message).toBe(
+      '1 of 4 changes were applied before it stopped at #Team (MODUS): Discord refused the change: Missing Permissions. The bot may be missing a permission this change sets; change it manually in Discord.',
+    )
+    expect(error.message).not.toContain('SECRET-TOKEN')
+    expect(deps.logs.log.mock.calls[0]![0].message).toMatch(/^Channel access PARTIALLY applied \(1 of 4\) by 700/)
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0]![0])).toContain('#Team (MODUS)')
+    expect(warn.mock.calls[0]!.join(' ')).not.toContain('SECRET-TOKEN')
+    warn.mockRestore()
+  })
+
   it('refuses with 409 and zero writes when the hash does not match', async () => {
     const deps = makeDeps(makeWorld())
     await expect(applyAccess(deps, ctx, [edit('cat', STAFF_ONLY)], 'f'.repeat(64))).rejects.toMatchObject({
