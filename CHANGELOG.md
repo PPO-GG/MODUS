@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.35.0...modus-v1.35.1) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **web:** pending-changes pill and named partial-failure errors in channel access ([#136](https://github.com/PPO-GG/MODUS/issues/136)) ([fd702f5](https://github.com/PPO-GG/MODUS/commit/fd702f542c2e4fe88607e9037610ba4fe3a1ca64))
+
 ## [1.35.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.34.0...modus-v1.35.0) (2026-10-12)
 
 
