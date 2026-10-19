@@ -31,6 +31,7 @@ import { createMusicService } from "./music";
 import { botHealthResponse } from "./music/MusicMetrics";
 import { registerWebhookRoutes } from "./WebhookRouter";
 import { registerDocsAPI } from "./DocsAPI";
+import { sendGuildOnboarding } from "./lib/onboarding";
 
 dotenv.config();
 
@@ -581,6 +582,14 @@ client.on(Events.GuildCreate, async (guild) => {
       ownerId: guild.ownerId ?? null,
     });
     logger.info(`Joined guild: ${guild.name} (${guild.id})`);
+
+    // Only send onboarding greeting for real-time joins, not gateway restart replays
+    if (
+      client.isReady() &&
+      (!guild.joinedTimestamp || Date.now() - guild.joinedTimestamp < 120_000)
+    ) {
+      await sendGuildOnboarding(guild, client, logger);
+    }
   } catch (err) {
     logger.error(
       `Failed to register guild ${guild.id}`,

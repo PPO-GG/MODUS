@@ -29,12 +29,21 @@ const MODULE_ICONS: Record<string, string> = {
   ai: "🧠",
 };
 
+const PUBLIC_URL = (
+  process.env.PUBLIC_WEB_URL ||
+  process.env.DASHBOARD_URL ||
+  "https://modusbot.io"
+).replace(/\/$/, "");
+
+export function getDashboardUrl(guildId?: string | null): string {
+  return guildId ? `${PUBLIC_URL}/dashboard/${guildId}` : `${PUBLIC_URL}/dashboard`;
+}
+
 function getModuleIcon(name: string): string {
   return MODULE_ICONS[name.toLowerCase()] || "📦";
 }
 
 function buildV2HelpPage(pages: DocsModule[], pageIndex: number): any[] {
-
   const page = pages[pageIndex];
   const icon = getModuleIcon(page.name);
   const totalPages = pages.length;
@@ -53,10 +62,11 @@ function buildV2HelpPage(pages: DocsModule[], pageIndex: number): any[] {
   });
 }
 
-function buildInteractiveRows(
+export function buildInteractiveRows(
   pages: DocsModule[],
   pageIndex: number,
   disabled = false,
+  guildId?: string | null,
 ): ActionRowBuilder<any>[] {
   const totalPages = pages.length;
 
@@ -92,11 +102,17 @@ function buildInteractiveRows(
     .setStyle(ButtonStyle.Secondary)
     .setDisabled(disabled || pageIndex === totalPages - 1);
 
+  const dashboardButton = new ButtonBuilder()
+    .setLabel("Web Dashboard")
+    .setStyle(ButtonStyle.Link)
+    .setURL(getDashboardUrl(guildId));
+
   const row1 = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(categorySelect);
   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
     prevButton,
     pageIndicator,
     nextButton,
+    dashboardButton,
   );
 
   return [row1, row2];
@@ -104,26 +120,56 @@ function buildInteractiveRows(
 
 // ─── Module Export ────────────────────────────────────────────────────────
 
+const helpCommand = new SlashCommandBuilder()
+  .setName("help")
+  .setDescription("Browse all available modules and commands.")
+  .toJSON();
+
+const dashboardCommand = new SlashCommandBuilder()
+  .setName("dashboard")
+  .setDescription("Get a link to the MODUS web dashboard for this server.")
+  .toJSON();
+
 const helpModule: BotModule = {
   name: "help",
   description:
-    "Browse all available modules and commands in a private paginated view.",
+    "Browse all available modules and commands, or get a link to the web dashboard.",
   meta: {
-    displayName: "Help",
+    displayName: "Help & Dashboard",
     category: "utility",
     icon: "i-lucide-circle-question-mark",
     color: "gray",
-    tags: ["commands", "docs", "help", "list"],
+    tags: ["commands", "docs", "help", "list", "dashboard"],
   },
-  data: new SlashCommandBuilder()
-    .setName("help")
-    .setDescription("Browse all available modules and commands.")
-    .toJSON(),
+  commands: [helpCommand, dashboardCommand],
 
   execute: async (
     interaction: ChatInputCommandInteraction,
     moduleManager: ModuleManager,
   ) => {
+    if (interaction.commandName === "dashboard") {
+      const dashboardUrl = getDashboardUrl(interaction.guildId);
+      const v2Layout = buildV2Layout({
+        title: "🌐 MODUS Web Dashboard",
+        description:
+          `Manage server settings, configure modules, and view real-time stats directly from the web dashboard.\n\n🔗 [Open Web Dashboard](${dashboardUrl})`,
+        buttons: [
+          {
+            label: "Open Dashboard",
+            url: dashboardUrl,
+          },
+        ],
+        footer: "MODUS • Modular Discord Utility System",
+        useContainer: true,
+      });
+
+      await interaction.editReply({
+        components: v2Layout,
+        flags: MessageFlags.IsComponentsV2,
+      });
+      return;
+    }
+
     const pages = buildModuleCatalog(moduleManager, { includeHidden: true });
 
     if (pages.length === 0) {
@@ -136,7 +182,12 @@ const helpModule: BotModule = {
     let currentPage = 0;
 
     const v2Layout = buildV2HelpPage(pages, currentPage);
-    const interactiveRows = buildInteractiveRows(pages, currentPage);
+    const interactiveRows = buildInteractiveRows(
+      pages,
+      currentPage,
+      false,
+      interaction.guildId,
+    );
 
     const reply = await interaction.editReply({
       components: [...v2Layout, ...interactiveRows],
@@ -149,7 +200,10 @@ const helpModule: BotModule = {
     });
 
     collector.on("collect", async (componentInteraction) => {
-      if (componentInteraction.isStringSelectMenu() && componentInteraction.customId === "help_category_select") {
+      if (
+        componentInteraction.isStringSelectMenu() &&
+        componentInteraction.customId === "help_category_select"
+      ) {
         currentPage = parseInt(componentInteraction.values[0], 10);
       } else if (componentInteraction.isButton()) {
         if (componentInteraction.customId === "help_prev") {
@@ -160,7 +214,12 @@ const helpModule: BotModule = {
       }
 
       const updatedV2Layout = buildV2HelpPage(pages, currentPage);
-      const updatedRows = buildInteractiveRows(pages, currentPage);
+      const updatedRows = buildInteractiveRows(
+        pages,
+        currentPage,
+        false,
+        interaction.guildId,
+      );
 
       await componentInteraction.update({
         components: [...updatedV2Layout, ...updatedRows],
@@ -170,7 +229,12 @@ const helpModule: BotModule = {
 
     collector.on("end", async () => {
       try {
-        const disabledRows = buildInteractiveRows(pages, currentPage, true);
+        const disabledRows = buildInteractiveRows(
+          pages,
+          currentPage,
+          true,
+          interaction.guildId,
+        );
         const finalV2Layout = buildV2HelpPage(pages, currentPage);
         await interaction.editReply({
           components: [...finalV2Layout, ...disabledRows],
