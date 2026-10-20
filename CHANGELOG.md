@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.36.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.35.1...modus-v1.36.0) (2026-10-20)
+
+
+### ✨ Features
+
+* **bot:** add /dashboard command, help embed link, and guild onboarding greeting ([#138](https://github.com/PPO-GG/MODUS/issues/138)) ([ea810d8](https://github.com/PPO-GG/MODUS/commit/ea810d82fe3d0631619c59d13fc14c71f661f305))
+
 ## [1.35.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.35.0...modus-v1.35.1) (2026-10-12)
 
 
