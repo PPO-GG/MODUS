@@ -1,7 +1,7 @@
 # Third-Party Licenses
 
 MODUS is licensed under the MIT License (see [LICENSE](./LICENSE)). It depends on
-868 third-party packages, which are distributed under their own licenses. This
+863 third-party packages, which are distributed under their own licenses. This
 file is generated from production dependencies across the pnpm workspace (`bot`, `web`,
 `packages/db`) via `pnpm licenses list --prod --json`.
 
@@ -10,7 +10,7 @@ Regenerate with:
 pnpm run licenses:generate
 ```
 
-## MIT (695)
+## MIT (690)
 
 - **@adonisjs/hash** `9.1.1` — Harminder Virk ([source](https://github.com/adonisjs/hash#readme))
 - **@alloc/quick-lru** `5.2.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/quick-lru#readme))
@@ -74,8 +74,6 @@ pnpm run licenses:generate
 - **@jridgewell/source-map** `0.3.11` — Justin Ridgewell ([source](https://github.com/jridgewell/sourcemaps/tree/main/packages/source-map))
 - **@jridgewell/sourcemap-codec** `1.5.5, 1.6.0` — Justin Ridgewell ([source](https://github.com/jridgewell/sourcemaps/tree/main/packages/sourcemap-codec))
 - **@jridgewell/trace-mapping** `0.3.31` — Justin Ridgewell ([source](https://github.com/jridgewell/sourcemaps/tree/main/packages/trace-mapping))
-- **@kwsites/file-exists** `1.1.1` — Steve King ([source](https://github.com/kwsites/file-exists#readme))
-- **@kwsites/promise-deferred** `1.1.1` — Steve King ([source](https://github.com/kwsites/promise-deferred#readme))
 - **@napi-rs/canvas** `0.1.100` ([source](https://github.com/Brooooooklyn/canvas#readme))
 - **@napi-rs/canvas-linux-x64-gnu** `0.1.100` ([source](https://github.com/Brooooooklyn/canvas#readme))
 - **@napi-rs/lzma-linux-x64-gnu** `1.5.1` ([source](https://github.com/Brooooooklyn/lzma#readme))
@@ -86,9 +84,9 @@ pnpm run licenses:generate
 - **@nodelib/fs.walk** `1.2.8` ([source](https://github.com/nodelib/nodelib/tree/master#readme))
 - **@nuxt/cli** `3.37.0` ([source](https://github.com/nuxt/cli#readme))
 - **@nuxt/devalue** `2.0.2` ([source](https://github.com/nuxt/devalue#readme))
-- **@nuxt/devtools** `3.4.0` ([source](https://devtools.nuxt.com))
-- **@nuxt/devtools-kit** `3.4.0, 3.4.2, 4.0.0-alpha.7` ([source](https://devtools.nuxt.com/module/utils-kit))
-- **@nuxt/devtools-wizard** `3.4.0` ([source](https://devtools.nuxt.com))
+- **@nuxt/devtools** `3.4.4` ([source](https://devtools.nuxt.com))
+- **@nuxt/devtools-kit** `3.4.0, 3.4.2, 3.4.4, 4.0.0-alpha.7` ([source](https://devtools.nuxt.com/module/utils-kit))
+- **@nuxt/devtools-wizard** `3.4.4` ([source](https://devtools.nuxt.com))
 - **@nuxt/fonts** `0.14.0` ([source](https://github.com/nuxt/fonts#readme))
 - **@nuxt/icon** `2.5.1` ([source](https://github.com/nuxt/icon#readme))
 - **@nuxt/kit** `4.5.1, 4.5.2, 4.6.2` ([source](https://nuxt.com/docs/4.x/api/kit))
@@ -130,8 +128,6 @@ pnpm run licenses:generate
 - **@sapphire/shapeshift** `4.0.0` — @sapphire ([source](https://www.sapphirejs.dev))
 - **@sapphire/snowflake** `3.5.5` — @sapphire ([source](https://github.com/sapphiredev/utilities/tree/main/packages/snowflake))
 - **@shuding/opentype.js** `1.4.0-beta.0` — Frederik De Bleser ([source](https://github.com/opentypejs/opentype.js#readme))
-- **@simple-git/args-pathspec** `1.0.4` ([source](https://github.com/steveukx/git-js#readme))
-- **@simple-git/argv-parser** `1.1.1` ([source](https://github.com/steveukx/git-js#readme))
 - **@sindresorhus/is** `7.2.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/is#readme))
 - **@sindresorhus/merge-streams** `4.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/merge-streams#readme))
 - **@snazzah/davey** `0.1.12` — Snazzah ([source](https://github.com/Snazzah/davey#readme))
@@ -246,7 +242,7 @@ pnpm run licenses:generate
 - **balanced-match** `4.0.4` ([source](https://github.com/juliangruber/balanced-match#readme))
 - **base64-js** `0.0.8, 1.5.1` — T. Jameson Little ([source](https://github.com/beatgammit/base64-js))
 - **bindings** `1.5.0` — Nathan Rajlich ([source](https://github.com/TooTallNate/node-bindings))
-- **birpc** `2.9.0, 4.0.0` — Anthony Fu ([source](https://github.com/antfu-collective/birpc#readme))
+- **birpc** `2.9.0, 4.0.0, 4.2.0` — Anthony Fu ([source](https://github.com/antfu-collective/birpc#readme))
 - **bowser** `2.14.1` — Dustin Diaz ([source](https://github.com/bowser-js/bowser))
 - **brace-expansion** `5.0.12` ([source](https://github.com/juliangruber/brace-expansion#readme))
 - **braces** `3.0.3` — Jon Schlinkert ([source](https://github.com/micromatch/braces))
@@ -323,7 +319,7 @@ pnpm run licenses:generate
 - **encodeurl** `2.0.0` ([source](https://github.com/pillarjs/encodeurl#readme))
 - **enhanced-resolve** `5.24.5` — Tobias Koppers @sokra ([source](https://github.com/webpack/enhanced-resolve#readme))
 - **env-paths** `2.2.1, 3.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/env-paths#readme))
-- **error-stack-parser-es** `1.0.5` ([source](https://github.com/antfu/error-stack-parser-es#readme))
+- **error-stack-parser-es** `1.0.5, 2.0.1` ([source](https://github.com/antfu-collective/error-stack-parser-es#readme))
 - **errx** `0.1.2, 0.2.2` ([source](https://github.com/danielroe/errx#readme))
 - **es-errors** `1.3.0` — Jordan Harband ([source](https://github.com/ljharb/es-errors#readme))
 - **es-module-lexer** `2.3.1` — Guy Bedford ([source](https://github.com/guybedford/es-module-lexer#readme))
@@ -340,7 +336,7 @@ pnpm run licenses:generate
 - **fast-deep-equal** `3.1.3` — Evgeny Poberezkin ([source](https://github.com/epoberezkin/fast-deep-equal#readme))
 - **fast-fifo** `1.3.2` — Mathias Buus ([source](https://github.com/mafintosh/fast-fifo))
 - **fast-glob** `3.3.3` — Denis Malinochkin ([source](https://github.com/mrmlnc/fast-glob#readme))
-- **fast-npm-meta** `1.5.1` — Anthony Fu ([source](https://github.com/antfu/fast-npm-meta#readme))
+- **fast-npm-meta** `2.2.0` — Anthony Fu ([source](https://github.com/antfu/fast-npm-meta#readme))
 - **fast-string-truncated-width** `3.0.3` ([source](https://github.com/fabiospampinato/fast-string-truncated-width#readme))
 - **fast-string-width** `3.0.2` ([source](https://github.com/fabiospampinato/fast-string-width#readme))
 - **fast-wrap-ansi** `0.2.2` — James Garbutt ([source](https://github.com/43081j/fast-wrap-ansi#readme))
@@ -381,7 +377,7 @@ pnpm run licenses:generate
 - **https-proxy-agent** `5.0.1, 7.0.6` — Nathan Rajlich ([source](https://github.com/TooTallNate/proxy-agents#readme))
 - **httpxy** `0.5.5` ([source](https://github.com/unjs/httpxy#readme))
 - **ignore** `7.0.6, 7.0.13` — kael ([source](https://github.com/kaelzhang/node-ignore#readme))
-- **image-meta** `0.2.2` ([source](https://github.com/unjs/image-meta#readme))
+- **image-meta** `0.3.0` ([source](https://github.com/unjs/image-meta#readme))
 - **immediate** `3.0.6` ([source](https://github.com/calvinmetcalf/immediate#readme))
 - **import-meta-resolve** `4.2.0` — Titus Wormer ([source](https://github.com/wooorm/import-meta-resolve#readme))
 - **impound** `1.1.6` ([source](https://github.com/unjs/impound#readme))
@@ -394,7 +390,7 @@ pnpm run licenses:generate
 - **is-glob** `4.0.3` — Jon Schlinkert ([source](https://github.com/micromatch/is-glob))
 - **is-in-ssh** `1.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/is-in-ssh#readme))
 - **is-inside-container** `1.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/is-inside-container#readme))
-- **is-installed-globally** `1.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/is-installed-globally#readme))
+- **is-installed-globally** `1.0.1` — Sindre Sorhus ([source](https://github.com/sindresorhus/is-installed-globally#readme))
 - **is-module** `1.0.0` — Jonathan Ong ([source](https://github.com/component/is-module#readme))
 - **is-number** `7.0.0` — Jon Schlinkert ([source](https://github.com/jonschlinkert/is-number))
 - **is-path-inside** `4.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/is-path-inside#readme))
@@ -431,7 +427,7 @@ pnpm run licenses:generate
 - **magic-regexp** `0.10.0` ([source](https://github.com/unjs/magic-regexp#readme))
 - **magic-string** `0.30.21, 1.1.0, 1.4.2, 1.4.3` — Rich Harris ([source](https://github.com/Rich-Harris/magic-string#readme))
 - **magic-string-ast** `1.0.3` — Kevin Deng ([source](https://github.com/sxzz/magic-string-ast#readme))
-- **magicast** `0.5.4, 0.5.5` ([source](https://github.com/unjs/magicast#readme))
+- **magicast** `0.5.5` ([source](https://github.com/unjs/magicast#readme))
 - **make-dir** `3.1.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/make-dir#readme))
 - **marked** `17.0.6` — Christopher Jeffrey ([source](https://marked.js.org))
 - **merge-stream** `2.0.0` — Stephen Sugden ([source](https://github.com/grncdr/merge-stream#readme))
@@ -486,7 +482,7 @@ pnpm run licenses:generate
 - **orderedmap** `2.1.1` — Marijn Haverbeke ([source](https://github.com/marijnh/orderedmap#readme))
 - **oxc-parser** `0.151.0` — Boshen and oxc contributors ([source](https://oxc.rs/docs/guide/usage/parser))
 - **oxc-walker** `1.1.1` ([source](https://github.com/oxc-project/oxc-walker#readme))
-- **package-manager-detector** `1.8.0, 1.9.0` — Anthony Fu ([source](https://github.com/antfu-collective/package-manager-detector#readme))
+- **package-manager-detector** `1.9.0` — Anthony Fu ([source](https://github.com/antfu-collective/package-manager-detector#readme))
 - **pako** `0.2.9` ([source](https://github.com/nodeca/pako))
 - **parse-css-color** `0.2.1` — Noel Delgado ([source](https://github.com/noeldelgado/parse-css-color#readme))
 - **parseurl** `1.3.3` ([source](https://github.com/pillarjs/parseurl#readme))
@@ -598,7 +594,6 @@ pnpm run licenses:generate
 - **shebang-regex** `3.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/shebang-regex#readme))
 - **shell-quote** `1.12.0` — James Halliday ([source](https://github.com/ljharb/shell-quote))
 - **shoukaku** `4.3.0` — Saya ([source](https://github.com/shipgirlproject/Shoukaku#readme))
-- **simple-git** `3.36.0` — Steve King ([source](https://github.com/steveukx/git-js#readme))
 - **sirv** `3.0.2` — Luke Edwards ([source](https://github.com/lukeed/sirv#readme))
 - **sisteransi** `1.0.5` — Terkel Gjervig ([source](https://github.com/terkelg/sisteransi#readme))
 - **site-config-stack** `4.2.3` ([source](https://github.com/harlan-zw/nuxt-site-config#readme))
@@ -679,7 +674,7 @@ pnpm run licenses:generate
 - **vite-node** `6.0.0` — Anthony Fu ([source](https://github.com/antfu-collective/vite-node#readme))
 - **vite-plugin-checker** `0.14.5` — fi3ework ([source](https://github.com/fi3ework/vite-plugin-checker))
 - **vite-plugin-inspect** `11.4.1` — Anthony Fu ([source](https://github.com/antfu-collective/vite-plugin-inspect#readme))
-- **vite-plugin-vue-tracer** `1.4.0` — Anthony Fu ([source](https://github.com/antfu/vite-plugin-vue-tracer#readme))
+- **vite-plugin-vue-tracer** `1.6.0` — Anthony Fu ([source](https://github.com/antfu/vite-plugin-vue-tracer#readme))
 - **vscode-uri** `3.1.0` — Microsoft ([source](https://github.com/microsoft/vscode-uri#readme))
 - **vue** `3.5.43` — Evan You ([source](https://vuejs.org/))
 - **vue-bundle-renderer** `2.3.1` ([source](https://github.com/nuxt-contrib/vue-bundle-renderer#readme))
@@ -694,7 +689,7 @@ pnpm run licenses:generate
 - **whatwg-url** `5.0.0` — Sebastian Mayr ([source](https://github.com/jsdom/whatwg-url#readme))
 - **wheel-gestures** `2.2.48` — Felix Leupold ([source](https://github.com/xiel/wheel-gestures#readme))
 - **wrap-ansi** `7.0.0, 8.1.0, 9.0.2` — Sindre Sorhus ([source](https://github.com/chalk/wrap-ansi#readme))
-- **ws** `8.21.1` — Einar Otto Stangvik ([source](https://github.com/websockets/ws))
+- **ws** `8.21.1, 8.22.0` — Einar Otto Stangvik ([source](https://github.com/websockets/ws))
 - **wsl-utils** `0.3.1` — Sindre Sorhus ([source](https://github.com/sindresorhus/wsl-utils#readme))
 - **xml-naming** `0.3.0` — Amit Gupta ([source](https://github.com/NaturalIntelligence/xml-naming#readme))
 - **xtend** `4.0.2` — Raynos ([source](https://github.com/Raynos/xtend))
@@ -854,7 +849,7 @@ pnpm run licenses:generate
 
 - **@discordjs/node-pre-gyp** `0.4.5` — Dane Springmeyer ([source](https://github.com/discordjs/node-pre-gyp#readme))
 - **@mapbox/node-pre-gyp** `2.0.3` — Dane Springmeyer ([source](https://github.com/mapbox/node-pre-gyp#readme))
-- **diff** `8.0.4` ([source](https://github.com/kpdecker/jsdiff#readme))
+- **diff** `9.0.0` ([source](https://github.com/kpdecker/jsdiff#readme))
 - **fzf** `0.5.2` — Ajit ([source](https://fzf.netlify.app))
 - **ieee754** `1.2.1` — Feross Aboukhadijeh ([source](https://github.com/feross/ieee754#readme))
 - **secure-json-parse** `4.1.0` — Eran Hammer ([source](https://github.com/fastify/secure-json-parse#readme))
