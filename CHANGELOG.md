@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.36.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.36.0...modus-v1.36.1) (2026-10-21)
+
+
+### 🐛 Bug Fixes
+
+* **bot:** point dashboard link buttons at the server overview route ([#144](https://github.com/PPO-GG/MODUS/issues/144)) ([2d834df](https://github.com/PPO-GG/MODUS/commit/2d834df92a72230f7049995acb84f7ff9dbbe1f0))
+* **web:** bump @nuxt/devtools to 3.4.4 to drop vulnerable simple-git ([#142](https://github.com/PPO-GG/MODUS/issues/142)) ([14e7cb8](https://github.com/PPO-GG/MODUS/commit/14e7cb8c9792a5477b170dfbecea0334fb57379e))
+
+## [1.36.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.35.1...modus-v1.36.0) (2026-10-20)
+
+
+### ✨ Features
+
+* **bot:** add /dashboard command, help embed link, and guild onboarding greeting ([#138](https://github.com/PPO-GG/MODUS/issues/138)) ([ea810d8](https://github.com/PPO-GG/MODUS/commit/ea810d82fe3d0631619c59d13fc14c71f661f305))
+
 ## [1.35.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.35.0...modus-v1.35.1) (2026-10-12)
 
 

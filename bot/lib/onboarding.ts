@@ -93,7 +93,7 @@ export async function sendGuildOnboarding(
       return;
     }
 
-    const dashboardUrl = `${PUBLIC_URL}/dashboard/${guild.id}`;
+    const dashboardUrl = `${PUBLIC_URL}/dashboard/server/${guild.id}/overview`;
 
     const embed = new EmbedBuilder()
       .setColor(0x5865f2)

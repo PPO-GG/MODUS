@@ -12,7 +12,7 @@ describe("help module", () => {
   });
 
   it("resolves dashboard URLs correctly", () => {
-    expect(getDashboardUrl("12345")).toMatch(/\/dashboard\/12345$/);
+    expect(getDashboardUrl("12345")).toMatch(/\/dashboard\/server\/12345\/overview$/);
     expect(getDashboardUrl(null)).toMatch(/\/dashboard$/);
     expect(getDashboardUrl(undefined)).toMatch(/\/dashboard$/);
   });
@@ -36,7 +36,7 @@ describe("help module", () => {
     const dashboardBtn: any = buttonRow.components[3];
     expect(dashboardBtn.data.label).toBe("Web Dashboard");
     expect(dashboardBtn.data.style).toBe(ButtonStyle.Link);
-    expect(dashboardBtn.data.url).toContain("/dashboard/guild-999");
+    expect(dashboardBtn.data.url).toContain("/dashboard/server/guild-999/overview");
   });
 
   it("handles the /dashboard command execution", async () => {
