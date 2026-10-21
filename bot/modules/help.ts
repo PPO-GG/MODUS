@@ -36,7 +36,7 @@ const PUBLIC_URL = (
 ).replace(/\/$/, "");
 
 export function getDashboardUrl(guildId?: string | null): string {
-  return guildId ? `${PUBLIC_URL}/dashboard/${guildId}` : `${PUBLIC_URL}/dashboard`;
+  return guildId ? `${PUBLIC_URL}/dashboard/server/${guildId}/overview` : `${PUBLIC_URL}/dashboard`;
 }
 
 function getModuleIcon(name: string): string {

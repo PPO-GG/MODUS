@@ -44,7 +44,7 @@ describe("sendGuildOnboarding", () => {
     expect(buttons.length).toBe(3);
     expect(buttons[0].data.label).toBe("Web Dashboard");
     expect(buttons[0].data.style).toBe(ButtonStyle.Link);
-    expect(buttons[0].data.url).toContain("/dashboard/guild-abc");
+    expect(buttons[0].data.url).toContain("/dashboard/server/guild-abc/overview");
     expect(buttons[1].data.label).toBe("modusbot.io");
     expect(buttons[2].data.label).toBe("Top.gg");
     expect(buttons[2].data.url).toContain("top.gg");
