@@ -15,6 +15,7 @@ import {
 import { BotModule, ModuleManager } from "../ModuleManager";
 import { LoggingSettingsSchema } from "../lib/schemas";
 import { parseSettings } from "../lib/validateSettings";
+import { reportAccessError } from "../lib/accessNotice";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -44,6 +45,7 @@ export async function sendAuditLog(
   embed: EmbedBuilder,
   eventType: keyof Omit<LoggingSettings, "auditChannelId">,
 ) {
+  let channelId: string | undefined;
   try {
     const isEnabled = await moduleManager.databaseService.isModuleEnabled(
       guildId,
@@ -60,6 +62,7 @@ export async function sendAuditLog(
       DEFAULT_SETTINGS;
 
     if (!settings.auditChannelId || !settings[eventType]) return;
+    channelId = settings.auditChannelId;
 
     const client = (moduleManager as any).client;
     const guild = client.guilds.cache.get(guildId);
@@ -70,6 +73,18 @@ export async function sendAuditLog(
       await channel.send({ embeds: [embed] });
     }
   } catch (err) {
+    const guild = (moduleManager as any).client?.guilds?.cache?.get(guildId);
+    if (
+      guild &&
+      (await reportAccessError(err, {
+        guild,
+        channelId,
+        module: "logging",
+        feature: "send audit logs",
+        logger: moduleManager.logger,
+      }))
+    )
+      return;
     moduleManager.logger.error(`Error sending audit log for ${eventType}`, guildId, err, "logging");
   }
 }

@@ -174,7 +174,12 @@ export function useServerSettings(guildId: string) {
   ) => {
     const name = moduleName.toLowerCase();
     try {
-      await $fetch(
+      const response = await $fetch<{
+        permissionFix?: {
+          applied: string[];
+          blocked: { channel: string; reasons: string[] }[];
+        };
+      }>(
         `/api/guild-configs/${encodeURIComponent(
           guildId,
         )}/${encodeURIComponent(name)}`,
@@ -203,6 +208,23 @@ export function useServerSettings(guildId: string) {
         description: `${moduleName} settings updated for this server.`,
         color: "success",
       });
+      const fix = response?.permissionFix;
+      if (fix?.applied.length) {
+        toast.add({
+          title: "Bot access fixed",
+          description: fix.applied.join(". "),
+          color: "success",
+        });
+      }
+      if (fix?.blocked.length) {
+        toast.add({
+          title: "Bot cannot use a channel",
+          description: fix.blocked
+            .map((b) => `#${b.channel}: ${b.reasons.join(" ")}`)
+            .join(" "),
+          color: "warning",
+        });
+      }
       return true;
     } catch (error) {
       console.error("Error saving module settings:", error);

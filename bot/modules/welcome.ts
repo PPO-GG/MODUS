@@ -14,6 +14,7 @@ import {
 } from "../lib/schemas";
 import { parseSettings } from "../lib/validateSettings";
 import { buildWelcomeMessage } from "../lib/welcomeMessage";
+import { reportAccessError } from "../lib/accessNotice";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -373,6 +374,7 @@ export function registerWelcomeEvents(moduleManager: ModuleManager) {
   const client = moduleManager["client"];
 
   client.on("guildMemberAdd", async (member: GuildMember) => {
+    let welcomeChannelId: string | undefined;
     try {
       const guildId = member.guild.id;
       const db = moduleManager.databaseService;
@@ -388,6 +390,8 @@ export function registerWelcomeEvents(moduleManager: ModuleManager) {
       const template =
         parseSettings(WelcomeTemplateSchema, settings, "welcome", guildId) ??
         WelcomeTemplateSchema.parse(DEFAULT_TEMPLATE);
+
+      welcomeChannelId = template.channelId;
 
       // Get channel
       const channel = member.guild.channels.cache.get(template.channelId!);
@@ -415,6 +419,16 @@ export function registerWelcomeEvents(moduleManager: ModuleManager) {
         "welcome",
       );
     } catch (err) {
+      if (
+        await reportAccessError(err, {
+          guild: member.guild,
+          channelId: welcomeChannelId,
+          module: "welcome",
+          feature: "send the welcome message",
+          logger: moduleManager.logger,
+        })
+      )
+        return;
       moduleManager.logger.error(
         "Failed to send welcome image",
         member.guild.id,

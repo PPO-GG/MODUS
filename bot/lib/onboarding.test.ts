@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { sendGuildOnboarding } from "./onboarding";
-import { ChannelType, ButtonStyle } from "discord.js";
+import { ChannelType, ButtonStyle, PermissionFlagsBits } from "discord.js";
 
 describe("sendGuildOnboarding", () => {
   it("sends to systemChannel when accessible", async () => {
@@ -22,6 +22,7 @@ describe("sendGuildOnboarding", () => {
       members: {
         me: {
           permissionsIn: permissionsInMock,
+          permissions: { has: () => true },
         },
       },
     };
@@ -74,6 +75,7 @@ describe("sendGuildOnboarding", () => {
       members: {
         me: {
           permissionsIn: permissionsInMock,
+          permissions: { has: () => true },
         },
       },
     };
@@ -110,6 +112,7 @@ describe("sendGuildOnboarding", () => {
       members: {
         me: {
           permissionsIn: permissionsInMock,
+          permissions: { has: () => true },
         },
       },
     };
@@ -126,5 +129,56 @@ describe("sendGuildOnboarding", () => {
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining("no writable text channel found"),
     );
+  });
+
+  describe("setup readiness", () => {
+    const logger = () => ({ info: vi.fn(), warn: vi.fn() }) as any;
+    const guildWith = (hasFlag: (flag: bigint) => boolean, send = vi.fn().mockResolvedValue({})) =>
+      ({
+        id: "guild-abc",
+        name: "Test Guild",
+        systemChannel: { isTextBased: () => true, name: "sys", send },
+        members: {
+          me: {
+            permissionsIn: () => ({ has: () => true }),
+            permissions: { has: hasFlag },
+          },
+        },
+      }) as any;
+
+    it("adds a setup field naming the missing permissions and linking the fix", async () => {
+      const send = vi.fn().mockResolvedValue({});
+      const guild = guildWith((flag) => flag !== PermissionFlagsBits.EmbedLinks, send);
+      await sendGuildOnboarding(guild, {} as any, logger());
+      const fields = send.mock.calls[0][0].embeds[0].data.fields ?? [];
+      expect(fields).toHaveLength(1);
+      expect(fields[0].name).toContain("Setup needed");
+      expect(fields[0].value).toContain("Embed Links");
+      expect(fields[0].value).toContain("/dashboard/server/guild-abc/permissions");
+    });
+
+    it("adds no setup field when the bot has everything", async () => {
+      const send = vi.fn().mockResolvedValue({});
+      await sendGuildOnboarding(guildWith(() => true, send), {} as any, logger());
+      expect(send.mock.calls[0][0].embeds[0].data.fields ?? []).toHaveLength(0);
+    });
+
+    it("DMs the owner when there is no channel to post in", async () => {
+      const dm = vi.fn().mockResolvedValue({});
+      const guild: any = {
+        id: "guild-locked",
+        name: "Locked Guild",
+        systemChannel: null,
+        channels: { fetch: vi.fn().mockResolvedValue([]) },
+        fetchOwner: vi.fn().mockResolvedValue({ send: dm }),
+        members: {
+          me: { permissionsIn: () => ({ has: () => false }), permissions: { has: () => true } },
+        },
+      };
+      await sendGuildOnboarding(guild, {} as any, logger());
+      expect(dm).toHaveBeenCalledTimes(1);
+      expect(dm.mock.calls[0][0]).toContain("Locked Guild");
+      expect(dm.mock.calls[0][0]).toContain("/dashboard/server/guild-locked/permissions");
+    });
   });
 });

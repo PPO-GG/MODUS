@@ -17,6 +17,7 @@ import { BotModule, ModuleManager } from "../ModuleManager";
 import { XpSettingsSchema } from "../lib/schemas";
 import { parseSettings } from "../lib/validateSettings";
 import { emitLevelUp } from "../lib/levelEvents";
+import { reportAccessError } from "../lib/accessNotice";
 import { getXpProgress, getLevelFromXp } from "@modus/db/rank-cards";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -386,6 +387,17 @@ async function sendLevelUpNotification(
     try {
       await sendChannel.send({ embeds: [embed] });
     } catch (err) {
+      if (
+        _moduleManager &&
+        (await reportAccessError(err, {
+          guild,
+          channelId: sendChannel.id,
+          module: "xp",
+          feature: "send level-up notifications",
+          logger: _moduleManager.logger,
+        }))
+      )
+        return;
       _moduleManager?.logger.error(
         "Failed to send level-up notification",
         guild.id,

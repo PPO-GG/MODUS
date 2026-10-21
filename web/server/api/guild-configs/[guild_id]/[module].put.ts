@@ -14,6 +14,8 @@ import { validateWelcomeImageElements } from "@modus/db/welcome-images";
 import { getRepos } from "../../../utils/db";
 import { requireModuleAccess } from "../../../utils/session";
 import { deleteR2Object, extractWelcomeBgKey } from "../../../utils/r2";
+import { autoGrantModuleChannels } from "../../../utils/permission-autofix";
+import { auditReportCache } from "../../../utils/permission-audit-cache";
 
 export default defineEventHandler(async (event) => {
   const guildId = getRouterParam(event, "guild_id");
@@ -36,7 +38,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await requireModuleAccess(event, guildId, moduleName);
+  const identity = await requireModuleAccess(event, guildId, moduleName);
 
   const body = await readBody<{
     enabled?: boolean;
@@ -120,9 +122,38 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    return bitrateClamped
-      ? { success: true, bitrateClamped: true }
-      : { success: true };
+    // Off unless AUTOFIX_CHANNEL_ACCESS=true: it edits channel permissions in Discord.
+    // Runs after the save and never throws, so it cannot fail the save itself.
+    let permissionFix: Awaited<ReturnType<typeof autoGrantModuleChannels>> | undefined;
+    const botToken = useRuntimeConfig().discordBotToken as string;
+    if (
+      process.env.AUTOFIX_CHANNEL_ACCESS === "true" &&
+      botToken &&
+      (body?.settings !== undefined || body?.enabled === true)
+    ) {
+      const fix = await autoGrantModuleChannels(
+        {
+          botToken,
+          get: (url, headers) => $fetch(url, { headers }),
+          request: (method, url, headers, reqBody) =>
+            $fetch(url, { method, headers, body: reqBody as any }),
+          configs: repos.guildConfigs,
+          logs: repos.logs,
+        },
+        { guildId, userId: identity.userId },
+        moduleName.toLowerCase(),
+      );
+      if (fix.applied.length > 0 || fix.blocked.length > 0) {
+        permissionFix = fix;
+        auditReportCache.delete(guildId);
+      }
+    }
+
+    return {
+      success: true,
+      ...(bitrateClamped ? { bitrateClamped: true } : {}),
+      ...(permissionFix ? { permissionFix } : {}),
+    };
   } catch (error: any) {
     console.error(
       `[GuildConfigs API] put(${guildId}/${moduleName}) failed:`,
