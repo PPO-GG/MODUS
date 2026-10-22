@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.36.1...modus-v1.37.0) (2026-10-22)
+
+
+### ✨ Features
+
+* **bot:** dashboard discovery, onboarding greeting, and missing-access handling ([#145](https://github.com/PPO-GG/MODUS/issues/145)) ([ebdc0bd](https://github.com/PPO-GG/MODUS/commit/ebdc0bd97baaf54305434ed23fca48efa5c47311))
+
 ## [1.36.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.36.0...modus-v1.36.1) (2026-10-21)
 
 
