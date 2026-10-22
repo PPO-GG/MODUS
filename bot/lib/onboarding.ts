@@ -9,12 +9,8 @@ import {
   ButtonStyle,
 } from "discord.js";
 import type { Logger } from "../Logger";
-
-const PUBLIC_URL = (
-  process.env.PUBLIC_WEB_URL ||
-  process.env.DASHBOARD_URL ||
-  "https://modusbot.io"
-).replace(/\/$/, "");
+import { PUBLIC_URL, dmGuildOwner, permissionsUrl } from "./accessNotice";
+import { findMissingInvitePermissions } from "./invitePermissions";
 
 const TOPGG_URL =
   process.env.TOPGG_URL || "https://top.gg/bot/1305967842901889085";
@@ -89,6 +85,11 @@ export async function sendGuildOnboarding(
       logger.info(
         `Onboarding message skipped for ${guild.name} (${guild.id}): no writable text channel found.`,
       );
+      await dmGuildOwner(
+        guild,
+        `Thanks for adding MODUS to **${guild.name}**! MODUS cannot post in any channel in your server, so it could not say hello. ` +
+          `Open the dashboard to see which permissions it needs: ${permissionsUrl(guild.id)}`,
+      );
       return;
     }
 
@@ -102,6 +103,18 @@ export async function sendGuildOnboarding(
       )
       .setFooter({ text: "MODUS • Modular Discord Utility System" })
       .setTimestamp();
+
+    const missing = findMissingInvitePermissions(me);
+    const missingAll = [...missing.baseline, ...missing.other];
+    if (missingAll.length > 0) {
+      embed.addFields({
+        name: "⚠️ Setup needed",
+        value:
+          `MODUS does not have these permissions: ${missingAll.join(", ")}. ` +
+          `${missing.baseline.length > 0 ? "Many features will not work. " : "Some modules will not work. "}` +
+          `[Fix it in one click](${permissionsUrl(guild.id)}).`,
+      });
+    }
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
