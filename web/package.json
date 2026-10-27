@@ -29,7 +29,7 @@
     "konva": "^10.2.5",
     "lucide-vue-next": "latest",
     "nanoid": "^3.3.11",
-    "nuxt": "^4.4.8",
+    "nuxt": "^4.6.2",
     "nuxt-auth-utils": "^0.5.25",
     "nuxt-og-image": "^6.9.0",
     "openai": "^6.34.0",
