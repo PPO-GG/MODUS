@@ -39,7 +39,7 @@
     "shoukaku": "^4.3.0",
     "sodium-native": "^5.1.0",
     "ws": "^8.20.1",
-    "zod": "^4.3.6"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
