@@ -1,7 +1,7 @@
 # Third-Party Licenses
 
 MODUS is licensed under the MIT License (see [LICENSE](./LICENSE)). It depends on
-863 third-party packages, which are distributed under their own licenses. This
+864 third-party packages, which are distributed under their own licenses. This
 file is generated from production dependencies across the pnpm workspace (`bot`, `web`,
 `packages/db`) via `pnpm licenses list --prod --json`.
 
@@ -10,7 +10,7 @@ Regenerate with:
 pnpm run licenses:generate
 ```
 
-## MIT (690)
+## MIT (691)
 
 - **@adonisjs/hash** `9.1.1` — Harminder Virk ([source](https://github.com/adonisjs/hash#readme))
 - **@alloc/quick-lru** `5.2.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/quick-lru#readme))
@@ -78,7 +78,7 @@ pnpm run licenses:generate
 - **@napi-rs/canvas-linux-x64-gnu** `0.1.100` ([source](https://github.com/Brooooooklyn/canvas#readme))
 - **@napi-rs/lzma-linux-x64-gnu** `1.5.1` ([source](https://github.com/Brooooooklyn/lzma#readme))
 - **@napi-rs/wasm-runtime** `1.2.2` — LongYinan ([source](https://napi.rs/))
-- **@nodable/entities** `3.0.0` — Amit Gupta ([source](https://github.com/nodable/val-parsers#readme))
+- **@nodable/entities** `3.1.0` — Amit Gupta ([source](https://github.com/nodable/val-parsers#readme))
 - **@nodelib/fs.scandir** `2.1.5` ([source](https://github.com/nodelib/nodelib/tree/master#readme))
 - **@nodelib/fs.stat** `2.0.5` ([source](https://github.com/nodelib/nodelib/tree/master#readme))
 - **@nodelib/fs.walk** `1.2.8` ([source](https://github.com/nodelib/nodelib/tree/master#readme))
@@ -134,11 +134,12 @@ pnpm run licenses:generate
 - **@snazzah/davey-linux-x64-gnu** `0.1.12` — Snazzah ([source](https://github.com/Snazzah/davey#readme))
 - **@stablelib/base64** `1.0.1` — Dmitry Chestnykh ([source](https://github.com/StableLib/stablelib/tree/master/packages/base64))
 - **@standard-schema/spec** `1.1.0` — Colin McDonnell ([source](https://standardschema.dev))
-- **@tailwindcss/node** `4.3.3` ([source](https://tailwindcss.com))
-- **@tailwindcss/oxide** `4.3.3` ([source](https://github.com/tailwindlabs/tailwindcss#readme))
-- **@tailwindcss/oxide-linux-x64-gnu** `4.3.3` ([source](https://github.com/tailwindlabs/tailwindcss#readme))
+- **@tailwindcss/node** `4.3.3, 4.3.5` ([source](https://tailwindcss.com))
+- **@tailwindcss/oxide** `4.3.3, 4.3.5` ([source](https://github.com/tailwindlabs/tailwindcss#readme))
+- **@tailwindcss/oxide-linux-x64-gnu** `4.3.3, 4.3.5` ([source](https://github.com/tailwindlabs/tailwindcss#readme))
+- **@tailwindcss/oxide-wasm32-wasi** `4.3.5` ([source](https://github.com/tailwindlabs/tailwindcss#readme))
 - **@tailwindcss/postcss** `4.3.3` ([source](https://tailwindcss.com))
-- **@tailwindcss/vite** `4.3.3` ([source](https://tailwindcss.com))
+- **@tailwindcss/vite** `4.3.5` ([source](https://tailwindcss.com))
 - **@tanstack/table-core** `8.21.3` — Tanner Linsley ([source](https://tanstack.com/table))
 - **@tanstack/virtual-core** `3.17.11, 3.19.6` — Tanner Linsley ([source](https://tanstack.com/virtual))
 - **@tanstack/vue-table** `8.21.3` — Tanner Linsley ([source](https://tanstack.com/table))
@@ -341,7 +342,7 @@ pnpm run licenses:generate
 - **fast-string-width** `3.0.2` ([source](https://github.com/fabiospampinato/fast-string-width#readme))
 - **fast-wrap-ansi** `0.2.2` — James Garbutt ([source](https://github.com/43081j/fast-wrap-ansi#readme))
 - **fast-xml-builder** `1.3.1` — Amit Gupta ([source](https://github.com/NaturalIntelligence/fast-xml-builder#readme))
-- **fast-xml-parser** `5.11.1` — Amit Gupta ([source](https://github.com/NaturalIntelligence/fast-xml-parser#readme))
+- **fast-xml-parser** `5.12.0` — Amit Gupta ([source](https://github.com/NaturalIntelligence/fast-xml-parser#readme))
 - **fdir** `6.5.0` — thecodrr ([source](https://github.com/thecodrr/fdir#readme))
 - **fflate** `0.7.5` — Arjun Barrett ([source](https://101arrowz.github.io/fflate))
 - **file-uri-to-path** `1.0.0` — Nathan Rajlich ([source](https://github.com/TooTallNate/file-uri-to-path))
@@ -396,7 +397,7 @@ pnpm run licenses:generate
 - **is-path-inside** `4.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/is-path-inside#readme))
 - **is-reference** `1.2.1` — Rich Harris ([source](https://github.com/Rich-Harris/is-reference#readme))
 - **is-stream** `2.0.1, 3.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/is-stream#readme))
-- **is-unsafe** `2.0.2` — Amit Gupta ([source](https://github.com/NaturalIntelligence/is-unsafe#readme))
+- **is-unsafe** `2.0.3` — Amit Gupta ([source](https://github.com/NaturalIntelligence/is-unsafe#readme))
 - **is-what** `5.5.0` — Luca Ban - Mesqueeb ([source](https://github.com/mesqueeb/is-what#readme))
 - **is-wsl** `2.2.0, 3.1.1` — Sindre Sorhus ([source](https://github.com/sindresorhus/is-wsl#readme))
 - **isarray** `1.0.0` — Julian Gruber ([source](https://github.com/juliangruber/isarray))
@@ -616,7 +617,7 @@ pnpm run licenses:generate
 - **strip-ansi** `6.0.1, 7.2.0` — Sindre Sorhus ([source](https://github.com/chalk/strip-ansi#readme))
 - **strip-final-newline** `3.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/strip-final-newline#readme))
 - **strip-literal** `4.0.0` — Anthony Fu ([source](https://github.com/antfu/strip-literal#readme))
-- **strnum** `2.4.2` — Amit Gupta ([source](https://github.com/NaturalIntelligence/strnum#readme))
+- **strnum** `2.5.1` — Amit Gupta ([source](https://github.com/NaturalIntelligence/strnum#readme))
 - **stylehacks** `8.0.1` — Ben Briggs ([source](https://github.com/cssnano/cssnano))
 - **superjson** `2.2.6` — Simon Knott ([source](https://github.com/blitz-js/superjson#readme))
 - **supports-color** `5.5.0, 10.2.2` — Sindre Sorhus ([source](https://github.com/chalk/supports-color#readme))
@@ -625,7 +626,7 @@ pnpm run licenses:generate
 - **tagged-tag** `1.0.0` — Sindre Sorhus ([source](https://github.com/sindresorhus/tagged-tag#readme))
 - **tailwind-merge** `3.7.0` — Dany Castillo ([source](https://github.com/dcastil/tailwind-merge))
 - **tailwind-variants** `3.3.0` — Junior Garcia ([source](https://github.com/heroui-inc/tailwind-variants#readme))
-- **tailwindcss** `4.3.3` ([source](https://tailwindcss.com))
+- **tailwindcss** `4.3.3, 4.3.5` ([source](https://tailwindcss.com))
 - **tapable** `2.3.3` — Tobias Koppers @sokra ([source](https://github.com/webpack/tapable))
 - **tar-stream** `3.2.0` — Mathias Buus ([source](https://github.com/mafintosh/tar-stream))
 - **teex** `1.0.1` — Mathias Buus ([source](https://github.com/mafintosh/teex))
