@@ -46,6 +46,7 @@ const activeTab = computed(() => {
   if (path.includes("/dashboard/admin/servers")) return "servers";
   if (path.includes("/dashboard/admin/logs")) return "logs";
   if (path.includes("/dashboard/admin/audit")) return "audit";
+  if (path.includes("/dashboard/admin/feedback")) return "feedback";
   if (path.includes("/dashboard/admin/music-system")) return "music-system";
   return "modules";
 });
@@ -101,6 +102,12 @@ const sidebarTabs = [
     label: "Audit Trail",
     icon: "i-heroicons-clipboard-document-list",
     to: "/dashboard/admin/audit",
+  },
+  {
+    id: "feedback",
+    label: "Feedback",
+    icon: "i-heroicons-chat-bubble-left-right",
+    to: "/dashboard/admin/feedback",
   },
 ];
 
