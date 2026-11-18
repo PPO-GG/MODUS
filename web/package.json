@@ -29,7 +29,7 @@
     "konva": "^10.2.5",
     "lucide-vue-next": "latest",
     "nanoid": "^3.3.11",
-    "nuxt": "^4.4.8",
+    "nuxt": "^4.6.4",
     "nuxt-auth-utils": "^0.5.25",
     "nuxt-og-image": "^6.9.0",
     "openai": "^6.34.0",
@@ -49,7 +49,7 @@
     "@iconify-json/simple-icons": "^1.2.92",
     "@types/node": "^25.6.0",
     "h3": "^1.15.11",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "vue-tsc": "^3.3.6"
   }
 }

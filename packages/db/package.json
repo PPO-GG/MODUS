@@ -66,6 +66,6 @@
     "node-appwrite": "^20.3.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   }
 }

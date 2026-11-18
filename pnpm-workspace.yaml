@@ -18,9 +18,12 @@ overrides:
   esbuild: '>=0.28.1'
   tar: '>=7.5.16'
   brace-expansion: '>=5.0.12'
-  undici@6: ^6.28.1
+  undici@6: ^6.29.1
   undici@7: ^7.28.0
-  undici@8: ^8.10.2
+  undici@8: ^8.12.2
+  node-forge: '>=1.4.3'
+  '@nuxt/kit': ^4.6.4
+  '@nuxt/schema': ^4.6.4
   shell-quote: '>=1.11.0'
   source-map-js: '>=1.2.2'
   svgo: '>=4.1.0'
