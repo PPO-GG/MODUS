@@ -39,7 +39,7 @@
     "shoukaku": "^4.3.0",
     "sodium-native": "^5.1.0",
     "ws": "^8.20.1",
-    "zod": "^4.3.6"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
@@ -47,6 +47,6 @@
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   }
 }
