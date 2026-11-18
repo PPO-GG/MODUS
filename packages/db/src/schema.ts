@@ -1302,3 +1302,30 @@ export const suggestionVotes = pgTable(
   }),
 );
 export type SuggestionVoteRow = typeof suggestionVotes.$inferSelect;
+
+// ── Bot feedback ─────────────────────────────────────────────────────
+// Free-text feedback that server admins send the bot owner via /feedback.
+// `category` is "bug" | "idea" | "other"; `status` is "open" | "resolved";
+// `context` is a FeedbackContextV1 snapshot (see repositories/bot-feedback.ts).
+export const botFeedback = pgTable(
+  "bot_feedback",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    guildId: text("guild_id").notNull(),
+    userId: text("user_id").notNull(),
+    category: text("category").notNull(),
+    message: text("message").notNull(),
+    contactOk: boolean("contact_ok").notNull().default(false),
+    context: jsonb("context").notNull().default(sql`'{}'::jsonb`),
+    status: text("status").notNull().default("open"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolvedBy: text("resolved_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byUserCreated: index("bot_feedback_user_created_idx").on(t.userId, t.createdAt),
+    byStatusCreated: index("bot_feedback_status_created_idx").on(t.status, t.createdAt),
+  }),
+);
+export type BotFeedbackRow = typeof botFeedback.$inferSelect;
+export type NewBotFeedbackRow = typeof botFeedback.$inferInsert;

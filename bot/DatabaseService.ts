@@ -42,6 +42,7 @@ import {
   SuggestionRepository,
   SuggestionVoteRepository,
   StarboardPostRepository,
+  BotFeedbackRepository,
   GuildEntitlementRepository,
   type PremiumStatus,
   type CreateModerationCaseInput,
@@ -95,6 +96,7 @@ export class DatabaseService {
   public readonly suggestions: SuggestionRepository;
   public readonly suggestionVotes: SuggestionVoteRepository;
   public readonly starboardPosts: StarboardPostRepository;
+  public readonly botFeedback: BotFeedbackRepository;
 
   /** TTL cache for guild config + tag lookups. Shared-shard aware via EventBus. */
   private configCache: CacheService<any>;
@@ -176,6 +178,7 @@ export class DatabaseService {
     this.suggestions = new SuggestionRepository(db);
     this.suggestionVotes = new SuggestionVoteRepository(db);
     this.starboardPosts = new StarboardPostRepository(db);
+    this.botFeedback = new BotFeedbackRepository(db);
 
     // Periodic log flush. unref() so a pending timer never holds the
     // process open during shutdown — gracefulShutdown calls flushLogs().

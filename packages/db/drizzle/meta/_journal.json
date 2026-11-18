@@ -141,6 +141,13 @@
       "when": 1791048174529,
       "tag": "0019_smooth_whiplash",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795034848512,
+      "tag": "0020_elite_smiling_tiger",
+      "breakpoints": true
     }
   ]
 }
