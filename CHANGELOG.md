@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.37.0...modus-v1.37.1) (2026-11-18)
+
+
+### 🐛 Bug Fixes
+
+* patch dependencies flagged by Dependabot security alerts ([#152](https://github.com/PPO-GG/MODUS/issues/152)) ([338ffd3](https://github.com/PPO-GG/MODUS/commit/338ffd3d4a5afeaf90786ba183c89622f87a5b76))
+
 ## [1.37.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.36.1...modus-v1.37.0) (2026-10-22)
 
 
