@@ -29,4 +29,5 @@ export * from "./repositories/autorole-grants";
 export * from "./repositories/suggestions";
 export * from "./repositories/suggestion-votes";
 export * from "./repositories/starboard-posts";
+export * from "./repositories/bot-feedback";
 export * from "./rank-cards";
