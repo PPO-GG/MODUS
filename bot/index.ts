@@ -1,4 +1,10 @@
-import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
+import {
+  ActivityType,
+  Client,
+  GatewayIntentBits,
+  Events,
+  Partials,
+} from "discord.js";
 import http from "http";
 import path from "path";
 import fs from "fs";
@@ -66,6 +72,13 @@ const client = new Client({
     Partials.Poll,
     Partials.PollAnswer,
   ],
+  // Sent with each shard's IDENTIFY, so every shard shows it and it survives
+  // reconnects. Discord ignores `name` for Custom activities; `state` is shown.
+  presence: {
+    activities: [
+      { type: ActivityType.Custom, name: "custom", state: "modusbot.io" },
+    ],
+  },
 });
 
 // Redis is optional: when REDIS_URL is unset, `clients` is null and
