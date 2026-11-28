@@ -191,6 +191,31 @@ describe("parseLavalinkNodes", () => {
     }
   });
 
+  const httpNode = (host: string) => ({
+    LAVALINK_NODES_JSON: JSON.stringify([{
+      id: "node",
+      url: `http://${host}:2333`,
+      password: "node-password",
+      region: "us-east",
+      capabilities: ["youtube"],
+      maxPlayers: 20,
+    }]),
+  });
+
+  it.each(["100.64.0.1", "100.101.102.103", "100.127.255.254"])(
+    "accepts HTTP for the Tailscale CGNAT address %s",
+    (host) => {
+      expect(() => parseLavalinkNodes(httpNode(host))).not.toThrow();
+    },
+  );
+
+  it.each(["100.63.255.255", "100.128.0.1", "8.8.8.8"])(
+    "rejects HTTP for the public address %s",
+    (host) => {
+      expect(() => parseLavalinkNodes(httpNode(host))).toThrowError(/HTTPS/);
+    },
+  );
+
   it("rejects credential-bearing node URLs before they can be serialized", () => {
     expect(() => parseLavalinkNodes({
       LAVALINK_NODES_JSON: JSON.stringify([{

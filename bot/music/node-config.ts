@@ -35,7 +35,9 @@ function isPrivateHttpHost(hostname: string): boolean {
     const octets = ipv4.slice(1).map(Number);
     return octets[0] === 10
       || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31)
-      || (octets[0] === 192 && octets[1] === 168);
+      || (octets[0] === 192 && octets[1] === 168)
+      // 100.64.0.0/10 (CGNAT): Tailscale tailnet addresses.
+      || (octets[0] === 100 && octets[1] >= 64 && octets[1] <= 127);
   }
 
   return host.endsWith(".ts.net") || !host.includes(".");
