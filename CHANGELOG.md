@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.38.0](https://github.com/PPO-GG/MODUS/compare/modus-v1.37.1...modus-v1.38.0) (2026-11-28)
+
+
+### ✨ Features
+
+* **bot:** show modusbot.io as the bot's custom status ([9a378ac](https://github.com/PPO-GG/MODUS/commit/9a378ac7482c379a99b585ac806dc06da3889ffd))
+
+
+### 🐛 Bug Fixes
+
+* **bot:** allow plain HTTP for Lavalink nodes on Tailscale addresses ([#156](https://github.com/PPO-GG/MODUS/issues/156)) ([412c7b6](https://github.com/PPO-GG/MODUS/commit/412c7b6d5a6fcc865a6df06cc925cf74816662fe))
+
 ## [1.37.1](https://github.com/PPO-GG/MODUS/compare/modus-v1.37.0...modus-v1.37.1) (2026-11-18)
 
 
